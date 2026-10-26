@@ -1,87 +1,94 @@
 # Puppet Fight CPC
 
-A one-on-one fighting game for the Amstrad CPC (Z80 assembly, Mode 0, overscan),
-starring caricature puppets in the style of *Puppet Regime*. Characters load
-from disk two at a time. The first pair is **Trump vs Putin**.
+A one-on-one fighting game for the **Amstrad CPC 6128**, written in Z80
+assembly. World leaders and celebrities, as felt caricature puppets inspired
+by GZERO Media's satire series *Puppet Regime*, fight with large pre-rendered
+sprites in Mode 0 overscan. Two fighters load from disk per match. The first
+bout is **Trump vs Putin**.
 
-![versus preview](docs/preview_versus.gif)
+![Trump vs Putin preview](docs/preview_versus.gif)
 
-## Sprite spec
+> Status: **pre-alpha**. The art pipeline and the first two fighters are
+> done. The engine hasn't been started. See the [game plan](docs/GAME_PLAN.md)
+> for milestones.
 
-| | |
-|---|---|
-| Mode | 0 (160-pixel mode, 2:1 wide pixels, 16 pens) |
-| Frame | 32×64 Mode 0 pixels (16 bytes × 64 lines) |
-| Wide frame | 64×64 for horizontal/falling poses, drawn with `offset_x = -16` px |
-| Transparency | pen 0; pen 15 is a second black used for opaque outlines |
-| Palette | one shared 16-pen game palette, see `tools/cpc_palette.py` |
-| Frame rate | 12 fps animation |
+## Features (planned)
 
-### Moves (all ≥ 3 frames)
+- Big puppet sprites: 32×64 Mode 0 pixels per frame, 64×64 for falls and
+  knockdowns, in a full overscan display
+- 12 moves per fighter: idle, walk, crouch, jump, punch, kick, sweep,
+  block, hit, KO, special and victory, each at least 3 frames
+- Character-specific specials from each puppet's on-show persona, e.g.
+  Trump's **Tweet Storm** and Putin's **Judo Throw**
+- 1P vs CPU, 2P versus, and an arcade ladder with a secret boss
+- Characters stored as separate disk files, so the roster can keep growing
 
-| Move | Frames | Notes |
+## Fighters
+
+| Fighter | Billing | Status |
 |---|---|---|
-| idle | 4 | loop |
-| walk | 4 | loop |
-| crouch | 3 | last frame is the hold |
-| jump | 3 | prep / tuck / land. The engine moves the sprite; height is not baked in |
-| punch | 3 | wind-up / extend / recover |
-| kick | 3 | chamber / extend / retract |
-| sweep | 3 | crouching low kick |
-| block | 3 | last frame is the hold |
-| hit | 3 | |
-| ko | 4 | frames 2-4 are 64×64 wide frames |
-| special | 4 | Trump: **Tweet Storm** (phone throw). Putin: **Judo Throw** |
-| victory | 3 | Trump: thumbs-up shimmy. Putin: strongman flex |
+| Donald Trump | "The Greatest American 2.0" | ✅ sprites done |
+| Vladimir Putin | "Meddler-in-Chief" | ✅ sprites done |
+| Kim Jong-Un | "The Supremest Leader" | 🎯 next wave |
+| Xi Jinping | "President Emperor of the PRC" | 🎯 next wave |
+| Elon Musk | "Tech Support" | 🎯 next wave |
+| Volodymyr Zelensky | "Humble President of Ukraine" | 🎯 next wave |
+| Modi, MBS, Biden, Macron, Merkel, Bolsonaro, Lula, Zuckerberg, Ian Bremmer (boss) | | 📋 later |
 
-## Pipeline
+Full profiles, special-move ideas and palette notes: [docs/CHARACTERS.md](docs/CHARACTERS.md).
+
+## Repository layout
 
 ```
-Blender (3D puppets, poses)  ->  art/render/<char>/*_id.png + *_lit.png
-        tools/make_sprites.py  ->  art/sprites/<char>/<move>_<n>.png  (indexed, CPC palette)
-  tools/aseprite_build.lua     ->  art/sprites/<char>.aseprite        (editable master, tags per move)
-  tools/aseprite_export.lua    ->  art/sprites/<char>/*.png            (after hand edits)
-        tools/cpc_export.py    ->  data/sprites/<char>.asm / .bin, palette.asm
-        tools/preview_gif.py   ->  docs/preview_*.gif
+art/blender/      puppets.blend: puppet scenes (PF_trump, PF_putin), poses keyframed
+art/render/       Blender renders (material-ID + lit passes per frame)
+art/sprites/      quantised sprite PNGs, sheets, previews, editable .aseprite files
+data/sprites/     CPC data: masked Mode 0 frames (.asm/.bin), palette
+docs/             game plan, character roster, pipeline notes, preview GIFs
+tools/            pipeline scripts (Blender, Python, Aseprite Lua)
 ```
 
-1. **Blender**: `tools/blender_puppets.py` builds each puppet from rigid "felt"
-   parts on a joint hierarchy in its own scene (`PF_trump`, `PF_putin`). Every
-   move is keyframed (timeline markers name the moves). Each frame is rendered
-   twice with Workbench: a flat material-ID pass and a white studio-lit pass.
-   It also writes `art/blender/puppets.blend` with just the puppet scenes. Run
-   it from the Blender MCP:
+## Rebuilding the sprites
+
+Requirements: Blender 5.2 and Aseprite 1.3 (both used through MCP in this
+project), Python 3 with Pillow.
+
+1. **Render** in Blender. This builds the puppets and renders every frame:
    ```python
    REPO = r"\\wsl.localhost\Ubuntu\home\vasilhs\repos\PuppetFightCPC"
    g = dict(globals(), REPO=REPO, CHARACTERS=["trump", "putin"], RENDER=True)
    exec(open(REPO + r"\tools\blender_puppets.py").read(), g)
    ```
-   Poses live in `COMMON_MOVES` / `TRUMP_MOVES` / `PUTIN_MOVES` as joint angles.
-2. **Quantise**: `python3 tools/make_sprites.py` maps each hi-res pixel to a
-   pen (material ramp × light level), then each 8×4 block votes for one Mode 0
-   pixel. Eyes and mouths get extra weight so they survive. It also adds
-   separation lines where an arm crosses the body, plus a black outline.
-3. **Aseprite**: `tools/aseprite_build.lua` builds a 64×64 indexed `.aseprite`
-   per character with one tag per move. Touch-ups by hand go here. Then run
-   `tools/aseprite_export.lua` to write the frames back out.
-   Note: re-running `make_sprites.py` overwrites the PNGs, and
-   `aseprite_build.lua` overwrites the `.aseprite` file, so hand edits are lost.
-4. **CPC data**: `python3 tools/cpc_export.py` writes masked Mode 0 frame data
-   (`(screen AND mask) OR data`), a move table and the Gate Array palette.
+2. **Quantise** to Mode 0 sprites:
+   ```bash
+   python3 tools/make_sprites.py
+   ```
+3. **Aseprite**: run `tools/aseprite_build.lua` to create the `.aseprite`
+   files, edit them, then run `tools/aseprite_export.lua` to write the frames
+   back out.
+4. **Export** the CPC data:
+   ```bash
+   python3 tools/cpc_export.py
+   ```
+5. **Preview** GIFs:
+   ```bash
+   python3 tools/preview_gif.py
+   ```
 
-## Memory notes
+Details (sprite spec, palette, quantisation, memory figures):
+[docs/PIPELINE.md](docs/PIPELINE.md).
 
-- Raw masked frames: ~86 KB per character (every byte stored).
-- Drawn bytes per frame: Trump avg ~350, Putin ~260. A compiled sprite
-  (LD/AND/OR per byte) is about 40-47 KB per character facing one way, so a
-  pair fits in a 128K machine's banks. Storing both facing directions doubles
-  this. The alternatives are flipping at draw time with a 256-byte flip table
-  (masked path), or having only the active facing compiled.
+## Documentation
 
-## Next steps
+- [Game plan](docs/GAME_PLAN.md): gameplay, controls, combat model, screen
+  and memory design, character file format, toolchain, milestones, risks
+- [Character roster](docs/CHARACTERS.md): researched *Puppet Regime* cast with
+  personas, specials and palette notes
+- [Art pipeline](docs/PIPELINE.md): Blender → Aseprite → CPC data
 
-- Compiled-sprite generator for the overscan screen layout.
-- Projectiles/effects: tweet bird (Trump special), hit sparks.
-- Pose polish: victory poses raise the arms sideways, toward the camera, so
-  they read weakly in profile. Trump's phone is too small to see.
-- More characters: add a spec + head function in `blender_puppets.py`.
+## Credits and disclaimer
+
+A non-commercial fan project. The characters are caricatures inspired by
+[*Puppet Regime*](https://gzeromedia.com/puppet-regime/) by GZERO Media
+(Eurasia Group). This project is not affiliated with or endorsed by GZERO
+Media, Eurasia Group, or any person depicted. All characters are satirical.
