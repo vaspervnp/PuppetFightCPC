@@ -489,6 +489,38 @@ A bench with both specials landing (−8 each) and the motion uppercut, and
 `make bench-all`, `bench-fight`, `bench-play` and `SLACK=15`, all show
 2 frames between pictures, 0 lines caught and 0 bytes wrong.
 
+## Milestone 3 step 4: knockdown
+
+The sweep, the uppercut, the special, and any hit on a fighter in the air
+knock it down instead of a hit reaction. In the `hitstun` table, 0 marks a
+knockdown move.
+
+A knockdown is the KO move with health left, and it lasts `KD_PICS` (36)
+pictures:
+- the KO frames play as a fall, then the last one holds while the fighter
+  lies there;
+- in the last 8 pictures it gets up on the same frames backwards, 2
+  pictures a frame;
+- then it is idle, turned to face the opponent.
+
+Nothing hits a fighter that is down or getting up, and its controls do
+nothing until it is up. A round ends only on a KO with no health left
+(`rt_out`).
+
+Checked on the emulator:
+
+| Test | Result |
+|---|---|
+| Trump's uppercut on a standing Putin | −6, down 36 pictures, gets up, idle |
+| Trump's punch on Putin coming down from a jump | −4, knocked down |
+| Trump punches Putin from in range while he is down | no hit |
+| Uppercut on Putin with 4 health | KO, round to Trump, new round with both up |
+
+A bench with the uppercut knockdown and a hit in the air, and `make
+bench-all`, `bench-fight`, `bench-play` and `SLACK=15`, show 2 frames
+between pictures, 0 lines caught and 0 bytes wrong. That completes
+milestone 3.
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

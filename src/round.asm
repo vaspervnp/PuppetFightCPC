@@ -1,10 +1,11 @@
 ;; ===========================================================================
-;; round.asm - rounds and the match: a KO ends the round, and so does the
-;; clock running out after ROUND_SECS seconds, when more health wins (the
-;; same health: a draw, nobody's round). The winner holds its victory pose
-;; for ROUND_END_PICS pictures, gets a win marker under its bar, and both
-;; fighters start again. WINS_NEEDED round wins take the match, and the
-;; next one starts from nothing. Cold code (COLD2_ORG).
+;; round.asm - rounds and the match: a KO (down with no health) ends the
+;; round, and so does the clock running out after ROUND_SECS seconds, when
+;; more health wins (the same health: a draw, nobody's round). The winner
+;; holds its victory pose for ROUND_END_PICS pictures, gets a win marker
+;; under its bar, and both fighters start again. WINS_NEEDED round wins
+;; take the match, and the next one starts from nothing. Cold code
+;; (COLD2_ORG).
 ;; ===========================================================================
 
 ROUND_END_PICS  EQU 75          ; 3 s
@@ -21,12 +22,12 @@ round_tick
     or a
     jr nz,rt_over
     ld ix,fighter_b             ; fighting: whoever isn't down after a KO
-    ld a,(fighter_a+F_MOVE)
-    cp MV_KO
+    ld hl,fighter_a
+    call rt_out
     jr z,rt_ko
     ld ix,fighter_a
-    ld a,(fighter_b+F_MOVE)
-    cp MV_KO
+    ld hl,fighter_b
+    call rt_out
     jr z,rt_ko
     ld hl,rnd_tick              ; nobody down: the clock
     dec (hl)
@@ -249,4 +250,18 @@ is_a
     ld de,fighter_a
     or a
     sbc hl,de
+    ret
+
+;; rt_out - HL = fighter: Z if it is knocked out (down, no health), not
+;; just knocked down. Destroys AF, DE, HL.
+rt_out
+    ld de,F_MOVE
+    add hl,de
+    ld a,(hl)
+    cp MV_KO
+    ret nz
+    ld de,F_HEALTH-F_MOVE
+    add hl,de
+    ld a,(hl)
+    or a
     ret

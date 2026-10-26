@@ -8,10 +8,13 @@
 ;;     punch, kick, ...      attacks: play through once, then idle
 ;;     block, hit            held for their stun (and a block while the
 ;;                           opponent attacks), then idle
+;;     KO                    with no health down for good; otherwise a
+;;                           knockdown: fall, lie, get up over KD_PICS
 ;; Frames advance every FRAME_PICS pictures (12.5 fps). An attack frame with
 ;; a hit box that reaches the opponent's hurt box lands once per attack
 ;; (combat): blocked if the opponent holds back while free, otherwise damage,
-;; a hit reaction for the move's hitstun, and at no health a KO.
+;; a hit reaction for the move's hitstun, a knockdown for the sweep, the
+;; uppercut, the special or any hit in the air, and at no health a KO.
 ;;
 ;; Every picture the stick goes into a motion history, turned to the
 ;; fighter's facing, so moves can ask for a motion: down, down-forward,
@@ -49,6 +52,7 @@ HEALTH_MAX      EQU 40          ; a full health bar, one byte a point
 HIT_PUSH        EQU 3           ; bytes a hit knocks the defender back,
 BLOCK_PUSH      EQU 1           ; and a block
 BLOCK_STUN      EQU 4           ; pictures a standing block holds at least
+KD_PICS         EQU 36          ; a knockdown: falling, lying, getting up
 HIST_LEN        EQU 12          ; pictures of motion history (0.48 s)
 DR_UP           EQU 1           ; the history: the stick turned to the
 DR_DOWN         EQU 2           ; fighter's facing
@@ -71,7 +75,7 @@ think
     cp MV_JUMP
     jp z,th_jump
     cp MV_KO
-    jp z,animate_hold           ; down for good
+    jp z,th_down
     cp MV_VICTORY
     jp z,animate_hold           ; and the winner stays up
     cp MV_BLOCK
@@ -191,6 +195,29 @@ th_bl_free
 th_unblock
     ld a,MV_IDLE
     jp start_move
+
+;; Down: a KO stays down. A knockdown falls (the KO frames) and lies there,
+;; then gets up in the last 2 pictures a frame, the same frames backwards.
+;; Nothing hits a fighter that is down or getting up (combat).
+th_down
+    ld a,(ix+F_HEALTH)
+    or a
+    jp z,animate_hold
+    dec (ix+F_STUN)
+    jr z,th_up
+    ld a,(ix+F_NFR)
+    add a,a
+    cp (ix+F_STUN)
+    jp c,animate_hold           ; falling or lying
+    ld a,(ix+F_STUN)            ; getting up
+    dec a
+    srl a
+    ld (ix+F_FRAME),a
+    ret
+th_up
+    ld a,MV_IDLE
+    call start_move
+    jp face_opponent
 
 ;; Hit: the reaction plays, then holds for the rest of the hitstun.
 th_stun

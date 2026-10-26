@@ -92,12 +92,21 @@ sk_alive
     push af
     call health_bar
     pop af
-    ld (ix+F_Y),FIGHTER_Y       ; knocked out of a jump too
+    or a
+    ld a,MV_KO                  ; no health: KO
+    jr z,sk_react
+    ld a,(ix+F_Y)               ; hit in the air: knocked down
+    cp FIGHTER_Y
+    jr nz,sk_down
+    ld a,(ix+F_STUN)            ; and by a knockdown move
     or a
     ld a,MV_HIT
     jr nz,sk_react
+sk_down
+    ld (ix+F_STUN),KD_PICS
     ld a,MV_KO
 sk_react
+    ld (ix+F_Y),FIGHTER_Y       ; out of a jump too
     call start_move
     ld b,HIT_PUSH
     ; fall into knock_back
@@ -117,8 +126,8 @@ kb_left
 ;; (block, hit, KO: not attacks), special.
 damage                          ; health points
     defb 4,5,4,6,6,0,0,0,8
-hitstun                         ; pictures in the hit reaction: the hit
-    defb 6,8,10,12,10,0,0,0,14  ; reaction's own frames take 6
+hitstun                         ; pictures in the hit reaction (its own
+    defb 6,8,0,0,10,0,0,0,0     ; frames take 6), 0: a knockdown
 
 ;; boxes - IX = fighter, HL = 8 bytes: the hurt box then the hit box of its
 ;; logic frame (F_MOVE, F_FRAME) on the screen, each x0, x1 (bytes), y0, y1

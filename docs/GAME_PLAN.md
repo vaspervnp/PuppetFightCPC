@@ -58,9 +58,10 @@ detection. It is kept forgiving, because CPC joysticks are stiff.
 walk, crouch, jump (straight or with a direction), punch, kick, sweep
 (↓ + kick), uppercut (↓ + punch) and back kick (back + kick). Hits, damage,
 blocking (hold back: standing stops all but the sweep, crouching stops
-everything), hitstun per move and blockstun, KO, and rounds (best of
-three, win markers under the bars, a 99-second clock: at time-out more
-health wins, level health is a draw). A 12-picture motion history gives
+everything), hitstun per move and blockstun, knockdown (sweep, uppercut,
+special and hits in the air: fall, lie, get up, untouchable while down),
+KO, and rounds (best of three, win markers under the bars, a 99-second
+clock: at time-out more health wins, level health is a draw). A 12-picture motion history gives
 the special (↓ ↘ → + either button, the `special` frames as a strong
 strike for now, until milestone 5 makes them a projectile and a throw) and
 the uppercut from ↓ then ↑ + punch (↓ + punch also works). No second
@@ -352,7 +353,7 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 | 0 | **Art pipeline + first fighters** ✅ | Trump and Putin, 14 moves, CPC data export |
 | 1 | **Tech spike** ✅ | overscan screen up. Buffering option chosen. Span-sprite and compiled-sprite drawers benchmarked. Memory map frozen. Two idle fighters animating at 25 fps |
 | 2 | **Engine core** ✅ | game loop, joystick/keyboard for 2 players, fighter state machine, walking, jumping arcs, facing and flip, ground and walls. Banded overlap rebuild, cheaper restore, on-demand compiler. `make bench` overlap+jump scenario at 25 fps with 0 lines caught |
-| 3 | **Combat** | hit/hurt boxes from Aseprite slices, damage, block, hitstun, knockdown, KO, rounds, timer, health bars |
+| 3 | **Combat** ✅ | hit/hurt boxes from Aseprite slices, damage, block, hitstun, knockdown, KO, rounds, timer, health bars |
 | 4 | **Character loading** | `.PFC` format, loader, pen remap, select screen, two characters from disk |
 | 5 | **Specials + projectiles** | motion input, Tweet Storm (tweet-bird projectile), Judo Throw (throw state) |
 | 6 | **Presentation** | stages (White House lawn, Kremlin hall), title, music, SFX, victory screens with taunts |
