@@ -39,11 +39,11 @@ src/gen/tables.asm: tools/sprite_codegen.py
 # A character's two bank images come out of one run. Draws are compiled at
 # run time (src/jit.asm); --slot checks every frame fits a cache slot.
 src/gen/trump_bank0.asm src/gen/trump_bank1.asm &: tools/sprite_codegen.py src/config.asm \
-        art/sprites/trump.json $(wildcard art/sprites/trump/*.png)
+        art/sprites/trump.json art/sprites/trump_hits.json $(wildcard art/sprites/trump/*.png)
 	$(PYTHON) tools/sprite_codegen.py character trump --slot $(CACHE_SLOT)
 
 src/gen/putin_bank0.asm src/gen/putin_bank1.asm &: tools/sprite_codegen.py src/config.asm \
-        art/sprites/putin.json $(wildcard art/sprites/putin/*.png)
+        art/sprites/putin.json art/sprites/putin_hits.json $(wildcard art/sprites/putin/*.png)
 	$(PYTHON) tools/sprite_codegen.py character putin --slot $(CACHE_SLOT)
 
 # One rasm pass writes the snapshot, the symbols and (via SAVE) the disc.
@@ -69,7 +69,7 @@ clean:
 	rm -rf $(BUILD)
 
 FORCE:
-.PHONY: all bench bench-all bench-play run clean FORCE
+.PHONY: all bench bench-all bench-play bench-fight run clean FORCE
 
 # The game with scripted controls: walk in, jump over, attacks. Close combat
 # needs the runtime compiler (only idle frames have compiled draws), so this
@@ -78,3 +78,10 @@ PLAY_KEYS := RIGHT@2-26,a@2-20,SPACE@30,z@34,x@40,DOWN@46-56,x@48,DOWN@60-64,SPA
 bench-play:
 	$(MAKE) --no-print-directory $(BUILD)/pfspike.sna
 	$(PYTHON) tools/spike_bench.py --keys $(PLAY_KEYS) --shots 20,31,50,76,90 || true
+
+# Combat: Trump lands a punch, Putin walks in and lands one, Trump blocks a
+# kick, Trump lands another. Ends Trump 36, Putin 32.
+FIGHT_KEYS := RIGHT@2-26,a@2-26,SPACE@30,a@40-42,z@44,RIGHT@52-55,LEFT@57-68,x@59,RIGHT@70-73,SPACE@75,a@80-83,x@86
+bench-fight:
+	$(MAKE) --no-print-directory $(BUILD)/pfspike.sna
+	$(PYTHON) tools/spike_bench.py --keys $(FIGHT_KEYS) --shots 34,47,62,78,90 || true

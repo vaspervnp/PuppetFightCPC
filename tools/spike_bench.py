@@ -171,10 +171,6 @@ class Bench:
             if self.t - last_done_t > 50 * FRAME_US:
                 sys.exit("stuck: no picture for 50 frames (pc %04X, phase %d)"
                          % (self.c.pc, self.peek("BENCH_PHASE")))
-            pic = self.peek("RENDER_COUNT")
-            if pic != last_pic:
-                last_pic = pic
-                self.apply_keys(done)
             ph = self.peek("BENCH_PHASE")
             if ph != last_ph:
                 if last_ph in PHASES:
@@ -197,6 +193,7 @@ class Bench:
                     done += 1
                     last_done_t = self.t
                 if ph == 7:                         # prepare: the picture is drawn
+                    self.apply_keys(done + 1)       # keys for the next logic
                     for f in ("FIGHTER_A", "FIGHTER_B"):
                         self.waits[f] += self.field(f, "F_HELD")
                     if done in getattr(self, "shots", ()):
@@ -305,6 +302,9 @@ def main():
     if n_done:
         tot = sum(durations.get(9, []))
         print("  frames compiled: %d, %.1f ms each" % (n_done, tot / n_done / 1000))
+    if "F_HEALTH" in b.S and not b.S.get("SCN_DEMO", 0):
+        print("  health at the end: Trump %d, Putin %d" % (
+            b.field("FIGHTER_A", "F_HEALTH"), b.field("FIGHTER_B", "F_HEALTH")))
     print("  frame held (not compiled yet): Trump %d, Putin %d pictures of %d" % (
         b.waits["FIGHTER_A"], b.waits["FIGHTER_B"], npics))
     print("  fighter band: lines %d-%d; a standing fighter's top is line %d" % (

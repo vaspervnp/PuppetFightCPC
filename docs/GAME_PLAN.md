@@ -54,10 +54,11 @@ overscan. Two fighters are loaded from disk per match.
 The input buffer keeps the last ~12 frames of joystick state for motion
 detection. It is kept forgiving, because CPC joysticks are stiff.
 
-**Built so far** (milestone 2, `src/input.asm`, `src/fighter.asm`): walk,
-crouch, jump (straight or with a direction), punch, kick, sweep (↓ + kick),
-uppercut (↓ + punch) and back kick (back + kick). There is no blocking,
-no damage and no motion input buffer yet. Keys, alongside the joysticks:
+**Built so far** (milestones 2-3, `src/input.asm`, `src/fighter.asm`):
+walk, crouch, jump (straight or with a direction), punch, kick, sweep
+(↓ + kick), uppercut (↓ + punch) and back kick (back + kick). Hits, damage,
+standing block (hold back while the opponent attacks), hit reactions and KO.
+No crouch block, rounds, timer or motion input buffer yet. Keys, alongside the joysticks:
 
 | | Up | Down | Left | Right | Punch | Kick |
 |---|---|---|---|---|---|---|
@@ -344,7 +345,7 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 |---|---|---|
 | 0 | **Art pipeline + first fighters** ✅ | Trump and Putin, 14 moves, CPC data export |
 | 1 | **Tech spike** ✅ | overscan screen up. Buffering option chosen. Span-sprite and compiled-sprite drawers benchmarked. Memory map frozen. Two idle fighters animating at 25 fps |
-| 2 | **Engine core** | game loop, joystick/keyboard for 2 players, fighter state machine, walking, jumping arcs, facing and flip, ground and walls. Banded overlap rebuild, cheaper restore, on-demand compiler. `make bench` overlap+jump scenario at 25 fps with 0 lines caught |
+| 2 | **Engine core** ✅ | game loop, joystick/keyboard for 2 players, fighter state machine, walking, jumping arcs, facing and flip, ground and walls. Banded overlap rebuild, cheaper restore, on-demand compiler. `make bench` overlap+jump scenario at 25 fps with 0 lines caught |
 | 3 | **Combat** | hit/hurt boxes from Aseprite slices, damage, block, hitstun, knockdown, KO, rounds, timer, health bars |
 | 4 | **Character loading** | `.PFC` format, loader, pen remap, select screen, two characters from disk |
 | 5 | **Specials + projectiles** | motion input, Tweet Storm (tweet-bird projectile), Judo Throw (throw state) |

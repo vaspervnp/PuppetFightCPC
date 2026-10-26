@@ -19,67 +19,67 @@ trump_dir
     defb 4 : defw trump_m_special
     defb 3 : defw trump_m_victory
 trump_m_idle
-    defb 1,16,0 : defw trump_idle_0_spans,551 : defs 5
-    defb 1,16,0 : defw trump_idle_1_spans,555 : defs 5
-    defb 1,16,0 : defw trump_idle_2_spans,550 : defs 5
-    defb 1,16,0 : defw trump_idle_3_spans,555 : defs 5
+    defb 1,16,0 : defw trump_idle_0_spans,551 : defb 4,11,1,62,0,0,0,0 : defs 1
+    defb 1,16,0 : defw trump_idle_1_spans,555 : defb 4,11,1,62,0,0,0,0 : defs 1
+    defb 1,16,0 : defw trump_idle_2_spans,550 : defb 4,11,1,62,0,0,0,0 : defs 1
+    defb 1,16,0 : defw trump_idle_3_spans,555 : defb 4,11,1,62,0,0,0,0 : defs 1
 trump_m_walk
-    defb 1,16,0 : defw trump_walk_0_spans,555 : defs 5
-    defb 1,16,0 : defw trump_walk_1_spans,562 : defs 5
-    defb 1,16,0 : defw trump_walk_2_spans,591 : defs 5
-    defb 1,16,0 : defw trump_walk_3_spans,554 : defs 5
+    defb 1,16,0 : defw trump_walk_0_spans,555 : defb 4,12,2,61,0,0,0,0 : defs 1
+    defb 1,16,0 : defw trump_walk_1_spans,562 : defb 4,12,0,61,0,0,0,0 : defs 1
+    defb 1,16,0 : defw trump_walk_2_spans,591 : defb 3,12,2,61,0,0,0,0 : defs 1
+    defb 1,16,0 : defw trump_walk_3_spans,554 : defb 4,12,0,61,0,0,0,0 : defs 1
 trump_m_crouch
-    defb 1,16,0 : defw trump_crouch_0_spans,539 : defs 5
-    defb 1,16,0 : defw trump_crouch_1_spans,519 : defs 5
-    defb 1,16,0 : defw trump_crouch_2_spans,470 : defs 5
+    defb 1,16,0 : defw trump_crouch_0_spans,539 : defb 4,12,2,61,0,0,0,0 : defs 1
+    defb 1,16,0 : defw trump_crouch_1_spans,519 : defb 5,12,5,61,0,0,0,0 : defs 1
+    defb 1,16,0 : defw trump_crouch_2_spans,470 : defb 5,12,9,61,0,0,0,0 : defs 1
 trump_m_jump
-    defb 1,16,0 : defw trump_jump_0_spans,500 : defs 5
-    defb 1,16,0 : defw trump_jump_1_spans,518 : defs 5
-    defb 1,16,0 : defw trump_jump_2_spans,577 : defs 5
+    defb 1,16,0 : defw trump_jump_0_spans,500 : defb 5,13,4,61,0,0,0,0 : defs 1
+    defb 1,16,0 : defw trump_jump_1_spans,518 : defb 4,12,6,61,0,0,0,0 : defs 1
+    defb 1,16,0 : defw trump_jump_2_spans,577 : defb 3,12,1,62,0,0,0,0 : defs 1
 trump_m_punch
-    defb 1,16,0 : defw trump_punch_0_spans,572 : defs 5
-    defb 1,16,0 : defw trump_punch_1_spans,569 : defs 5
-    defb 1,16,0 : defw trump_punch_2_spans,549 : defs 5
+    defb 1,16,0 : defw trump_punch_0_spans,572 : defb 3,11,1,62,0,0,0,0 : defs 1
+    defb 1,16,0 : defw trump_punch_1_spans,569 : defb 5,14,2,61,11,15,30,40 : defs 1
+    defb 1,16,0 : defw trump_punch_2_spans,549 : defb 5,12,1,62,0,0,0,0 : defs 1
 trump_m_kick
-    defb 1,16,0 : defw trump_kick_0_spans,550 : defs 5
-    defb 1,16,0 : defw trump_kick_1_spans,599 : defs 5
-    defb 1,16,0 : defw trump_kick_2_spans,535 : defs 5
+    defb 1,16,0 : defw trump_kick_0_spans,550 : defb 2,11,0,61,0,0,0,0 : defs 1
+    defb 1,16,0 : defw trump_kick_1_spans,599 : defb 0,11,2,62,7,12,30,42 : defs 1
+    defb 1,16,0 : defw trump_kick_2_spans,535 : defb 2,10,0,61,0,0,0,0 : defs 1
 trump_m_sweep
-    defb 0,16,0 : defw trump_sweep_0_spans,519 : defs 5
-    defb 0,16,0 : defw trump_sweep_1_spans,469 : defs 5
-    defb 0,16,0 : defw trump_sweep_2_spans,494 : defs 5
+    defb 0,16,0 : defw trump_sweep_0_spans,519 : defb 5,12,5,61,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_sweep_1_spans,469 : defb 5,13,11,61,7,13,50,62 : defs 1
+    defb 0,16,0 : defw trump_sweep_2_spans,494 : defb 5,13,8,62,0,0,0,0 : defs 1
 trump_m_uppercut
-    defb 0,16,0 : defw trump_uppercut_0_spans,528 : defs 5
-    defb 0,16,0 : defw trump_uppercut_1_spans,521 : defs 5
-    defb 0,16,0 : defw trump_uppercut_2_spans,541 : defs 5
-    defb 0,16,0 : defw trump_uppercut_3_spans,555 : defs 5
+    defb 0,16,0 : defw trump_uppercut_0_spans,528 : defb 4,12,3,61,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_uppercut_1_spans,521 : defb 5,12,1,61,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_uppercut_2_spans,541 : defb 1,10,0,62,7,12,2,26 : defs 1
+    defb 0,16,0 : defw trump_uppercut_3_spans,555 : defb 3,11,1,62,0,0,0,0 : defs 1
 trump_m_backkick
-    defb 0,16,0 : defw trump_backkick_0_spans,574 : defs 5
-    defb 0,16,0 : defw trump_backkick_1_spans,535 : defs 5
-    defb 0,16,0 : defw trump_backkick_2_spans,486 : defs 5
-    defb 0,16,0 : defw trump_backkick_3_spans,569 : defs 5
+    defb 0,16,0 : defw trump_backkick_0_spans,574 : defb 4,12,1,61,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_backkick_1_spans,535 : defb 1,9,3,61,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_backkick_2_spans,486 : defb 0,11,9,62,8,12,34,46 : defs 1
+    defb 0,16,0 : defw trump_backkick_3_spans,569 : defb 4,12,1,61,0,0,0,0 : defs 1
 trump_m_block
-    defb 0,16,0 : defw trump_block_0_spans,563 : defs 5
-    defb 0,16,0 : defw trump_block_1_spans,551 : defs 5
-    defb 0,16,0 : defw trump_block_2_spans,540 : defs 5
+    defb 0,16,0 : defw trump_block_0_spans,563 : defb 4,11,1,62,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_block_1_spans,551 : defb 4,12,1,62,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_block_2_spans,540 : defb 4,12,1,62,0,0,0,0 : defs 1
 trump_m_hit
-    defb 0,16,0 : defw trump_hit_0_spans,544 : defs 5
-    defb 0,16,0 : defw trump_hit_1_spans,512 : defs 5
-    defb 0,16,0 : defw trump_hit_2_spans,517 : defs 5
+    defb 0,16,0 : defw trump_hit_0_spans,544 : defb 1,11,0,62,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_hit_1_spans,512 : defb 0,9,5,61,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_hit_2_spans,517 : defb 2,11,1,62,0,0,0,0 : defs 1
 trump_m_ko
-    defb 0,16,0 : defw trump_ko_0_spans,560 : defs 5
-    defb 0,32,-8 : defw trump_ko_1_spans,551 : defs 5
-    defb 0,32,-8 : defw trump_ko_2_spans,497 : defs 5
-    defb 0,32,-8 : defw trump_ko_3_spans,397 : defs 5
+    defb 0,16,0 : defw trump_ko_0_spans,560 : defb 0,9,3,61,0,0,0,0 : defs 1
+    defb 0,32,-8 : defw trump_ko_1_spans,551 : defb 5,18,15,61,0,0,0,0 : defs 1
+    defb 0,32,-8 : defw trump_ko_2_spans,497 : defb 3,18,27,60,0,0,0,0 : defs 1
+    defb 0,32,-8 : defw trump_ko_3_spans,397 : defb 3,17,34,60,0,0,0,0 : defs 1
 trump_m_special
-    defb 0,16,0 : defw trump_special_0_spans,568 : defs 5
-    defb 0,16,0 : defw trump_special_1_spans,591 : defs 5
-    defb 0,16,0 : defw trump_special_2_spans,530 : defs 5
-    defb 0,16,0 : defw trump_special_3_spans,550 : defs 5
+    defb 0,16,0 : defw trump_special_0_spans,568 : defb 2,11,1,62,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_special_1_spans,591 : defb 1,11,1,62,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_special_2_spans,530 : defb 5,15,2,62,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_special_3_spans,550 : defb 5,13,1,62,0,0,0,0 : defs 1
 trump_m_victory
-    defb 0,16,0 : defw trump_victory_0_spans,565 : defs 5
-    defb 0,16,0 : defw trump_victory_1_spans,558 : defs 5
-    defb 0,16,0 : defw trump_victory_2_spans,559 : defs 5
+    defb 0,16,0 : defw trump_victory_0_spans,565 : defb 3,11,1,62,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_victory_1_spans,558 : defb 2,11,0,62,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_victory_2_spans,559 : defb 2,11,0,62,0,0,0,0 : defs 1
 
 trump_sweep_0_spans  ; 16 bytes wide
     defb 5,64,57

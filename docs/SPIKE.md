@@ -379,6 +379,37 @@ byte facing right and ~29 facing left (read, test, two stores and a step,
 count). The remaining tweaks (`exx` for the (s, n) pointer, the mask
 worked out instead of looked up) are worth ~5%.
 
+## Milestone 3 step 1: hits, blocks, damage, KO
+
+- **Boxes.** Frame records are now 16 bytes. `sprite_codegen.py` adds each
+  frame's hurt box (the bounding box of its pixels) and, for an attack's
+  hitting frame, its hit box. Hit boxes come from
+  `art/sprites/<char>_hits.json`, written by hand from the frames (the
+  frame that hits and a pixel rectangle facing right). Working them out
+  from the silhouettes didn't hold up: whole bodies lean into punches, and
+  kicks don't reach past the idle outline.
+- **Combat** (`fighter.asm`, after `separate`, on the logic's frames, so a
+  frame held for the compiler doesn't change the fight). An attack lands
+  once, when its hit box meets the opponent's hurt box (facing left the
+  boxes mirror). A fighter holding back while free or blocking blocks it:
+  1 byte of pushback, no damage. Otherwise the defender takes damage
+  (punch 4, kick 5, sweep 4, uppercut 6, back kick 6, of 40), plays the hit
+  reaction, is knocked back 3 bytes (out of a jump too), and at 0 is down
+  for good (KO, last frame held).
+- **Blocking.** Holding back while the opponent attacks stops a walk and
+  holds the block pose.
+- **Health bars.** The lost part of a bar is blanked from the middle of
+  the screen outwards, during the logic, while the beam is below the HUD.
+- **Memory.** The workspace and the fighter records moved to the unused
+  tail of screen slice 3 (&DDE0-&DECF), and `start` sets them up. That
+  leaves room under the cache for the copy buffer: the payload ends at
+  &14AC, with 28 bytes to spare.
+- **Bench.** Keys now change at `prepare`, so a one-picture press can't
+  fall between two reads of the keyboard (some presses were being lost).
+  `make bench-fight` plays a short fight: Trump lands a punch, Putin walks
+  in and lands one, Trump blocks a kick and lands another. It ends at
+  Trump 36, Putin 32, with 2 frames per picture and 0 lines caught.
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

@@ -86,6 +86,8 @@ RESTORE_LIST_B  EQU #E4E0       ; slices 4 and 6: #x4E0-#x7FF free
 RESTORE_FLIP    EQU #10         ; high byte: one list of a pair to the other
     ASSERT (RESTORE_LIST_A AND #FF)==(RESTORE_LIST_B AND #FF)
 RESTORE_DUMMY   EQU #C7FF       ; past line_tab in slice 0
+WORK_AT         EQU (RESTORE_LIST_A XOR #1000)+256  ; #DDE0: workspace,
+WORK_ROOM       EQU #E000-WORK_AT   ; past list A1 in slice 3's tail
 flip_tab        EQU #CE00       ; built at boot (make_tables), in the rest
 mask_tab        EQU #CF00       ; of slice 1's tail: page aligned
     ASSERT RESTORE_LIST_A+256<=flip_tab

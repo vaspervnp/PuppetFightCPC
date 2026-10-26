@@ -611,15 +611,13 @@ rec_addr
     ld e,(hl)
     inc hl
     ld d,(hl)                   ; DE = the move's first record
-    ld a,c                      ; + REC_SIZE * frame
+    ld a,c                      ; + REC_SIZE * frame (16)
+    add a,a
+    add a,a
     add a,a
     add a,a
     ld l,a
     ld h,0
-    ld b,h
-    ld c,l
-    add hl,hl
-    add hl,bc                   ; * 12
     add hl,de
     ld bc,#7FC0
     out (c),c

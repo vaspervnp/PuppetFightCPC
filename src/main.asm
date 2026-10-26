@@ -36,6 +36,32 @@ payload_store
 payload_start
 
 start
+    ld hl,work_start            ; the workspace: zeros, then
+    ld de,work_start+1
+    ld bc,work_end-work_start-1
+    ld (hl),0
+    ldir
+    ld a,1                      ; compile whatever the time until the
+    ld (jit_force),a            ; first picture
+    ld hl,SN_TAIL0
+    ld (sn_next),hl
+    ld a,6
+    ld (sn_left),a
+    ld ix,fighter_a
+    ld (ix+F_RAM0),#C4
+    ld (ix+F_X),TRUMP_X0
+    ld (ix+F_RLIST+1),RESTORE_LIST_A>>8
+    ld ix,fighter_b
+    ld (ix+F_RAM0),#C6
+    ld (ix+F_X),PUTIN_X0
+    ld (ix+F_FACE),1
+    ld (ix+F_RLIST+1),RESTORE_LIST_B>>8
+    ld a,FIGHTER_Y
+    ld (fighter_a+F_Y),a
+    ld (fighter_b+F_Y),a
+    ld a,RESTORE_LIST_A AND #FF  ; (both lists start at #xxE0)
+    ld (fighter_a+F_RLIST),a
+    ld (fighter_b+F_RLIST),a
     call set_black
     call build_line_tab
     call draw_stage
@@ -56,6 +82,9 @@ start
     ld hl,palette_game
     call set_palette
     call irq_init
+    ld a,HEALTH_MAX
+    ld (fighter_a+F_HEALTH),a
+    ld (fighter_b+F_HEALTH),a
     ld ix,fighter_a             ; both start standing
     ld a,MV_IDLE
     call start_move
@@ -213,12 +242,15 @@ F_HELD          EQU 40          ; is waiting for it
 F_STAB          EQU 41          ; its cache (jit.asm): slot table, slots
 F_NSLOTS        EQU 43
 F_PKEY          EQU 44          ; F_OX..F_OSN when its restore list was made
-F_SIZE          EQU F_PKEY+F_OSN+2-F_OX
+F_HEALTH        EQU F_PKEY+F_OSN+2-F_OX     ; combat (fighter.asm): health,
+F_HITDONE       EQU F_HEALTH+1              ; this attack has landed
+F_SIZE          EQU F_HITDONE+1
 
 MOVE_IDLE       EQU 0
 DIR_SLOTS       EQU #4004       ; in a character's bank 0: bank 1 cache
 DIR_MOVES       EQU #4007       ; slots (count, first), then the moves
-REC_SIZE        EQU 12
+REC_SIZE        EQU 16
+    ASSERT REC_SIZE==16             ; rec_addr shifts
 
 ;; ---------------------------------------------------------------------------
 ;; logic - next picture's frames and positions.
@@ -246,6 +278,7 @@ logic
     ld iy,fighter_a
     call think
     call separate
+    call combat
     ld ix,fighter_a
     call load_frame
     ld ix,fighter_b
@@ -403,22 +436,22 @@ load_frame
 ;; ---------------------------------------------------------------------------
 
 
-;; The two fighters: Trump in banks 4-5 facing right, Putin in banks 6-7
-;; facing left. Everything else in a record is filled in at run time.
-fighter_a
-    defb #C4,TRUMP_X0,FIGHTER_Y,0
-    defs F_RLIST-4
-    defw RESTORE_LIST_A
-    defs F_SIZE-F_RLIST-2
-fighter_b
-    defb #C6,PUTIN_X0,FIGHTER_Y,1
-    defs F_RLIST-4
-    defw RESTORE_LIST_B
-    defs F_SIZE-F_RLIST-2
+line_tab        EQU LINE_TAB_AT
 
+payload_end
+jit_stage       EQU payload_end     ; a frame on its way to another bank
+STAGE_SIZE      EQU 600             ; (sprite_codegen.py: largest stream 599)
+    ASSERT jit_stage+STAGE_SIZE<=CACHE_AT   ; the compiled frame caches follow
 ;; ---------------------------------------------------------------------------
-;; Workspace (carried in the file for the spike; costs ~600 bytes)
+;; Workspace: in the unused tail of screen slice 3, past restore list A1.
+;; Not in the file: start clears it and sets what isn't zero.
 ;; ---------------------------------------------------------------------------
+    ORG WORK_AT
+work_start
+;; The two fighters: Trump in banks 4-5 facing right, Putin in banks 6-7
+;; facing left (start fills in the first fields).
+fighter_a       defs F_SIZE
+fighter_b       defs F_SIZE
 bench_phase     defb 0          ; first, so the bench can find it easily
 frame_count     defb 0
 irq_count       defb 0
@@ -444,11 +477,15 @@ p2_ctl          defb 0
 sf_draw         defw 0
 skip_a          defb 0          ; prepare: no window work for A / B
 skip_b          defb 0
+bx_a            defs 8          ; combat: attacker's boxes, defender's
+bx_b            defs 8
+bx_w1           defb 0          ; boxes: frame width - 1, left edge
+bx_left         defb 0
 sf_x            defb 0
 br_w            defb 0
 jit_done        defw 0          ; frames compiled (the bench reads it)
 jit_clock       defb 0          ; jit.asm: cache use counter,
-jit_force       defb 1          ; compile whatever the time (at boot),
+jit_force       defb 0          ; compile whatever the time (at boot),
 jg_rec          defw 0          ; the frame asked for,
 jg_face         defb 0
 jv_best         defw 0
@@ -466,19 +503,17 @@ jw_sn           defw 0
 jw_size         defw 0
 jw_guessing     defb 0          ; the job in hand is a guess (jw_guess)
 jw_stage        defb 0          ; the slot's bank, if the frame is copied
-sn_next         defw SN_TAIL0   ; jit_init: where the next (s, n) table
-sn_left         defb 6          ; goes, room left in this tail, which tail
+sn_next         defw 0          ; jit_init: where the next (s, n) table
+sn_left         defb 0          ; goes, room left in this tail, which tail
 sn_tail         defb 0
 job_ra          defs J_SIZE     ; restore A, restore B, draw A, draw B
 job_rb          defs J_SIZE
 job_da          defs J_SIZE
 job_db          defs J_SIZE
-line_tab        EQU LINE_TAB_AT
 
-payload_end
-jit_stage       EQU payload_end     ; a frame on its way to another bank
-STAGE_SIZE      EQU 600             ; (sprite_codegen.py: largest stream 599)
-    ASSERT jit_stage+STAGE_SIZE<=CACHE_AT   ; the compiled frame caches follow
+work_end
+    ASSERT work_end<=WORK_AT+WORK_ROOM
+    ORG payload_end
 
     RUN boot
     SAVE 'PFSPIKE.BIN',boot,payload_store-boot+payload_end-payload_start,DSK,'../build/pfspike.dsk'
