@@ -68,50 +68,81 @@ detection. It is kept forgiving, because CPC joysticks are stiff.
 
 ## 3. Technical design
 
-### 3.1 Screen
+### 3.1 Screen (decided in milestone 1)
 
-Overscan Mode 0, aiming for **192×256 visible pixels**: 96 bytes per line ×
-256 lines ≈ 24 KB. The CRTC is set up for a 32 KB screen (R12 bits 2-3 = 11)
-so the screen can cross a 16K page.
+Overscan Mode 0, **192×272 visible pixels**: 96 bytes per line × 272 lines
+= 26,112 bytes in a 32 KB screen at &8000-&FFFF. The CRTC values are the
+ones OverscanCPC proved on a real 6128 (R1=48, R6=34, R12/R13=&2C10, so the
+fetch rolls from page 2 into page 3 at row 21 with no rupture).
 
-Key constraint: **the CRTC and Gate Array always read video from the base
-64K**. Extra RAM banks are only visible to the Z80 (paged in at &4000-&7FFF,
-or in the C1-C3 layouts). Banked sprite code must never be paged over the
-buffer being drawn to.
+**Single buffer.** A second overscan screen plus engine does not fit
+comfortably in 128K, and the spike shows we don't need one:
 
-Buffering options. Pick one in milestone 1:
+- **Background mirror.** Main RAM &4000-&7FFF holds a copy of the fighter
+  band (lines 144-271). Each screen byte is mirrored at the same address
+  with `H = (H AND &3F) OR &40`. Page 3 rows land at offsets &000-&4DF and
+  page 2 rows 18-20 at &6E0-&7FF of each 2K slice, so they never collide.
+  Erasing a fighter is a copy from the mirror over the spans of its old
+  frame. There are no save buffers, and fighters can overlap freely because
+  the mirror never holds a fighter.
+- **Two windows per picture.** We render at 25 fps, so each picture spans
+  two frames. The beam reaches the fighters' top line (204 when standing)
+  15.6 ms after the frame tick. Fighter A is rebuilt (restore + draw) right
+  after the first tick, fighter B right after the second. When their ground
+  overlaps, both are restored and redrawn in one window.
+- Interrupts are recognised on VSYNC, as in OverscanCPC: a frame tick is the
+  interrupt that lands inside VSYNC, so every frame's work starts at the
+  same raster position.
 
-| Option | Layout | Pros | Cons |
-|---|---|---|---|
-| A. Double buffer | screens at &0000 and &8000 (24K each). Engine in the 8K gaps. Sprites in banks paged at &4000 only while drawing to the &8000 screen | no tearing, simple drawing | when drawing to the &0000 screen, sprite code must be paged elsewhere (e.g. C1: bank at &C000, over the front buffer the CPU isn't writing to). Tight main RAM |
-| B. Single buffer, beam-raced | one screen. Erase/redraw each fighter just after the beam has passed it | frees ~24K | needs precise timing. Flicker risk with large overlapping sprites |
-| C. Double buffer, reduced height | two 16K screens (e.g. 192×168 play area) plus HUD via a CRTC split (raster interrupt) | simple paging | loses the "full overscan" look |
+Measured on the cycle-accurate emulator, with both idle fighters swaying:
+no scanline is caught half drawn, and the screen matches mirror + sprites
+byte for byte. See [SPIKE.md](SPIKE.md).
 
-Baseline recommendation: **A**, with a hand-tuned memory map (§3.4). Fall
-back to C if paging gets too tangled.
+Constraints this leaves:
+- When the fighters overlap, everything must fit one window. That means
+  under 15.6 ms when standing, and only ~11.8 ms when a fighter's top is at
+  line 144 (the top of a jump).
+- Extra RAM is only paged in with &C4-&C7 (bank at &4000). That never
+  touches the screen at &8000-&FFFF, whichever way the video fetch follows
+  the RAM configuration. It does hide the background mirror, so restore
+  and draw must page between them.
 
-### 3.2 Sprite drawing
+### 3.2 Sprite drawing (measured in milestone 1)
 
-The art pipeline already exports masked Mode 0 frames. The engine will use
-two encodings:
+Two encodings come out of `tools/sprite_codegen.py`:
 
-1. **Span-encoded masked frames** (default). Per line: skip count, then the
-   run of bytes where opaque bytes are plain data and edge bytes are
-   mask+data. Roughly 500 bytes per frame (Trump averages 282 opaque + 64
-   edge bytes per frame) → ~20 KB per character. Mirroring for the
-   left-facing fighter uses a 256-byte pixel-swap table and walks each line
-   backwards. One copy of the art covers both directions.
-2. **Compiled sprites** for the hottest frames only (idle and walk loops).
-   They are generated as `LD (HL),n` / `LD A,(HL) : AND m : OR d : LD (HL),A`
-   sequences, with the overscan next-line address arithmetic inlined. That is
-   about 1.2 KB per frame, per facing.
+1. **Span stream** (every frame). Per line: first byte s, count n, then n
+   data bytes. No masks are stored: pen 0 is the only transparent pen, so
+   the mask is `mask_tab[byte]`. About 1.4 bytes of storage per drawn byte,
+   ~450 bytes per frame. Restores use it for every frame, and the generic
+   drawer can draw it mirrored through `flip_tab`.
+2. **Compiled routine** (hot frames). `LD (HL),n` for opaque bytes,
+   `LD A,(HL) : AND m : OR d : LD (HL),A` for edges, and a line-table `POP`
+   per scanline. About 4.6 bytes of code per drawn byte, ~1.5 KB per frame
+   per facing.
 
-Background restore: the stage is static. Each fighter saves the background
-under its bounding box (dirty rectangles) before drawing, or redraws from the
-stage image kept in a bank.
+| Step (idle frames, ~350 / ~275 bytes) | Time | Per unit |
+|---|---|---|
+| Restore from mirror (span, LDIR) | 5.1-5.4 ms | ~53 µs per line + 6 µs per byte |
+| Compiled draw, right or left | 2.4-2.8 ms | ~8 µs per drawn byte, all in |
+| Generic mirrored span draw | 8.7 ms | ~32 µs per drawn byte, all in |
 
-Target: two fighters + two projectiles + HUD updates within one 50 Hz frame
-pair (25 fps ≈ 40,000 usable NOPs per frame pair).
+What this decides:
+- When the fighters are apart, every combination fits its window, including
+  the generic drawer (5.1 + 8.7 = 13.8 ms < 15.6).
+- When they overlap, only compiled draws fit (15.8 ms, standing). That's
+  with no margin, and none at all for a jumping fighter.
+- Compiled code for every frame and both facings would be ~150 KB per
+  character, so it can't all be resident.
+
+**Next steps** (part of milestone 2):
+- **Make restore cheaper**: a separate (s, n) table read through the
+  alternate register set, and skipping bytes the new frame overwrites when
+  the fighter hasn't moved.
+- **Compile on demand**: a runtime compiler that turns the current move's
+  span frames into compiled code for the current facing, in a per-fighter
+  RAM cache (~6-8 KB). Idle, walk, crouch and block are compiled ahead of
+  time for both facings.
 
 ### 3.3 Palette strategy
 
@@ -136,22 +167,23 @@ The CPC has no true brown, which matters for several roster skin tones. The
 usable skin ramps are orange (FF8000) → dark red (800000), pink (FF8080) →
 dark red, and pastel yellow (FFFF80) → olive (808000).
 
-### 3.4 Memory map (draft, 128K)
+### 3.4 Memory map (frozen in milestone 1)
 
 | Area | Size | Contents |
 |---|---|---|
-| &0000-&5FFF | 24K | screen 0 |
-| &6000-&7FFF | 8K | engine core, interrupt handler, input, state machines |
-| &8000-&DFFF | 24K | screen 1 |
-| &E000-&FFFF | 8K | stack, tables (flip, pen remap, line addresses), HUD font |
-| Bank 4-5 | 32K | fighter A: span-encoded frames, compiled hot frames, move data |
+| &0038 | 3 | interrupt jump (both ROMs are off, so this is RAM) |
+| &0100-&01FF | 256 | stack |
+| &0200-&3FFF | 15.5K | engine, tables (flip, mask, line_tab), hot compiled frames |
+| &4000-&7FFF | 16K | background mirror of the fighter band (~12K used, ~4K free in 512-byte gaps) |
+| &8000-&FFFF | 32K | overscan screen (26K used, ~6K free in 800-byte gaps of page 3) |
+| Bank 4-5 | 32K | fighter A: span frames, move data, compiled cache |
 | Bank 6-7 | 32K | fighter B |
-| (shared via paging) | | stage graphics, music + player |
 
-The stage and music need room too. Options: compress the stage (ZX0) and
-unpack it into the screens at round start, keep stage tiles in a fighter
-bank's spare space, or trim per-character data to 28K. Turning this into a
-firm budget is the first deliverable of milestone 1.
+The load image starts at &4000, where AMSDOS hands over. It moves itself
+down to &0200 before the mirror is built. In the spike, the engine plus
+four compiled frames and eight span frames fill the payload to &33E2.
+Stage graphics and music have to come from the gaps or be ZX0-packed and
+unpacked at round start.
 
 ### 3.5 Character file format (`TRUMP.PFC` etc.)
 
@@ -187,7 +219,7 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 | # | Milestone | Done when |
 |---|---|---|
 | 0 | **Art pipeline + first fighters** ✅ | Trump and Putin, 14 moves, CPC data export |
-| 1 | **Tech spike** | overscan screen up. Buffering option chosen. Span-sprite and compiled-sprite drawers benchmarked. Memory map frozen. Two idle fighters animating at 25 fps |
+| 1 | **Tech spike** ✅ | overscan screen up. Buffering option chosen. Span-sprite and compiled-sprite drawers benchmarked. Memory map frozen. Two idle fighters animating at 25 fps |
 | 2 | **Engine core** | game loop, joystick/keyboard for 2 players, fighter state machine, walking, jumping arcs, facing and flip, ground and walls |
 | 3 | **Combat** | hit/hurt boxes from Aseprite slices, damage, block, hitstun, knockdown, KO, rounds, timer, health bars |
 | 4 | **Character loading** | `.PFC` format, loader, pen remap, select screen, two characters from disk |
@@ -201,7 +233,7 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 
 | Risk | Mitigation |
 |---|---|
-| Overscan + double buffer + banking doesn't fit | milestone 1 decides early. Fallback is option C (reduced height + CRTC split) |
+| Overlapping fighters miss the beam (one shared window) | cheaper restore and on-demand compiled frames (§3.2). If that is not enough: drop to 12.5 fps only on overlapping pictures |
 | Sprite drawing too slow at 25 fps | span encoding + compiled hot frames. Drop to 17 fps for KO/special frames. Only redraw the changed fighter |
 | Character data over 32K | fewer unique frames (mirror and reuse), shared frames for hit/block, ZX0-compress cold moves and unpack on demand |
 | Palette clashes between characters | personal-pen scheme (§3.3). Design new characters from the shared ramps |
