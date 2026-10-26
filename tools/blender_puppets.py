@@ -305,6 +305,8 @@ def setup_render(sc):
 # kn = knee bend (positive folds the shin back), el = elbow bend (positive
 # folds the forearm forward/up). torso/head/lean: positive = lean forward.
 # twist = turn the torso so the near shoulder comes forward (punches).
+# spin = turn the whole puppet about the vertical axis (back kick); turn
+# overrides the head's own yaw so it can look back over the shoulder.
 # ab = arm abduction (raise sideways). x/z = root offset; air = height above
 # ground (otherwise the lowest point is snapped to the floor).
 # wide = render a 64x64 frame (for horizontal/falling poses). The wider camera
@@ -360,6 +362,21 @@ COMMON_MOVES = {
         P(hpN=85, knN=5, hpF=40, knF=135, torso=30, shF=-20, elF=40, shN=60, elN=60, x=-0.05),
         P(hpN=70, knN=60, hpF=30, knF=120, torso=24),
     ],
+    # anti-air: dip, drive up from the legs, fist past the head
+    "uppercut": [
+        P(hpN=40, knN=70, hpF=10, knF=60, torso=24, twist=-15, shN=-15, elN=95, x=0.02),
+        P(hpN=25, knN=35, hpF=-5, knF=25, torso=10, twist=20, shN=80, elN=100, x=0.06),
+        P(hpN=10, knN=5, hpF=-15, knF=5, torso=-12, twist=40, shN=140, elN=20, shF=20, elF=110, head=-25, x=0.08),
+        P(hpN=20, knN=25, hpF=-15, knF=15, torso=0, twist=15, shN=110, elN=60, x=0.04),
+    ],
+    # spinning mule kick: turn away, then drive the near leg straight back
+    # into the opponent while looking over the shoulder
+    "backkick": [
+        P(spin=60, turn=-80, hpN=70, knN=110, torso=10, shN=40, elN=100),
+        P(spin=150, turn=-165, hpN=-30, knN=95, torso=30, shN=20, elN=90, shF=30, elF=90),
+        P(spin=170, turn=-185, hpN=-95, knN=5, hpF=10, knF=10, torso=50, shN=-20, elN=60, shF=-30, elF=60, x=0.05),
+        P(spin=60, turn=-80, hpN=30, knN=60, torso=10, shN=40, elN=100),
+    ],
     "block": [
         P(shN=60, elN=125, shF=65, elF=125, head=4),
         P(shN=80, elN=150, shF=85, elF=150, head=10, torso=12),
@@ -414,12 +431,12 @@ PUTIN_MOVES = {
 CHAR_MOVES = {"trump": TRUMP_MOVES, "putin": PUTIN_MOVES}
 
 MOVE_ORDER = ["idle", "walk", "crouch", "jump", "punch", "kick", "sweep",
-              "block", "hit", "ko", "special", "victory"]
+              "uppercut", "backkick", "block", "hit", "ko", "special", "victory"]
 
 
 def apply_pose(sc, J, p):
     rad = math.radians
-    J["root"].rotation_euler = (0, rad(p.get("lean", 0)), 0)
+    J["root"].rotation_euler = (0, rad(p.get("lean", 0)), rad(p.get("spin", 0)))
     J["torso"].rotation_euler = (0, rad(p.get("torso", 0)), rad(p.get("twist", 0)))
     # the head counters the torso twist so the face keeps looking at the viewer
     turn = p.get("turn", HEAD_TURN) - p.get("twist", 0) * 0.8

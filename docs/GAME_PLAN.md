@@ -45,6 +45,8 @@ overscan. Two fighters are loaded from disk per match.
 | ↑ | jump (↑ + direction = jump arc) |
 | Fire 1 | punch (crouching: low punch) |
 | Fire 2, or Fire 1 + ↓ when no second button | kick (crouching: sweep) |
+| ↓ then ↑ + Fire 1 | uppercut (anti-air) |
+| ← + kick | back kick (spinning mule kick) |
 | ↓ ↘ → + Fire | special 1 (projectile or rush) |
 | → ↓ ↘ + Fire | special 2 (when a character has one) |
 
@@ -155,7 +157,7 @@ firm budget is the first deliverable of milestone 1.
 
 ```
 header      magic "PF", version, name, personal colours (4 firmware colours)
-move table  12+ moves: frame count, per-frame duration, hitbox/hurtbox,
+move table  14+ moves: frame count, per-frame duration, hitbox/hurtbox,
             damage/stun data, special-move input pattern
 frames      span-encoded masked frames (pens 0-9)
 hot frames  compiled idle/walk routines (generated for the right-facing side)
@@ -184,7 +186,7 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 
 | # | Milestone | Done when |
 |---|---|---|
-| 0 | **Art pipeline + first fighters** ✅ | Trump and Putin, 12 moves, CPC data export |
+| 0 | **Art pipeline + first fighters** ✅ | Trump and Putin, 14 moves, CPC data export |
 | 1 | **Tech spike** | overscan screen up. Buffering option chosen. Span-sprite and compiled-sprite drawers benchmarked. Memory map frozen. Two idle fighters animating at 25 fps |
 | 2 | **Engine core** | game loop, joystick/keyboard for 2 players, fighter state machine, walking, jumping arcs, facing and flip, ground and walls |
 | 3 | **Combat** | hit/hurt boxes from Aseprite slices, damage, block, hitstun, knockdown, KO, rounds, timer, health bars |

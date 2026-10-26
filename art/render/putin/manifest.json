@@ -175,22 +175,80 @@
    ]
   },
   {
-   "name": "block",
+   "name": "uppercut",
    "frames": [
     {
      "frame": 24,
-     "file": "block_0",
+     "file": "uppercut_0",
      "width": 32,
      "offset_x": 0
     },
     {
      "frame": 25,
-     "file": "block_1",
+     "file": "uppercut_1",
      "width": 32,
      "offset_x": 0
     },
     {
      "frame": 26,
+     "file": "uppercut_2",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "frame": 27,
+     "file": "uppercut_3",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "backkick",
+   "frames": [
+    {
+     "frame": 28,
+     "file": "backkick_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "frame": 29,
+     "file": "backkick_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "frame": 30,
+     "file": "backkick_2",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "frame": 31,
+     "file": "backkick_3",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "block",
+   "frames": [
+    {
+     "frame": 32,
+     "file": "block_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "frame": 33,
+     "file": "block_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "frame": 34,
      "file": "block_2",
      "width": 32,
      "offset_x": 0
@@ -201,19 +259,19 @@
    "name": "hit",
    "frames": [
     {
-     "frame": 27,
+     "frame": 35,
      "file": "hit_0",
      "width": 32,
      "offset_x": 0
     },
     {
-     "frame": 28,
+     "frame": 36,
      "file": "hit_1",
      "width": 32,
      "offset_x": 0
     },
     {
-     "frame": 29,
+     "frame": 37,
      "file": "hit_2",
      "width": 32,
      "offset_x": 0
@@ -224,25 +282,25 @@
    "name": "ko",
    "frames": [
     {
-     "frame": 30,
+     "frame": 38,
      "file": "ko_0",
      "width": 32,
      "offset_x": 0
     },
     {
-     "frame": 31,
+     "frame": 39,
      "file": "ko_1",
      "width": 64,
      "offset_x": -16
     },
     {
-     "frame": 32,
+     "frame": 40,
      "file": "ko_2",
      "width": 64,
      "offset_x": -16
     },
     {
-     "frame": 33,
+     "frame": 41,
      "file": "ko_3",
      "width": 64,
      "offset_x": -16
@@ -253,25 +311,25 @@
    "name": "special",
    "frames": [
     {
-     "frame": 34,
+     "frame": 42,
      "file": "special_0",
      "width": 32,
      "offset_x": 0
     },
     {
-     "frame": 35,
+     "frame": 43,
      "file": "special_1",
      "width": 32,
      "offset_x": 0
     },
     {
-     "frame": 36,
+     "frame": 44,
      "file": "special_2",
      "width": 32,
      "offset_x": 0
     },
     {
-     "frame": 37,
+     "frame": 45,
      "file": "special_3",
      "width": 32,
      "offset_x": 0
@@ -282,19 +340,19 @@
    "name": "victory",
    "frames": [
     {
-     "frame": 38,
+     "frame": 46,
      "file": "victory_0",
      "width": 32,
      "offset_x": 0
     },
     {
-     "frame": 39,
+     "frame": 47,
      "file": "victory_1",
      "width": 32,
      "offset_x": 0
     },
     {
-     "frame": 40,
+     "frame": 48,
      "file": "victory_2",
      "width": 32,
      "offset_x": 0

@@ -24,6 +24,8 @@ How puppet sprites go from Blender to CPC data. See the [README](../README.md) f
 | punch | 3 | wind-up / extend / recover |
 | kick | 3 | chamber / extend / retract |
 | sweep | 3 | crouching low kick |
+| uppercut | 4 | dip / rise / full extension / recover. Anti-air |
+| backkick | 4 | spinning mule kick: turn away, leg driven straight back at the opponent |
 | block | 3 | last frame is the hold |
 | hit | 3 | |
 | ko | 4 | frames 2-4 are 64×64 wide frames |
@@ -67,7 +69,7 @@ Blender (3D puppets, poses)  ->  art/render/<char>/*_id.png + *_lit.png
 
 ## Memory notes
 
-- Raw masked frames: ~86 KB per character (every byte stored).
+- Raw masked frames: ~102 KB per character, 48 frames (every byte stored).
 - Drawn bytes per frame: Trump avg ~350, Putin ~260. A compiled sprite
   (LD/AND/OR per byte) is about 40-47 KB per character facing one way, so a
   pair fits in a 128K machine's banks. Storing both facing directions doubles

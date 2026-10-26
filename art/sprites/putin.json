@@ -172,6 +172,56 @@
    ]
   },
   {
+   "name": "uppercut",
+   "frames": [
+    {
+     "file": "uppercut_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "uppercut_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "uppercut_2",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "uppercut_3",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "backkick",
+   "frames": [
+    {
+     "file": "backkick_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "backkick_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "backkick_2",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "backkick_3",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
    "name": "block",
    "frames": [
     {

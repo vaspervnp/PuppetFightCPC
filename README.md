@@ -16,8 +16,9 @@ bout is **Trump vs Putin**.
 
 - Big puppet sprites: 32×64 Mode 0 pixels per frame, 64×64 for falls and
   knockdowns, in a full overscan display
-- 12 moves per fighter: idle, walk, crouch, jump, punch, kick, sweep,
-  block, hit, KO, special and victory, each at least 3 frames
+- 14 moves per fighter: idle, walk, crouch, jump, punch, kick, sweep,
+  uppercut, back kick, block, hit, KO, special and victory, each at least
+  3 frames
 - Character-specific specials from each puppet's on-show persona, e.g.
   Trump's **Tweet Storm** and Putin's **Judo Throw**
 - 1P vs CPU, 2P versus, and an arcade ladder with a secret boss
