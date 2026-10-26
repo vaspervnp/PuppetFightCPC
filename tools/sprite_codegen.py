@@ -20,11 +20,17 @@ Two encodings, both fed from art/sprites/<char>/<move>_<n>.png:
   writes <label>_drawl, the same frame mirrored (DE = x is still the box's
   left edge).
 
-Calling convention for a compiled routine (interrupts off):
-      SP = line_tab + 2*y     (sprite top scanline)
-      DE = x                  (byte column of the sprite's left edge)
-      IY = return address     (the routine ends with JP (IY))
-  Destroys AF, BC, HL. SP is left past the sprite's last line.
+Calling convention for a compiled routine (interrupts off). The routine
+starts at the frame's first drawn line (the span header's "top"), and runs
+in chunks of CHUNK lines so the banded rebuild can interleave it with the
+other fighter's work (src/rebuild.asm):
+      SP  = line_tab + 2*(y + top)
+      DE  = x                 (byte column of the sprite's left edge)
+      IXL = chunks to draw before yielding (>= 1)
+      IY  = where to yield to; HL then holds the address to resume at,
+            and DE is unchanged. After the last chunk HL is 0.
+  Destroys AF, BC, HL. A frame of n lines has (n + CHUNK - 1) / CHUNK
+  chunks.
 
 Usage:
     tools/sprite_codegen.py tables                  -> src/gen/tables.asm
@@ -93,6 +99,15 @@ def hexs(bs):
     return ",".join("#%02X" % b for b in bs)
 
 
+def emit_sn(label, rows):
+    """Just (s, n) per line: what a restore needs, without the data to skip."""
+    top, lines = spans(rows)
+    out = ["%s_sn" % label, "    defb %d,%d" % (top, len(lines))]
+    for i in range(0, len(lines), 8):
+        out.append("    defb " + ",".join("%d,%d" % (s, len(d)) for s, d in lines[i:i + 8]))
+    return out
+
+
 def emit_spans(label, width, rows):
     top, lines = spans(rows)
     out = ["%s_spans  ; %d bytes wide" % (label, width),
@@ -106,15 +121,20 @@ def mirror(rows):
     return [[flip_of(b) for b in reversed(r)] for r in rows]
 
 
+CHUNK = 8
+
+
 def emit_compiled(label, rows, suffix="draw"):
-    """Straight-line code: one store per drawn byte."""
-    top, lines = spans(rows)
-    out = ["%s_%s" % (label, suffix)]
-    if top <= 3:
-        out += ["    pop hl"] * top
-    else:
-        out += ["    ld hl,%d" % (2 * top), "    add hl,sp", "    ld sp,hl"]
-    for s, d in lines:
+    """Straight-line code: one store per drawn byte, a yield point every
+    CHUNK lines."""
+    _top, lines = spans(rows)
+    name = "%s_%s" % (label, suffix)
+    out = [name]
+    for k, (s, d) in enumerate(lines):
+        if k and k % CHUNK == 0:
+            nxt = "%s_c%d" % (name, k // CHUNK)
+            out += ["    dec ixl", "    jr nz,%s" % nxt,
+                    "    ld hl,%s" % nxt, "    jp (iy)", nxt]
         out.append("    pop hl")
         if not d:
             continue
@@ -134,7 +154,7 @@ def emit_compiled(label, rows, suffix="draw"):
                         "    or #%02X" % b, "    ld (hl),a"]
             if i != len(d) - 1:
                 out.append("    inc hl")
-    out.append("    jp (iy)")
+    out += ["    ld hl,0", "    jp (iy)"]
     return out
 
 
@@ -162,8 +182,12 @@ def cmd_frames(args):
         label = "%s_%s" % (args.label, f)
         out.append("")
         out += emit_spans(label, width, rows)
+        out += emit_sn(label, rows)
         if f in compiled:
-            out += emit_compiled(label, rows)
+            body = emit_compiled(label, rows)
+            if f in (args.right_unless or []):
+                body = ["    IFNOT %s" % args.right_unless_sym] + body + ["    ENDIF"]
+            out += body
         if f in compiled_left:
             body = emit_compiled(label, mirror(rows), "drawl")
             if args.left_if:
@@ -190,6 +214,9 @@ def main():
     fr.add_argument("--compiled", nargs="+")
     fr.add_argument("--compiled-left", nargs="+")
     fr.add_argument("--left-if", help="assemble the left-facing code only IF this symbol")
+    fr.add_argument("--right-unless-sym", help="with --right-unless: the symbol")
+    fr.add_argument("--right-unless", nargs="+",
+                    help="assemble these frames' compiled code only IFNOT --right-unless-sym")
     args = ap.parse_args()
     {"tables": cmd_tables, "frames": cmd_frames}[args.cmd](args)
 

@@ -60,11 +60,18 @@ putin_idle_0_spans  ; 16 bytes wide
     defb 5,4,#55,#FF,#C3,#AA
     defb 6,3,#FF,#FF,#AA
     defb 7,1,#FF
+putin_idle_0_sn
+    defb 6,57
+    defb 7,2,6,3,6,4,5,5,5,5,5,5,5,5,5,6
+    defb 5,6,5,6,5,6,5,6,5,5,5,6,5,6,5,6
+    defb 5,6,5,6,5,5,5,5,6,4,6,6,6,6,6,6
+    defb 5,7,5,7,5,7,5,7,5,7,5,7,5,6,5,6
+    defb 5,6,5,6,5,6,5,5,5,4,5,4,5,4,5,4
+    defb 6,3,6,3,6,3,6,3,6,3,6,3,6,3,5,4
+    defb 5,4,5,4,5,4,5,4,5,4,5,3,5,4,6,3
+    defb 7,1
     IF PUTIN_COMPILED
 putin_idle_0_drawl
-    ld hl,12
-    add hl,sp
-    ld sp,hl
     pop hl
     add hl,de
     ld bc,7
@@ -174,6 +181,11 @@ putin_idle_0_drawl
     ld (hl),#3C
     inc hl
     ld (hl),#D7
+    dec ixl
+    jr nz,putin_idle_0_drawl_c1
+    ld hl,putin_idle_0_drawl_c1
+    jp (iy)
+putin_idle_0_drawl_c1
     pop hl
     add hl,de
     ld bc,5
@@ -310,6 +322,11 @@ putin_idle_0_drawl
     ld (hl),#3C
     inc hl
     ld (hl),#7D
+    dec ixl
+    jr nz,putin_idle_0_drawl_c2
+    ld hl,putin_idle_0_drawl_c2
+    jp (iy)
+putin_idle_0_drawl_c2
     pop hl
     add hl,de
     ld bc,5
@@ -453,6 +470,11 @@ putin_idle_0_drawl
     ld (hl),#69
     inc hl
     ld (hl),#FF
+    dec ixl
+    jr nz,putin_idle_0_drawl_c3
+    ld hl,putin_idle_0_drawl_c3
+    jp (iy)
+putin_idle_0_drawl_c3
     pop hl
     add hl,de
     ld bc,4
@@ -612,6 +634,11 @@ putin_idle_0_drawl
     ld (hl),#D7
     inc hl
     ld (hl),#D7
+    dec ixl
+    jr nz,putin_idle_0_drawl_c4
+    ld hl,putin_idle_0_drawl_c4
+    jp (iy)
+putin_idle_0_drawl_c4
     pop hl
     add hl,de
     ld bc,5
@@ -732,6 +759,11 @@ putin_idle_0_drawl
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,putin_idle_0_drawl_c5
+    ld hl,putin_idle_0_drawl_c5
+    jp (iy)
+putin_idle_0_drawl_c5
     pop hl
     add hl,de
     ld bc,7
@@ -833,6 +865,11 @@ putin_idle_0_drawl
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,putin_idle_0_drawl_c6
+    ld hl,putin_idle_0_drawl_c6
+    jp (iy)
+putin_idle_0_drawl_c6
     pop hl
     add hl,de
     ld bc,7
@@ -953,11 +990,17 @@ putin_idle_0_drawl
     ld (hl),#FF
     inc hl
     ld (hl),#FF
+    dec ixl
+    jr nz,putin_idle_0_drawl_c7
+    ld hl,putin_idle_0_drawl_c7
+    jp (iy)
+putin_idle_0_drawl_c7
     pop hl
     add hl,de
     ld bc,8
     add hl,bc
     ld (hl),#FF
+    ld hl,0
     jp (iy)
     ENDIF
 
@@ -1020,6 +1063,16 @@ putin_idle_1_spans  ; 16 bytes wide
     defb 5,4,#55,#FF,#D7,#AA
     defb 6,3,#55,#FF,#AA
     defb 7,1,#FF
+putin_idle_1_sn
+    defb 6,57
+    defb 7,2,6,4,6,4,5,5,5,5,5,6,5,6,5,6
+    defb 5,6,5,6,5,6,5,6,5,6,5,6,5,6,5,6
+    defb 5,6,5,6,5,6,6,4,6,4,6,6,6,6,6,6
+    defb 5,7,5,7,5,7,5,7,5,7,5,7,5,6,5,6
+    defb 5,6,5,6,5,6,5,5,5,4,5,4,5,4,5,4
+    defb 6,3,6,3,6,3,6,3,6,3,6,3,6,3,5,4
+    defb 5,4,5,4,5,3,5,3,5,3,5,3,5,4,6,3
+    defb 7,1
 
 putin_idle_2_spans  ; 16 bytes wide
     defb 6,57
@@ -1080,11 +1133,18 @@ putin_idle_2_spans  ; 16 bytes wide
     defb 6,2,#FF,#D7
     defb 6,2,#55,#FF
     defb 7,1,#AA
+putin_idle_2_sn
+    defb 6,57
+    defb 7,2,7,3,6,4,6,5,5,6,5,6,5,6,5,6
+    defb 5,6,5,6,5,6,5,7,5,6,5,6,5,6,5,6
+    defb 5,6,6,5,6,5,6,5,6,4,6,6,6,6,6,6
+    defb 5,7,5,7,5,7,5,7,6,6,5,7,5,6,5,6
+    defb 5,6,5,6,5,6,5,5,5,4,5,4,5,4,5,4
+    defb 6,3,6,3,6,3,6,3,6,3,6,3,5,4,5,4
+    defb 5,4,5,3,5,3,5,3,5,3,5,3,6,2,6,2
+    defb 7,1
     IF PUTIN_COMPILED
 putin_idle_2_drawl
-    ld hl,12
-    add hl,sp
-    ld sp,hl
     pop hl
     add hl,de
     ld bc,7
@@ -1218,6 +1278,11 @@ putin_idle_2_drawl
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,putin_idle_2_drawl_c1
+    ld hl,putin_idle_2_drawl_c1
+    jp (iy)
+putin_idle_2_drawl_c1
     pop hl
     add hl,de
     ld bc,5
@@ -1370,6 +1435,11 @@ putin_idle_2_drawl
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,putin_idle_2_drawl_c2
+    ld hl,putin_idle_2_drawl_c2
+    jp (iy)
+putin_idle_2_drawl_c2
     pop hl
     add hl,de
     ld bc,5
@@ -1516,6 +1586,11 @@ putin_idle_2_drawl
     ld (hl),#69
     inc hl
     ld (hl),#FF
+    dec ixl
+    jr nz,putin_idle_2_drawl_c3
+    ld hl,putin_idle_2_drawl_c3
+    jp (iy)
+putin_idle_2_drawl_c3
     pop hl
     add hl,de
     ld bc,4
@@ -1673,6 +1748,11 @@ putin_idle_2_drawl
     ld (hl),#D7
     inc hl
     ld (hl),#D7
+    dec ixl
+    jr nz,putin_idle_2_drawl_c4
+    ld hl,putin_idle_2_drawl_c4
+    jp (iy)
+putin_idle_2_drawl_c4
     pop hl
     add hl,de
     ld bc,5
@@ -1799,6 +1879,11 @@ putin_idle_2_drawl
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,putin_idle_2_drawl_c5
+    ld hl,putin_idle_2_drawl_c5
+    jp (iy)
+putin_idle_2_drawl_c5
     pop hl
     add hl,de
     ld bc,7
@@ -1905,6 +1990,11 @@ putin_idle_2_drawl
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,putin_idle_2_drawl_c6
+    ld hl,putin_idle_2_drawl_c6
+    jp (iy)
+putin_idle_2_drawl_c6
     pop hl
     add hl,de
     ld bc,7
@@ -1987,6 +2077,11 @@ putin_idle_2_drawl
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,putin_idle_2_drawl_c7
+    ld hl,putin_idle_2_drawl_c7
+    jp (iy)
+putin_idle_2_drawl_c7
     pop hl
     add hl,de
     ld bc,8
@@ -1995,6 +2090,7 @@ putin_idle_2_drawl
     and #AA
     or #55
     ld (hl),a
+    ld hl,0
     jp (iy)
     ENDIF
 
@@ -2057,3 +2153,13 @@ putin_idle_3_spans  ; 16 bytes wide
     defb 5,4,#55,#FF,#D7,#AA
     defb 6,3,#55,#FF,#AA
     defb 7,1,#FF
+putin_idle_3_sn
+    defb 6,57
+    defb 7,2,6,4,6,4,5,5,5,5,5,6,5,6,5,6
+    defb 5,6,5,6,5,6,5,6,5,6,5,6,5,6,5,6
+    defb 5,6,5,6,5,6,6,4,6,4,6,6,6,6,6,6
+    defb 5,7,5,7,5,7,5,7,5,7,5,7,5,6,5,6
+    defb 5,6,5,6,5,6,5,5,5,4,5,4,5,4,5,4
+    defb 6,3,6,3,6,3,6,3,6,3,6,3,6,3,5,4
+    defb 5,4,5,4,5,3,5,3,5,3,5,3,5,4,6,3
+    defb 7,1

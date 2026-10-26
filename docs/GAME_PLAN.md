@@ -9,7 +9,8 @@ overscan. Two fighters are loaded from disk per match.
 
 - **Look**: large, colourful puppet sprites (32×64 Mode 0 pixels, 64×64 for
   falls) on a full overscan screen, so it reads as a "big sprite" CPC game.
-- **Feel**: responsive, readable combat at a steady 25 fps. Simple inputs
+- **Feel**: responsive, readable combat locked at 25 fps, with no drops even
+  when fighters overlap (§3.2b). Simple inputs
   (one- or two-button joystick) with a few special moves per character.
 - **Humour**: each character's specials and victory poses riff on their
   *Puppet Regime* persona.
@@ -123,26 +124,84 @@ Two encodings come out of `tools/sprite_codegen.py`:
 
 | Step (idle frames, ~350 / ~275 bytes) | Time | Per unit |
 |---|---|---|
-| Restore from mirror (span, LDIR) | 5.1-5.4 ms | ~53 µs per line + 6 µs per byte |
-| Compiled draw, right or left | 2.4-2.8 ms | ~8 µs per drawn byte, all in |
+| Restore from mirror, from a prepared restore list | 2.8-3.3 ms | ~17 µs per line + 6 µs per byte |
+| Compiled draw, right or left (yields every 8 lines) | 2.4-2.9 ms | ~8 µs per drawn byte, all in |
 | Generic mirrored span draw | 8.7 ms | ~32 µs per drawn byte, all in |
+
+Restore lists: `prepare` turns the frame a fighter has on the screen into
+one (screen address, byte count) entry per scanline, in idle time after
+the picture. The restore inside the window then only pops, mirrors the
+address and copies. The first pass computed all of that per line, inside
+the window (~53 µs per line, 5.1-5.4 ms).
 
 What this decides:
 - When the fighters are apart, every combination fits its window, including
   the generic drawer (5.1 + 8.7 = 13.8 ms < 15.6).
-- When they overlap, only compiled draws fit (15.8 ms, standing). That's
-  with no margin, and none at all for a jumping fighter.
+- When they overlap, only compiled draws fit. With them, every overlap case
+  fits with 2-3 ms to spare (§3.2b).
 - Compiled code for every frame and both facings would be ~150 KB per
   character, so it can't all be resident.
 
-**Next steps** (part of milestone 2):
-- **Make restore cheaper**: a separate (s, n) table read through the
-  alternate register set, and skipping bytes the new frame overwrites when
-  the fighter hasn't moved.
+**Next step** (part of milestone 2):
 - **Compile on demand**: a runtime compiler that turns the current move's
   span frames into compiled code for the current facing, in a per-fighter
   RAM cache (~6-8 KB). Idle, walk, crouch and block are compiled ahead of
   time for both facings.
+
+### 3.2b Frame rate: locked at 25 fps
+
+**The fight renders at 25 fps on every picture.** That includes overlaps,
+jumps, specials, projectiles and KO falls. There is no fallback to 17 or
+12.5 fps: if a move doesn't fit, the move or the art changes, not the frame
+rate. Logic runs at 50 Hz (two steps per picture), as in OverscanCPC.
+
+Per-picture budget: 40 ms = two windows of ~15.6 ms before the beam reaches
+the standing fighters, plus the rest of each frame.
+
+| Case | What has to fit | Plan |
+|---|---|---|
+| Fighters apart | one fighter per window: restore + draw < 15.6 ms, or < 11.8 ms at the top of a jump | already met. 13.9 ms worst with the generic drawer |
+| Fighters overlapping | both fighters in one window, done before the beam reaches each line | **banded rebuild**, below |
+| Projectiles, hit sparks | small sprites (≤ 8 bytes × 16 lines) in the window of the fighter that owns them | span-drawn, ~0.5 ms each |
+| Logic, input, AI, HUD, music | after the rebuild in each frame. The music player goes on the third interrupt, off the frame tick | ≤ 4 ms per frame |
+
+**Banded rebuild** (`src/rebuild.asm`, built and measured). Restore A,
+restore B, draw A and draw B are jobs. The scheduler walks the screen in
+16-line bands, top to bottom, and runs each job as far as its target in
+the band: restores to band + 16, draw A to band + 8, draw B to band + 0.
+Compiled draws yield every 8 lines. The staggered targets keep the order
+restore, restore, draw A, draw B on every scanline. Both windows use the
+same scheduler; a window that holds one fighter just has two jobs.
+
+The hardest case is both fighters in the air and overlapping. All the work
+then sits in lines 144-207, which the beam has finished by 15.8 ms after
+the tick, so the total has to fit before that whatever the order. Measured
+on the cycle-accurate 6128 (`make bench-all`, every frame judged):
+
+| Case | Window ends by | Lines caught |
+|---|---|---|
+| Apart, generic draw for Putin | 12.3 ms | 0 |
+| Toe to toe, standing | 12.6 ms | 0 |
+| Toe to toe, one fighter jumping | 13.2 ms | 0 |
+| Toe to toe, both jumping (tops at line 144) | 12.8 ms | 0 |
+
+Margin, by starting the rebuild late on purpose (`SLACK`): 2 ms late is
+still clean in the both-jumping case, 3 ms late is not. That 2 ms is the
+budget for projectiles and HUD changes in a shared window, until the
+on-demand compiler and further restore work add more.
+
+Overlaps need both fighters drawn with compiled code. The on-demand
+compiler guarantees it: a frame is compiled the picture before it's needed,
+while the fighters are still apart or the frame is still being held.
+
+**Rules that keep 25 fps true:**
+- Jump apex no higher than line 144 (the top of the background mirror).
+- No frame over 32×64 in a shared window. Wide 64×64 KO frames only happen
+  after the round is decided, when the opponent is idle or doing a victory
+  pose. Their window then holds only the falling fighter.
+- `make bench-all` (apart, toe to toe, toe to toe with jumps) must report
+  0 lines caught. That is the acceptance test for milestones 2 and 3, and
+  `SLACK=20` must stay clean so the 2 ms margin isn't eaten silently.
 
 ### 3.3 Palette strategy
 
@@ -175,13 +234,14 @@ dark red, and pastel yellow (FFFF80) → olive (808000).
 | &0100-&01FF | 256 | stack |
 | &0200-&3FFF | 15.5K | engine, tables (flip, mask, line_tab), hot compiled frames |
 | &4000-&7FFF | 16K | background mirror of the fighter band (~12K used, ~4K free in 512-byte gaps) |
-| &8000-&FFFF | 32K | overscan screen (26K used, ~6K free in 800-byte gaps of page 3) |
+| &8000-&FFFF | 32K | overscan screen (26K used). The unused 800-byte tails of page 3 hold `line_tab` (&C4E0) and the two restore lists (&CCE0, &D4E0); ~4K of tails are still free |
 | Bank 4-5 | 32K | fighter A: span frames, move data, compiled cache |
 | Bank 6-7 | 32K | fighter B |
 
 The load image starts at &4000, where AMSDOS hands over. It moves itself
 down to &0200 before the mirror is built. In the spike, the engine plus
-four compiled frames and eight span frames fill the payload to &33E2.
+four compiled frames and eight span frames fill the payload to &38D2 (the
+overlap build, with two compiled frames per fighter, to &367F).
 Stage graphics and music have to come from the gaps or be ZX0-packed and
 unpacked at round start.
 
@@ -220,7 +280,7 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 |---|---|---|
 | 0 | **Art pipeline + first fighters** ✅ | Trump and Putin, 14 moves, CPC data export |
 | 1 | **Tech spike** ✅ | overscan screen up. Buffering option chosen. Span-sprite and compiled-sprite drawers benchmarked. Memory map frozen. Two idle fighters animating at 25 fps |
-| 2 | **Engine core** | game loop, joystick/keyboard for 2 players, fighter state machine, walking, jumping arcs, facing and flip, ground and walls |
+| 2 | **Engine core** | game loop, joystick/keyboard for 2 players, fighter state machine, walking, jumping arcs, facing and flip, ground and walls. Banded overlap rebuild, cheaper restore, on-demand compiler. `make bench` overlap+jump scenario at 25 fps with 0 lines caught |
 | 3 | **Combat** | hit/hurt boxes from Aseprite slices, damage, block, hitstun, knockdown, KO, rounds, timer, health bars |
 | 4 | **Character loading** | `.PFC` format, loader, pen remap, select screen, two characters from disk |
 | 5 | **Specials + projectiles** | motion input, Tweet Storm (tweet-bird projectile), Judo Throw (throw state) |
@@ -233,8 +293,8 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 
 | Risk | Mitigation |
 |---|---|
-| Overlapping fighters miss the beam (one shared window) | cheaper restore and on-demand compiled frames (§3.2). If that is not enough: drop to 12.5 fps only on overlapping pictures |
-| Sprite drawing too slow at 25 fps | span encoding + compiled hot frames. Drop to 17 fps for KO/special frames. Only redraw the changed fighter |
+| Overlapping fighters miss the beam (one shared window) | banded rebuild + cheaper restore + on-demand compiled frames (§3.2b). The frame rate is not a mitigation: if it still doesn't fit, cap jump height or trim the frame's art |
+| Sprite drawing too slow at 25 fps | span encoding + compiled frames, only redraw a fighter that changed, wide KO frames only once the round is decided. `make bench` overlap scenario must show 0 lines caught |
 | Character data over 32K | fewer unique frames (mirror and reuse), shared frames for hit/block, ZX0-compress cold moves and unpack on demand |
 | Palette clashes between characters | personal-pen scheme (§3.3). Design new characters from the shared ramps |
 | Satire of real people | keep it in the show's affectionate-absurd register. No real violence imagery beyond slapstick. Credit *Puppet Regime* as inspiration. It's a non-commercial fan project |

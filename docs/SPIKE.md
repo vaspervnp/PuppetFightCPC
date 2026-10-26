@@ -1,9 +1,12 @@
 # Milestone 1 — Tech Spike Results
 
 Can two big puppet fighters be drawn on a full overscan Mode 0 screen at
-25 fps with no flicker? Yes when they're apart. When they overlap it works
-for standing fighters, but with almost no margin. The decisions that came
-out of this are in [GAME_PLAN.md §3](GAME_PLAN.md#3-technical-design).
+25 fps with no flicker? Yes, in every case tested. That includes the worst
+one: both fighters in the air and overlapping, which share one window. The
+first pass worked when the fighters were apart but had almost no margin
+when they overlapped. The follow-up (banded rebuild + restore lists, below)
+covers overlaps and jumps with 2-3 ms to spare. The decisions are in
+[GAME_PLAN.md §3](GAME_PLAN.md#3-technical-design).
 
 ![spike screen](spike_screen.png)
 
@@ -14,17 +17,20 @@ swaying on a 192×272 overscan stage, captured from the emulated 6128.*
 
 | File | What it does |
 |---|---|
-| `src/main.asm` | boot and move down to &0200, 25 fps loop, two-window rebuild schedule, spike logic (idle animation + sway) |
+| `src/main.asm` | boot and move down to &0200, 25 fps loop, two-window schedule, spike logic (idle animation, sway, jumps) |
+| `src/rebuild.asm` | the banded scheduler: restore and draw jobs for both fighters, run band by band ahead of the beam; job set-up |
 | `src/crtc.asm`, `src/irq.asm`, `src/video.asm` | overscan CRTC set-up, VSYNC-recognised frame tick, line table, stage, background mirror |
-| `src/sprite.asm` | span restore (both facings) and the generic mirrored span drawer |
-| `tools/sprite_codegen.py` | span streams, compiled routines (both facings), flip/mask tables |
+| `src/sprite.asm` | restore from a prepared restore list, the list builder, and the generic mirrored span drawer |
+| `tools/sprite_codegen.py` | span streams, (s, n) tables, compiled routines with a yield every 8 lines (both facings), flip/mask tables |
 | `tools/spike_bench.py` | runs the snapshot on the headless 6128 and measures it |
 
 ```bash
 make                                    # build/pfspike.sna and build/pfspike.dsk (RUN"PFSPIKE)
 make bench                              # measure on the headless 6128
 make run                                # open in Caprice32
-make PUTIN_DRAW=compiled CLOSE_UP=1     # variants, see the Makefile
+make bench-all                          # the three scenarios the 25 fps rule must hold in
+make PUTIN_DRAW=compiled CLOSE_UP=1 JUMP=1   # variants, see the Makefile
+make bench ... SLACK=20                 # margin test: start every rebuild 2 ms late
 ```
 
 ## How it was measured
@@ -36,14 +42,15 @@ a time:
 - **Phase timing.** The rebuild writes `bench_phase` at every step, so the
   time each value is held is the cost of that step.
 - **Beam check.** As the beam starts each scanline of the fighter band, the
-  bytes it is about to fetch are captured. If they match neither the picture
-  before the rebuild nor the one after, that line was *caught* half drawn,
-  which is visible flicker.
+  bytes it is about to fetch are captured. Every frame is judged: if the
+  bytes match neither the band at the frame's start nor at its end, that
+  line was *caught* half drawn, which is visible flicker. Matching the start
+  only is *late*: the line shows the previous picture for one frame.
 - **Correctness.** The band is rebuilt in Python from the background mirror
   and the span streams in RAM, then compared with the screen byte for byte.
   Any difference is debris or a drawing bug.
 
-## Results (60 pictures each)
+## First pass results (60 pictures each)
 
 | Step | Trump (352 bytes, 62 lines) | Putin (275 bytes, 57 lines) |
 |---|---|---|
@@ -90,13 +97,76 @@ other tick: 22 ms, and Putin's lower half was caught every picture.
   `push hl : pop iy`) overwrites a scanline address, and the next picture
   then writes to the wrong place. Steps chain through IY and never push.
 
+- rasm divides in floating point and rounds, so `label/256` is the high
+  byte only for page-aligned labels: &04F6/256 assembled as 5. Use
+  `label>>8`.
+- rasm doesn't export `-D` defines to the symbol file, even with `-sq`.
+  `config.asm` copies the scenario switches into `SCN_*` EQUs for the bench.
+
+## Follow-up: 25 fps in every case (banded rebuild)
+
+25 fps is a hard rule ([GAME_PLAN §3.2b](GAME_PLAN.md#32b-frame-rate-locked-at-25-fps)),
+so the overlap case had to fit with room to spare, jumps included.
+
+**Banded rebuild** (`src/rebuild.asm`). The four steps of a shared window
+(restore A, restore B, draw A, draw B) are jobs. The scheduler walks the
+screen in 16-line bands, top to bottom, and runs every job as far as its
+target in that band. Restores can stop on any line. Compiled draws yield
+every 8 lines (the generator puts a `DEC IXL : JR NZ` checkpoint there). To
+keep the per-line order, the targets are staggered: restores to
+band + 16, draw A to band + 8, draw B to band + 0. Whatever line a job
+touches has already been finished by every job that must come before it.
+Lines are kept relative to line 144 so all the bookkeeping is 8-bit.
+
+**Restore lists.** The restore was twice the cost of a compiled draw, nearly
+all of it per-line set-up (~53 µs). Now `prepare`, which runs in idle logic
+time after each picture, turns each fighter's on-screen frame into a list
+of (screen address, byte count) per scanline. Inside the window the
+restore is `POP DE : POP BC`, mirror address, `LDIR`: ~17 µs per line. The
+lists sit in unused tails of screen page 3 (&CCE0, &D4E0), next to
+`line_tab` (&C4E0), so they cost no payload.
+
+**Prepared jobs.** Job set-up also moved into `prepare`, so the rebuild
+starts 32-80 µs after the tick instead of 300-700.
+
+### Results (96 pictures, every frame judged)
+
+| Step | First pass | Now |
+|---|---|---|
+| Restore Trump | 5.40 ms | 3.33 ms |
+| Restore Putin | 5.13 ms | 2.78 ms |
+| Compiled draw Trump / Putin | 2.83 / 2.36 ms | 2.93 / 2.44 ms (+8-line yields) |
+| Scheduler overhead | — | ~1.3 ms per picture |
+
+| Scenario | Latest window end | Lines caught | Lines late | Bytes wrong |
+|---|---|---|---|---|
+| Apart (two windows), generic Putin | 12.3 ms | 0 | 0 | 0 |
+| Toe to toe (shared window), compiled | 12.6 ms | 0 | 0 | 0 |
+| Toe to toe + jumps, compiled: Trump up | 13.1 ms | 0 | 0 | 0 |
+| ... Putin up | 13.2 ms | 0 | 0 | 0 |
+| ... **both up** (tops at line 144) | 12.8 ms | 0 | 0 | 0 |
+
+**Margin.** `SLACK=n` starts every rebuild n×100 µs late. In the worst case
+(both in the air, overlapping): 2.0 ms late is still clean, 3.0 ms late
+catches 13 lines. Before the restore lists and prepared jobs, 0.5 ms late
+already caught 29.
+
+Banding alone wasn't enough. With the old restore, the both-up case caught
+56 lines: everything sits in lines 144-207, which the beam has finished by
+15.8 ms, and the work was ~17.5 ms. The cheaper restore is what made it fit.
+Banding's job is ordering: every line is finished in top-to-bottom order,
+whichever fighter is higher. The old fixed order (all restores, then all
+draws) wasn't benchmarked with jumps, so this run doesn't show how much
+margin banding adds on its own.
+
 ## Next (milestone 2 work this feeds)
 
-- Restore with a separate (s, n) table through the alternate registers
-  (target ~40 µs per line). Skip bytes the new frame covers when a fighter
-  hasn't moved.
 - A runtime compiler: turn the current move's span frames into compiled
-  code for the current facing, in a per-fighter cache.
-- Rebuild the higher fighter first when they overlap, and move fighter data
-  into banks 4-7 (paging between mirror and bank for restore and draw).
+  code for the current facing, in a per-fighter cache. Overlaps need both
+  fighters compiled: the generic drawer alone is 8.7 ms.
+- Fighter data in banks 4-7. The restore no longer reads sprite data inside
+  the window (the lists are prepared), so it can run with the mirror paged
+  in while the draws page the fighter's bank.
+- Let x patches live per job, not per routine, so both fighters can face the
+  same way (today the generic drawer's x is patched into its code).
 - Confirm on real hardware (CRTC types 0-2), as OverscanCPC did.

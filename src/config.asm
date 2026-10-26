@@ -55,6 +55,18 @@ SPR_W           EQU 16          ; bytes (32 mode 0 pixels)
 SPR_H           EQU 64
 FLOOR_Y         EQU 268         ; feet; a standing fighter's top is 204
 FIGHTER_Y       EQU FLOOR_Y-SPR_H
+JUMP_MAX        EQU FIGHTER_Y-BAND_TOP  ; 60: a jump's top is the mirror's top
+
+;; line_tab (272 words, built at boot) lives in the unused tail of the first
+;; 2 KB slice of screen page 3: rows 21-33 fill #C000-#C4DF of every slice,
+;; and the CRTC never fetches #C4E0-#C7FF.
+LINE_TAB_AT     EQU #C4E0
+;; The same unused tails of later slices hold the restore lists that prepare
+;; builds (4 bytes per scanline, at most 64 lines), and the dummy byte an
+;; empty line copies into.
+RESTORE_LIST_A  EQU #CCE0       ; slice 1: #CCE0-#CFFF free
+RESTORE_LIST_B  EQU #D4E0       ; slice 2: #D4E0-#D7FF free
+RESTORE_DUMMY   EQU #C7FF       ; past line_tab in slice 0
 
 ;; --- Spike scene ---------------------------------------------------------
 HUD_LINES       EQU 24
@@ -64,6 +76,9 @@ TRUMP_X0        EQU 20
     IFNDEF CLOSE_UP
 CLOSE_UP        EQU 0
     ENDIF
+    IFNDEF JUMP
+JUMP            EQU 0           ; -DJUMP=1: they take turns to jump, then
+    ENDIF                       ; jump together (implies a shared window)
     IF CLOSE_UP                 ; -DCLOSE_UP=1: toe to toe, so their ground
 PUTIN_X0        EQU TRUMP_X0+14 ; overlaps and both share one window
     ELSE
@@ -91,3 +106,14 @@ PH_RESTORE_B    EQU 2
 PH_DRAW_A       EQU 3
 PH_DRAW_B       EQU 4
 PH_LOGIC        EQU 5
+PH_SCHED        EQU 6           ; the banded scheduler between jobs
+
+    IFNDEF SLACK
+SLACK           EQU 0           ; -DSLACK=n: margin test, rebuild n*100 us late
+    ENDIF
+
+;; --- Copies of the -D build options, so they reach the symbol file ---------
+;; (rasm exports EQUs with -sq, but not command-line defines.)
+SCN_CLOSE_UP    EQU CLOSE_UP
+SCN_JUMP        EQU JUMP
+SCN_PUTIN_COMPILED EQU PUTIN_COMPILED

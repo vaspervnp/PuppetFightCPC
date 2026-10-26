@@ -45,21 +45,32 @@ start
     call set_palette
     call irq_init
     call logic                  ; positions and frames for the first picture
+    call prepare
 
 main_loop
-    call wait_render            ; first frame of the picture: Trump
-    call ground_overlap
-    jr nz,ml_together
-    call rebuild_a
-    call wait_tick              ; second frame: Putin gets a window of his own
-    call rebuild_b
-    jr ml_logic
-ml_together
-    call rebuild_both           ; overlapping: both in one window
+    call wait_render            ; first frame of the picture
+    IF SLACK                    ; margin test only: start SLACK*100 us late
+    ld b,SLACK
+ml_slack
+    ld c,24
+ml_slack_in
+    dec c
+    jr nz,ml_slack_in
+    djnz ml_slack
+    ENDIF
+    call rebuild                ; jobs set up by prepare, last picture
+    ld a,(together)
+    or a
+    jr nz,ml_logic
+    call rebuild_clear          ; apart: Putin gets the next window
+    call setup_b
+    call wait_tick
+    call rebuild
 ml_logic
     ld a,PH_LOGIC
     ld (bench_phase),a
     call logic
+    call prepare
     xor a
     ld (bench_phase),a
     jr main_loop
@@ -86,42 +97,16 @@ wait_render
 logic
     ld hl,render_count
     inc (hl)
-    ld a,(hl)
-    rra                         ; /2: 12.5 fps animation
-    and 3
-    add a,a
-    add a,a                     ; 4 bytes per frame entry
-    ld e,a
-    ld d,0
     ld hl,trump_frames
-    add hl,de
-    ld e,(hl)
-    inc hl
-    ld d,(hl)
-    inc hl
+    call frame_entry
     ld (fa_spans),de
-    ld e,(hl)
-    inc hl
-    ld d,(hl)
-    ld (fa_draw),de
-    ld a,(render_count)
-    rra
-    and 3
-    add a,a
-    add a,a
-    ld e,a
-    ld d,0
+    ld (fa_draw),bc
+    ld (fa_sn),hl
     ld hl,putin_frames
-    add hl,de
-    ld e,(hl)
-    inc hl
-    ld d,(hl)
-    inc hl
+    call frame_entry
     ld (fb_spans),de
-    ld e,(hl)
-    inc hl
-    ld d,(hl)
-    ld (fb_draw),de
+    ld (fb_draw),bc
+    ld (fb_sn),hl
 
     ld a,(render_count)
     rra
@@ -137,132 +122,81 @@ logic
     ld a,PUTIN_X0
     sub b
     ld (fb_x),a
+
+    ;; Jumps (JUMP=1): a 48-picture cycle - Trump jumps, then Putin, then
+    ;; both together. Otherwise both stand.
+    ld a,FIGHTER_Y
+    ld (fa_y),a
+    ld (fb_y),a
+    IF JUMP
+    ld a,(render_count)
+lg_mod48
+    cp 48
+    jr c,lg_mod_ok
+    sub 48
+    jr lg_mod48
+lg_mod_ok
+    ld c,a
+    and 15
+    ld e,a
+    ld d,0
+    ld hl,jump_arc
+    add hl,de
+    ld a,FIGHTER_Y
+    sub (hl)
+    ld b,a                      ; B = the airborne top line
+    ld a,c
+    cp 16
+    jr c,lg_a_jumps
+    cp 32
+    jr c,lg_b_jumps
+    ld a,b                      ; both
+    ld (fa_y),a
+lg_b_jumps
+    ld a,b
+    ld (fb_y),a
+    ret
+lg_a_jumps
+    ld a,b
+    ld (fa_y),a
+    ENDIF
+    ret
+
+jump_arc                        ; rise and fall over 16 pictures, top at
+    defb 7,21,32,42,50,55,59,60,60,59,55,50,42,32,21,7  ; JUMP_MAX lines
+    ASSERT JUMP_MAX>=60
+
+;; frame_entry - HL = a fighter's frame table; picks the idle frame for this
+;; picture (12.5 fps animation). Out: DE = spans, BC = draw, HL = (s, n).
+;; Destroys AF.
+frame_entry
+    ld a,(render_count)
+    rra
+    and 3
+    ld c,a
+    add a,a
+    add a,c
+    add a,a                     ; 6 bytes per entry
+    ld c,a
+    ld b,0
+    add hl,bc
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    inc hl
+    ld c,(hl)
+    inc hl
+    ld b,(hl)
+    inc hl
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a
     ret
 
 sway                            ; -6..6, a triangle over 32 steps
     defb 0,1,2,3,4,5,6,6,6,5,4,3,2,1,0,0
     defb 0,-1,-2,-3,-4,-5,-6,-6,-6,-5,-4,-3,-2,-1,0,0
-
-;; ---------------------------------------------------------------------------
-;; Rebuilding a fighter: take its old picture off (copy the mirror back over
-;; its spans) and put the new one down.
-;;
-;; At 25 pictures a second each picture spans two frames, and the beam
-;; reaches the fighters' top line 15.6 ms into each frame. A fighter rebuilt
-;; within that window is never seen half drawn, so the two fighters take one
-;; frame each: Trump in the first, Putin in the second. Only when their
-;; ground overlaps must both come off before either goes back, in a single
-;; window - restoring one over the other would bite into it.
-;; The mirror makes restoring safe in any order: it never holds a fighter.
-;;
-;; Everything runs with interrupts off and SP walking line_tab, so the
-;; steps chain through IY rather than calling each other.
-;; ---------------------------------------------------------------------------
-rebuild_a
-    di
-    ld (rebuild_sp),sp
-    ld iy,rba_1
-    jp step_restore_a
-rba_1
-    ld iy,rb_end
-    jp step_draw_a
-
-rebuild_b
-    di
-    ld (rebuild_sp),sp
-    ld iy,rbb_1
-    jp step_restore_b
-rbb_1
-    ld iy,rb_end
-    jp step_draw_b
-
-rebuild_both
-    di
-    ld (rebuild_sp),sp
-    ld iy,rbt_1
-    jp step_restore_a
-rbt_1
-    ld iy,rbt_2
-    jp step_restore_b
-rbt_2
-    ld iy,rbt_3
-    jp step_draw_a
-rbt_3
-    ld iy,rb_end
-    jp step_draw_b
-
-rb_end
-    ld sp,(rebuild_sp)
-    ei
-    xor a
-    ld (bench_phase),a
-    ret
-
-;; Each step continues at IY when it is done. Steps never push: by the second
-;; one SP points into line_tab, and a push would overwrite a scanline address.
-;; A draw step also records what is now on the screen, for the next restore.
-step_restore_a
-    ld a,(fa_drawn)
-    or a
-    jr z,step_skip
-    ld a,PH_RESTORE_A
-    ld (bench_phase),a
-    ld a,(fa_old_x)
-    ld (rr_x+1),a
-    ld ix,(fa_old_spans)
-    ld sp,line_tab+FIGHTER_Y*2
-    jp restore_r
-step_skip
-    jp (iy)
-
-step_restore_b
-    ld a,(fb_drawn)
-    or a
-    jr z,step_skip
-    ld a,PH_RESTORE_B
-    ld (bench_phase),a
-    ld a,(fb_old_x)
-    add a,SPR_W
-    ld (rl_xw+1),a
-    ld ix,(fb_old_spans)
-    ld sp,line_tab+FIGHTER_Y*2
-    jp restore_l
-
-step_draw_a
-    ld a,PH_DRAW_A
-    ld (bench_phase),a
-    ld a,(fa_x)
-    ld (fa_old_x),a
-    ld e,a
-    ld d,0
-    ld hl,(fa_spans)
-    ld (fa_old_spans),hl
-    ld a,1
-    ld (fa_drawn),a
-    ld hl,(fa_draw)
-    ld sp,line_tab+FIGHTER_Y*2
-    jp (hl)
-
-step_draw_b
-    ld a,PH_DRAW_B
-    ld (bench_phase),a
-    ld hl,(fb_spans)
-    ld (fb_old_spans),hl
-    ld a,1
-    ld (fb_drawn),a
-    ld a,(fb_x)
-    ld (fb_old_x),a
-    ld sp,line_tab+FIGHTER_Y*2
-    IF PUTIN_COMPILED
-    ld e,a
-    ld d,0
-    ld hl,(fb_draw)
-    jp (hl)
-    ELSE
-    add a,SPR_W-1
-    ld (dl_xr+1),a
-    jp draw_l
-    ENDIF
 
 ;; ground_overlap - NZ if the bytes A covers (old or new) meet B's.
 ;; Destroys AF, BC.
@@ -295,6 +229,7 @@ go_apart
     include "irq.asm"
     include "video.asm"
     include "sprite.asm"
+    include "rebuild.asm"
 
 ;; ---------------------------------------------------------------------------
 ;; Tables and sprite data
@@ -307,22 +242,29 @@ dl_entries                      ; draw_l chain entry for n drawn bytes
     defw dl_chain_end-(n-1)*DL_BLOCK
     REND
 
-trump_frames                    ; spans, compiled draw
-    defw trump_idle_0_spans,trump_idle_0_draw
-    defw trump_idle_1_spans,trump_idle_1_draw
-    defw trump_idle_2_spans,trump_idle_2_draw
-    defw trump_idle_3_spans,trump_idle_3_draw
-putin_frames                    ; spans, compiled left-facing draw
-    IF PUTIN_COMPILED               ; only two frames fit compiled
-    defw putin_idle_0_spans,putin_idle_0_drawl
-    defw putin_idle_2_spans,putin_idle_2_drawl
-    defw putin_idle_0_spans,putin_idle_0_drawl
-    defw putin_idle_2_spans,putin_idle_2_drawl
+trump_frames                    ; spans, compiled draw, (s, n) table
+    IF PUTIN_COMPILED               ; overlaps: two compiled frames, for room
+    defw trump_idle_0_spans,trump_idle_0_draw,trump_idle_0_sn
+    defw trump_idle_2_spans,trump_idle_2_draw,trump_idle_2_sn
+    defw trump_idle_0_spans,trump_idle_0_draw,trump_idle_0_sn
+    defw trump_idle_2_spans,trump_idle_2_draw,trump_idle_2_sn
     ELSE
-    defw putin_idle_0_spans,0
-    defw putin_idle_1_spans,0
-    defw putin_idle_2_spans,0
-    defw putin_idle_3_spans,0
+    defw trump_idle_0_spans,trump_idle_0_draw,trump_idle_0_sn
+    defw trump_idle_1_spans,trump_idle_1_draw,trump_idle_1_sn
+    defw trump_idle_2_spans,trump_idle_2_draw,trump_idle_2_sn
+    defw trump_idle_3_spans,trump_idle_3_draw,trump_idle_3_sn
+    ENDIF
+putin_frames                    ; spans, compiled left-facing draw, (s, n)
+    IF PUTIN_COMPILED               ; only two frames fit compiled
+    defw putin_idle_0_spans,putin_idle_0_drawl,putin_idle_0_sn
+    defw putin_idle_2_spans,putin_idle_2_drawl,putin_idle_2_sn
+    defw putin_idle_0_spans,putin_idle_0_drawl,putin_idle_0_sn
+    defw putin_idle_2_spans,putin_idle_2_drawl,putin_idle_2_sn
+    ELSE
+    defw putin_idle_0_spans,0,putin_idle_0_sn
+    defw putin_idle_1_spans,0,putin_idle_1_sn
+    defw putin_idle_2_spans,0,putin_idle_2_sn
+    defw putin_idle_3_spans,0,putin_idle_3_sn
     ENDIF
 
     include "gen/trump_idle.asm"
@@ -339,23 +281,42 @@ render_count    defb 0
 fa_drawn        defb 0
 fb_drawn        defb 0
 rebuild_sp      defw 0
-rst_count       defb 0
+band_end        defb 0
+rr_count        defb 0
+br_list         defw 0
+br_x            defb 0          ; build_restore: x, then facing
+br_dir          defb 0
+br_first        defb 0
+br_lines        defb 0
 dl_count        defb 0
 fr_h            defb 0
 fr_x            defb 0
 fr_w            defb 0
 fr_b            defb 0
 fa_x            defb 0
+fa_y            defb 0
 fa_old_x        defb 0
+fa_old_y        defb 0
 fa_spans        defw 0
 fa_old_spans    defw 0
 fa_draw         defw 0
+fa_sn           defw 0
+fa_old_sn       defw 0
 fb_x            defb 0
+fb_y            defb 0
 fb_old_x        defb 0
+fb_old_y        defb 0
 fb_spans        defw 0
 fb_old_spans    defw 0
 fb_draw         defw 0
-line_tab        defs DISPLAY_LINES*2
+fb_sn           defw 0
+fb_old_sn       defw 0
+together        defb 0
+job_ra          defs J_SIZE     ; restore A, restore B, draw A, draw B
+job_rb          defs J_SIZE
+job_da          defs J_SIZE
+job_db          defs J_SIZE
+line_tab        EQU LINE_TAB_AT
 
 payload_end
     ASSERT payload_end<=LOAD_ORG    ; must not reach the load image it came from

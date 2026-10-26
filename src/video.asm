@@ -96,7 +96,7 @@ ds_even
     cp DISPLAY_LINES AND #FF
     jr nz,ds_line
     ld a,d
-    cp DISPLAY_LINES/256
+    cp DISPLAY_LINES>>8
     jr nz,ds_line
 
     ld ix,stage_rects

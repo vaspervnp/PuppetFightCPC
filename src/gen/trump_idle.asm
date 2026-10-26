@@ -65,8 +65,17 @@ trump_idle_0_spans  ; 16 bytes wide
     defb 5,4,#55,#FF,#C3,#AA
     defb 6,3,#FF,#FF,#AA
     defb 7,1,#FF
+trump_idle_0_sn
+    defb 1,62
+    defb 6,3,5,5,5,5,5,6,4,7,4,7,4,7,4,7
+    defb 4,7,4,8,4,8,4,7,4,7,4,7,4,7,4,7
+    defb 4,7,5,6,5,6,5,6,5,6,5,6,6,5,6,6
+    defb 6,6,6,6,5,7,5,7,5,7,4,8,4,8,4,8
+    defb 4,8,4,8,4,8,4,8,4,7,4,7,5,6,5,5
+    defb 5,5,5,5,5,5,5,5,5,5,5,5,6,4,6,3
+    defb 6,3,6,3,6,3,5,4,5,4,5,4,5,4,5,4
+    defb 5,4,5,4,5,4,5,4,6,3,7,1
 trump_idle_0_draw
-    pop hl
     pop hl
     add hl,de
     ld bc,6
@@ -209,6 +218,11 @@ trump_idle_0_draw
     ld (hl),#03
     inc hl
     ld (hl),#57
+    dec ixl
+    jr nz,trump_idle_0_draw_c1
+    ld hl,trump_idle_0_draw_c1
+    jp (iy)
+trump_idle_0_draw_c1
     pop hl
     add hl,de
     ld bc,4
@@ -367,6 +381,11 @@ trump_idle_0_draw
     ld (hl),#E4
     inc hl
     ld (hl),#DD
+    dec ixl
+    jr nz,trump_idle_0_draw_c2
+    ld hl,trump_idle_0_draw_c2
+    jp (iy)
+trump_idle_0_draw_c2
     pop hl
     add hl,de
     ld bc,4
@@ -504,6 +523,11 @@ trump_idle_0_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_0_draw_c3
+    ld hl,trump_idle_0_draw_c3
+    jp (iy)
+trump_idle_0_draw_c3
     pop hl
     add hl,de
     ld bc,6
@@ -666,6 +690,11 @@ trump_idle_0_draw
     ld (hl),#EA
     inc hl
     ld (hl),#D5
+    dec ixl
+    jr nz,trump_idle_0_draw_c4
+    ld hl,trump_idle_0_draw_c4
+    jp (iy)
+trump_idle_0_draw_c4
     pop hl
     add hl,de
     ld bc,4
@@ -840,6 +869,11 @@ trump_idle_0_draw
     ld (hl),#C0
     inc hl
     ld (hl),#DD
+    dec ixl
+    jr nz,trump_idle_0_draw_c5
+    ld hl,trump_idle_0_draw_c5
+    jp (iy)
+trump_idle_0_draw_c5
     pop hl
     add hl,de
     ld bc,5
@@ -959,6 +993,11 @@ trump_idle_0_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_0_draw_c6
+    ld hl,trump_idle_0_draw_c6
+    jp (iy)
+trump_idle_0_draw_c6
     pop hl
     add hl,de
     ld bc,6
@@ -1074,6 +1113,11 @@ trump_idle_0_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_0_draw_c7
+    ld hl,trump_idle_0_draw_c7
+    jp (iy)
+trump_idle_0_draw_c7
     pop hl
     add hl,de
     ld bc,5
@@ -1156,6 +1200,7 @@ trump_idle_0_draw
     ld bc,7
     add hl,bc
     ld (hl),#FF
+    ld hl,0
     jp (iy)
 
 trump_idle_1_spans  ; 16 bytes wide
@@ -1222,8 +1267,18 @@ trump_idle_1_spans  ; 16 bytes wide
     defb 5,4,#55,#FF,#D7,#AA
     defb 6,3,#55,#FF,#AA
     defb 7,1,#FF
+trump_idle_1_sn
+    defb 1,62
+    defb 6,4,6,4,5,6,5,6,5,6,5,7,5,7,4,8
+    defb 4,8,4,8,4,8,4,7,4,7,4,7,4,7,4,7
+    defb 5,6,5,6,5,6,5,6,5,6,5,6,6,5,6,6
+    defb 6,6,6,6,5,7,5,7,5,7,5,7,4,8,4,8
+    defb 4,8,4,8,4,8,4,8,4,7,4,7,5,6,5,6
+    defb 5,5,5,5,5,5,5,5,5,5,5,5,6,4,6,3
+    defb 6,3,6,3,5,4,5,4,5,4,5,4,5,4,5,4
+    defb 5,3,5,4,5,3,5,4,6,3,7,1
+    IFNOT PUTIN_COMPILED
 trump_idle_1_draw
-    pop hl
     pop hl
     add hl,de
     ld bc,6
@@ -1368,6 +1423,11 @@ trump_idle_1_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_1_draw_c1
+    ld hl,trump_idle_1_draw_c1
+    jp (iy)
+trump_idle_1_draw_c1
     pop hl
     add hl,de
     ld bc,4
@@ -1543,6 +1603,11 @@ trump_idle_1_draw
     ld (hl),#E4
     inc hl
     ld (hl),#DD
+    dec ixl
+    jr nz,trump_idle_1_draw_c2
+    ld hl,trump_idle_1_draw_c2
+    jp (iy)
+trump_idle_1_draw_c2
     pop hl
     add hl,de
     ld bc,5
@@ -1678,6 +1743,11 @@ trump_idle_1_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_1_draw_c3
+    ld hl,trump_idle_1_draw_c3
+    jp (iy)
+trump_idle_1_draw_c3
     pop hl
     add hl,de
     ld bc,6
@@ -1838,6 +1908,11 @@ trump_idle_1_draw
     ld (hl),#EA
     inc hl
     ld (hl),#D5
+    dec ixl
+    jr nz,trump_idle_1_draw_c4
+    ld hl,trump_idle_1_draw_c4
+    jp (iy)
+trump_idle_1_draw_c4
     pop hl
     add hl,de
     ld bc,4
@@ -2017,6 +2092,11 @@ trump_idle_1_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_1_draw_c5
+    ld hl,trump_idle_1_draw_c5
+    jp (iy)
+trump_idle_1_draw_c5
     pop hl
     add hl,de
     ld bc,5
@@ -2136,6 +2216,11 @@ trump_idle_1_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_1_draw_c6
+    ld hl,trump_idle_1_draw_c6
+    jp (iy)
+trump_idle_1_draw_c6
     pop hl
     add hl,de
     ld bc,6
@@ -2253,6 +2338,11 @@ trump_idle_1_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_1_draw_c7
+    ld hl,trump_idle_1_draw_c7
+    jp (iy)
+trump_idle_1_draw_c7
     pop hl
     add hl,de
     ld bc,5
@@ -2325,7 +2415,9 @@ trump_idle_1_draw
     ld bc,7
     add hl,bc
     ld (hl),#FF
+    ld hl,0
     jp (iy)
+    ENDIF
 
 trump_idle_2_spans  ; 16 bytes wide
     defb 1,62
@@ -2391,9 +2483,18 @@ trump_idle_2_spans  ; 16 bytes wide
     defb 6,3,#FF,#D7,#AA
     defb 6,2,#55,#FF
     defb 7,1,#AA
+trump_idle_2_sn
+    defb 1,62
+    defb 6,4,6,4,5,6,5,6,5,7,5,7,5,7,5,7
+    defb 5,7,4,8,4,8,4,8,4,8,5,6,5,7,5,7
+    defb 5,7,5,6,5,7,5,7,5,7,6,5,6,5,6,6
+    defb 6,6,6,6,5,7,5,7,5,7,5,7,4,8,4,8
+    defb 4,8,4,8,4,8,4,8,4,8,5,6,5,6,5,6
+    defb 5,5,5,5,5,5,5,5,5,5,6,4,6,4,6,4
+    defb 6,3,6,3,5,4,5,4,5,4,5,4,5,3,5,3
+    defb 5,3,5,3,5,3,6,3,6,2,7,1
 trump_idle_2_draw
     pop hl
-    pop hl
     add hl,de
     ld bc,6
     add hl,bc
@@ -2540,6 +2641,11 @@ trump_idle_2_draw
     ld (hl),#03
     inc hl
     ld (hl),#57
+    dec ixl
+    jr nz,trump_idle_2_draw_c1
+    ld hl,trump_idle_2_draw_c1
+    jp (iy)
+trump_idle_2_draw_c1
     pop hl
     add hl,de
     ld bc,5
@@ -2709,6 +2815,11 @@ trump_idle_2_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_2_draw_c2
+    ld hl,trump_idle_2_draw_c2
+    jp (iy)
+trump_idle_2_draw_c2
     pop hl
     add hl,de
     ld bc,5
@@ -2869,6 +2980,11 @@ trump_idle_2_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_2_draw_c3
+    ld hl,trump_idle_2_draw_c3
+    jp (iy)
+trump_idle_2_draw_c3
     pop hl
     add hl,de
     ld bc,6
@@ -3029,6 +3145,11 @@ trump_idle_2_draw
     ld (hl),#EA
     inc hl
     ld (hl),#D5
+    dec ixl
+    jr nz,trump_idle_2_draw_c4
+    ld hl,trump_idle_2_draw_c4
+    jp (iy)
+trump_idle_2_draw_c4
     pop hl
     add hl,de
     ld bc,4
@@ -3205,6 +3326,11 @@ trump_idle_2_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_2_draw_c5
+    ld hl,trump_idle_2_draw_c5
+    jp (iy)
+trump_idle_2_draw_c5
     pop hl
     add hl,de
     ld bc,5
@@ -3318,6 +3444,11 @@ trump_idle_2_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_2_draw_c6
+    ld hl,trump_idle_2_draw_c6
+    jp (iy)
+trump_idle_2_draw_c6
     pop hl
     add hl,de
     ld bc,6
@@ -3425,6 +3556,11 @@ trump_idle_2_draw
     ld (hl),#C0
     inc hl
     ld (hl),#D5
+    dec ixl
+    jr nz,trump_idle_2_draw_c7
+    ld hl,trump_idle_2_draw_c7
+    jp (iy)
+trump_idle_2_draw_c7
     pop hl
     add hl,de
     ld bc,5
@@ -3485,6 +3621,7 @@ trump_idle_2_draw
     and #55
     or #AA
     ld (hl),a
+    ld hl,0
     jp (iy)
 
 trump_idle_3_spans  ; 16 bytes wide
@@ -3551,8 +3688,18 @@ trump_idle_3_spans  ; 16 bytes wide
     defb 5,4,#55,#FF,#D7,#AA
     defb 6,3,#55,#FF,#AA
     defb 7,1,#FF
+trump_idle_3_sn
+    defb 1,62
+    defb 6,4,6,4,5,6,5,6,5,6,5,7,5,7,4,8
+    defb 4,8,4,8,4,8,4,7,4,7,4,7,4,7,4,7
+    defb 5,6,5,6,5,6,5,6,5,6,5,6,6,5,6,6
+    defb 6,6,6,6,5,7,5,7,5,7,5,7,4,8,4,8
+    defb 4,8,4,8,4,8,4,8,4,7,4,7,5,6,5,6
+    defb 5,5,5,5,5,5,5,5,5,5,5,5,6,4,6,3
+    defb 6,3,6,3,5,4,5,4,5,4,5,4,5,4,5,4
+    defb 5,3,5,4,5,3,5,4,6,3,7,1
+    IFNOT PUTIN_COMPILED
 trump_idle_3_draw
-    pop hl
     pop hl
     add hl,de
     ld bc,6
@@ -3697,6 +3844,11 @@ trump_idle_3_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_3_draw_c1
+    ld hl,trump_idle_3_draw_c1
+    jp (iy)
+trump_idle_3_draw_c1
     pop hl
     add hl,de
     ld bc,4
@@ -3872,6 +4024,11 @@ trump_idle_3_draw
     ld (hl),#E4
     inc hl
     ld (hl),#DD
+    dec ixl
+    jr nz,trump_idle_3_draw_c2
+    ld hl,trump_idle_3_draw_c2
+    jp (iy)
+trump_idle_3_draw_c2
     pop hl
     add hl,de
     ld bc,5
@@ -4007,6 +4164,11 @@ trump_idle_3_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_3_draw_c3
+    ld hl,trump_idle_3_draw_c3
+    jp (iy)
+trump_idle_3_draw_c3
     pop hl
     add hl,de
     ld bc,6
@@ -4167,6 +4329,11 @@ trump_idle_3_draw
     ld (hl),#EA
     inc hl
     ld (hl),#D5
+    dec ixl
+    jr nz,trump_idle_3_draw_c4
+    ld hl,trump_idle_3_draw_c4
+    jp (iy)
+trump_idle_3_draw_c4
     pop hl
     add hl,de
     ld bc,4
@@ -4346,6 +4513,11 @@ trump_idle_3_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_3_draw_c5
+    ld hl,trump_idle_3_draw_c5
+    jp (iy)
+trump_idle_3_draw_c5
     pop hl
     add hl,de
     ld bc,5
@@ -4465,6 +4637,11 @@ trump_idle_3_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_3_draw_c6
+    ld hl,trump_idle_3_draw_c6
+    jp (iy)
+trump_idle_3_draw_c6
     pop hl
     add hl,de
     ld bc,6
@@ -4582,6 +4759,11 @@ trump_idle_3_draw
     and #55
     or #AA
     ld (hl),a
+    dec ixl
+    jr nz,trump_idle_3_draw_c7
+    ld hl,trump_idle_3_draw_c7
+    jp (iy)
+trump_idle_3_draw_c7
     pop hl
     add hl,de
     ld bc,5
@@ -4654,4 +4836,6 @@ trump_idle_3_draw
     ld bc,7
     add hl,bc
     ld (hl),#FF
+    ld hl,0
     jp (iy)
+    ENDIF

@@ -39,7 +39,9 @@ BAND_TOP = 144
 W = 16
 FIGHTER_Y = 204
 PHASES = {1: "restore A (Trump, right)", 2: "restore B (Putin, left)",
-          3: "draw A (compiled)", 4: "draw B (Putin, left)", 5: "logic"}
+          3: "draw A (compiled)", 4: "draw B (Putin, left)",
+          6: "scheduler overhead", 5: "logic"}
+REBUILD_PHASES = (1, 2, 3, 4, 6)
 
 
 def load_syms():
@@ -54,12 +56,27 @@ def load_syms():
 class Bench:
     def __init__(self):
         self.S = load_syms()
+        self.caught_by = defaultdict(int)
+        self.window_end = defaultdict(list)     # jump state -> rebuild end times
         self.c = CPC()
         self.c.run_frames(5)
         self.c.quickload(os.path.join(BUILD, "pfspike.sna"))
         self.c.run_frames(60)           # stage, mirror, first pictures
         lt = self.c.read_ram(self.S["LINE_TAB"], LINES * 2)
         self.line_addr = [lt[2 * i] | lt[2 * i + 1] << 8 for i in range(LINES)]
+
+    @staticmethod
+    def jump_state(st):
+        fa, fb = st
+        return ("A up" if fa < FIGHTER_Y else "A down") + ", " + ("B up" if fb < FIGHTER_Y else "B down")
+
+    def scenario(self):
+        close = self.S.get("SCN_CLOSE_UP", 0)
+        jump = self.S.get("SCN_JUMP", 0)
+        comp = self.S.get("SCN_PUTIN_COMPILED", 0)
+        return "%s%s, Putin %s" % ("toe to toe (one shared window)" if close else "apart (two windows)",
+                                   ", taking turns to jump then jumping together" if jump else "",
+                                   "compiled" if comp else "generic")
 
     def peek(self, name, size=1):
         b = self.c.read_ram(self.S[name], size)
@@ -75,14 +92,15 @@ class Bench:
         last_ph = self.peek("BENCH_PHASE")
         ph_start = 0
         durations = defaultdict(list)
+        acc = defaultdict(int)              # this picture's time per phase
         rebuild_start = None
         rebuild_spans = []                  # (start from tick, end from tick)
         frames = []                         # per frame: {line: bytes seen}
+        snaps = []                          # the band at each frame tick
+        states = []                         # (fa_y, fb_y) at each tick
         seen = None
-        pictures = [self.band()]            # picture after each rebuild
         caught = defaultdict(int)
         late = defaultdict(int)
-        rebuilt_frames = []                 # index into frames of rebuild frames
         done = 0
         while done < renders:
             self.c.run_us(STEP)
@@ -93,39 +111,53 @@ class Bench:
                 tick_t = t
                 if seen is not None:
                     frames.append(seen)
+                snaps.append(self.band())
+                states.append((self.peek("FA_Y"), self.peek("FB_Y")))
                 seen = {}
             ph = self.peek("BENCH_PHASE")
             if ph != last_ph:
                 if last_ph in PHASES:
-                    durations[last_ph].append(t - ph_start)
-                if last_ph == 0 and ph in (1, 2, 3, 4) and rebuild_start is None:
+                    acc[last_ph] += t - ph_start
+                if last_ph in (0, 5) and ph in REBUILD_PHASES and rebuild_start is None:
                     rebuild_start = t
-                if ph in (0, 5) and last_ph in (1, 2, 3, 4):
-                    # rebuild finished: the new picture
-                    rebuild_spans.append((rebuild_start - tick_t, t - tick_t))
-                    rebuilt_frames.append(len(frames))
-                    pictures.append(self.band())
+                if ph in (0, 5) and last_ph in REBUILD_PHASES:
+                    # one rebuild (window) finished (the first may have begun
+                    # before the bench was watching)
+                    if rebuild_start is not None and tick_t is not None:
+                        rebuild_spans.append((rebuild_start - tick_t, t - tick_t))
+                        self.window_end[self.jump_state(states[-1])].append(t - tick_t)
                     rebuild_start = None
+                if ph == 5:
+                    # logic starts: the picture is complete
+                    for k, v in acc.items():
+                        durations[k].append(v)
+                    acc.clear()
                     done += 1
+                if last_ph == 5:
+                    durations[5].append(acc.pop(5, 0))
                 last_ph, ph_start = ph, t
             if tick_t is not None and seen is not None:
                 beam = (t - tick_t) // LINE_US - BLANK
                 if BAND_TOP <= beam < LINES and beam not in seen:
                     seen[beam] = self.c.read_ram(self.line_addr[beam], 96)
 
-        # judge every frame in which a rebuild ran
-        for k, fi in enumerate(rebuilt_frames):
-            if fi >= len(frames):
-                continue
-            before, after = pictures[k], pictures[k + 1]
-            for L, got in frames[fi].items():
+        # Judge every frame: what the beam fetched on each line has to be the
+        # band as it was when the frame began (that line is rebuilt later -
+        # a frame late, a tear at worst) or as it is when the frame ends.
+        # Anything else was caught half drawn: visible flicker.
+        for i, got_lines in enumerate(frames):
+            if i + 1 >= len(snaps):
+                break
+            before, after = snaps[i], snaps[i + 1]
+            for L, got in got_lines.items():
                 if got == after[L]:
                     continue
                 if got == before[L]:
                     late[L] += 1
                 else:
                     caught[L] += 1
-        return durations, rebuild_spans, caught, late, len(rebuilt_frames)
+                    self.caught_by[self.jump_state(states[i])] += 1
+        return durations, rebuild_spans, caught, late, done, len(frames)
 
     def expected_band(self):
         """The band rebuilt from the mirror plus both fighters' span data."""
@@ -134,17 +166,19 @@ class Bench:
             a = self.line_addr[L]
             m = ((a >> 8) & 0x3F | 0x40) << 8 | (a & 0xFF)
             out[L] = bytearray(self.c.read_ram(m, 96))
-        for spans_sym, x_sym, flipped in (("FA_OLD_SPANS", "FA_OLD_X", False),
-                                          ("FB_OLD_SPANS", "FB_OLD_X", True)):
+        for spans_sym, x_sym, y_sym, flipped in (
+                ("FA_OLD_SPANS", "FA_OLD_X", "FA_OLD_Y", False),
+                ("FB_OLD_SPANS", "FB_OLD_X", "FB_OLD_Y", True)):
             p = self.peek(spans_sym, 2)
             x = self.peek(x_sym)
+            y = self.peek(y_sym)
             top, lines = self.c.read_ram(p, 2)
             p += 2
             for i in range(lines):
                 s, n = self.c.read_ram(p, 2)
                 data = self.c.read_ram(p + 2, n)
                 p += 2 + n
-                row = out[FIGHTER_Y + top + i]
+                row = out[y + top + i]
                 for j, d in enumerate(data):
                     if flipped:
                         d = flip_of(d)
@@ -157,14 +191,15 @@ class Bench:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--renders", type=int, default=50)
+    ap.add_argument("--renders", type=int, default=96)   # two jump cycles
     ap.add_argument("--png", default=os.path.join(BUILD, "spike.png"))
     args = ap.parse_args()
 
     b = Bench()
-    durations, spans, caught, late, nreb = b.run(args.renders)
+    durations, spans, caught, late, nreb, nframes = b.run(args.renders)
 
-    print("Phase timings over %d pictures (us, from the cycle-accurate 6128):" % nreb)
+    print("Scenario: %s" % b.scenario())
+    print("Phase timings per picture over %d pictures (us, from the cycle-accurate 6128):" % nreb)
     for ph, name in PHASES.items():
         d = durations.get(ph, [])
         if d:
@@ -175,14 +210,20 @@ def main():
     top_us = (BLANK + FIGHTER_Y) * LINE_US
     print("  beam reaches the fighters' top line (%d) at %d us" % (FIGHTER_Y, top_us))
 
-    print("Beam check (fighter band, lines %d-%d):" % (BAND_TOP, LINES - 1))
+    if len(b.window_end) > 1 or b.S.get("SCN_JUMP", 0):
+        print("  rebuild windows by jump state (y at the tick: count, latest end):")
+        for k in sorted(b.window_end):
+            v = b.window_end[k]
+            print("    %-16s %3d windows, ends by %5d us" % (k, len(v), max(v)))
+    print("Beam check (fighter band, lines %d-%d, every one of %d frames):" % (BAND_TOP, LINES - 1, nframes))
     print("  lines caught half drawn: %d (in %d line-frames)" % (len(caught), sum(caught.values())))
     print("  lines late (previous picture shown): %d (in %d line-frames)" % (len(late), sum(late.values())))
     if caught:
         print("  caught lines:", sorted(caught)[:20], "..." if len(caught) > 20 else "")
+        print("  caught line-frames by jump state (y read at the frame tick):", dict(b.caught_by))
 
     b.c.run_us(400)                     # let rb_done record what it drew
-    while b.peek("BENCH_PHASE") in (1, 2, 3, 4):
+    while b.peek("BENCH_PHASE") in REBUILD_PHASES:
         b.c.run_us(STEP)
     exp = b.expected_band()
     got = b.band()
