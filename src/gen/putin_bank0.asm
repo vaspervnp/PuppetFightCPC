@@ -19,67 +19,67 @@ putin_dir
     defb 4 : defw putin_m_special
     defb 3 : defw putin_m_victory
 putin_m_idle
-    defb 1,16,0 : defw putin_idle_0_spans : defs 7
-    defb 1,16,0 : defw putin_idle_1_spans : defs 7
-    defb 1,16,0 : defw putin_idle_2_spans : defs 7
-    defb 1,16,0 : defw putin_idle_3_spans : defs 7
+    defb 1,16,0 : defw putin_idle_0_spans,468 : defs 5
+    defb 1,16,0 : defw putin_idle_1_spans,474 : defs 5
+    defb 1,16,0 : defw putin_idle_2_spans,469 : defs 5
+    defb 1,16,0 : defw putin_idle_3_spans,474 : defs 5
 putin_m_walk
-    defb 1,16,0 : defw putin_walk_0_spans : defs 7
-    defb 1,16,0 : defw putin_walk_1_spans : defs 7
-    defb 1,16,0 : defw putin_walk_2_spans : defs 7
-    defb 1,16,0 : defw putin_walk_3_spans : defs 7
+    defb 1,16,0 : defw putin_walk_0_spans,466 : defs 5
+    defb 1,16,0 : defw putin_walk_1_spans,465 : defs 5
+    defb 1,16,0 : defw putin_walk_2_spans,502 : defs 5
+    defb 1,16,0 : defw putin_walk_3_spans,461 : defs 5
 putin_m_crouch
-    defb 1,16,0 : defw putin_crouch_0_spans : defs 7
-    defb 1,16,0 : defw putin_crouch_1_spans : defs 7
-    defb 1,16,0 : defw putin_crouch_2_spans : defs 7
+    defb 1,16,0 : defw putin_crouch_0_spans,444 : defs 5
+    defb 1,16,0 : defw putin_crouch_1_spans,431 : defs 5
+    defb 1,16,0 : defw putin_crouch_2_spans,420 : defs 5
 putin_m_jump
-    defb 1,16,0 : defw putin_jump_0_spans : defs 7
-    defb 0,16,0 : defw putin_jump_1_spans : defs 7
-    defb 0,16,0 : defw putin_jump_2_spans : defs 7
+    defb 1,16,0 : defw putin_jump_0_spans,434 : defs 5
+    defb 0,16,0 : defw putin_jump_1_spans,425 : defs 5
+    defb 0,16,0 : defw putin_jump_2_spans,464 : defs 5
 putin_m_punch
-    defb 0,16,0 : defw putin_punch_0_spans : defs 7
-    defb 0,16,0 : defw putin_punch_1_spans : defs 7
-    defb 0,16,0 : defw putin_punch_2_spans : defs 7
+    defb 0,16,0 : defw putin_punch_0_spans,481 : defs 5
+    defb 0,16,0 : defw putin_punch_1_spans,461 : defs 5
+    defb 0,16,0 : defw putin_punch_2_spans,467 : defs 5
 putin_m_kick
-    defb 0,16,0 : defw putin_kick_0_spans : defs 7
-    defb 0,16,0 : defw putin_kick_1_spans : defs 7
-    defb 0,16,0 : defw putin_kick_2_spans : defs 7
+    defb 0,16,0 : defw putin_kick_0_spans,435 : defs 5
+    defb 0,16,0 : defw putin_kick_1_spans,490 : defs 5
+    defb 0,16,0 : defw putin_kick_2_spans,430 : defs 5
 putin_m_sweep
-    defb 0,16,0 : defw putin_sweep_0_spans : defs 7
-    defb 1,16,0 : defw putin_sweep_1_spans : defs 7
-    defb 0,16,0 : defw putin_sweep_2_spans : defs 7
+    defb 0,16,0 : defw putin_sweep_0_spans,431 : defs 5
+    defb 1,16,0 : defw putin_sweep_1_spans,375 : defs 5
+    defb 0,16,0 : defw putin_sweep_2_spans,428 : defs 5
 putin_m_uppercut
-    defb 0,16,0 : defw putin_uppercut_0_spans : defs 7
-    defb 0,16,0 : defw putin_uppercut_1_spans : defs 7
-    defb 0,16,0 : defw putin_uppercut_2_spans : defs 7
-    defb 0,16,0 : defw putin_uppercut_3_spans : defs 7
+    defb 0,16,0 : defw putin_uppercut_0_spans,441 : defs 5
+    defb 0,16,0 : defw putin_uppercut_1_spans,423 : defs 5
+    defb 0,16,0 : defw putin_uppercut_2_spans,448 : defs 5
+    defb 0,16,0 : defw putin_uppercut_3_spans,490 : defs 5
 putin_m_backkick
-    defb 0,16,0 : defw putin_backkick_0_spans : defs 7
-    defb 0,16,0 : defw putin_backkick_1_spans : defs 7
-    defb 0,16,0 : defw putin_backkick_2_spans : defs 7
-    defb 0,16,0 : defw putin_backkick_3_spans : defs 7
+    defb 0,16,0 : defw putin_backkick_0_spans,483 : defs 5
+    defb 0,16,0 : defw putin_backkick_1_spans,434 : defs 5
+    defb 0,16,0 : defw putin_backkick_2_spans,403 : defs 5
+    defb 0,16,0 : defw putin_backkick_3_spans,482 : defs 5
 putin_m_block
-    defb 0,16,0 : defw putin_block_0_spans : defs 7
-    defb 0,16,0 : defw putin_block_1_spans : defs 7
-    defb 0,16,0 : defw putin_block_2_spans : defs 7
+    defb 0,16,0 : defw putin_block_0_spans,462 : defs 5
+    defb 0,16,0 : defw putin_block_1_spans,441 : defs 5
+    defb 0,16,0 : defw putin_block_2_spans,414 : defs 5
 putin_m_hit
-    defb 0,16,0 : defw putin_hit_0_spans : defs 7
-    defb 0,16,0 : defw putin_hit_1_spans : defs 7
-    defb 0,16,0 : defw putin_hit_2_spans : defs 7
+    defb 0,16,0 : defw putin_hit_0_spans,432 : defs 5
+    defb 0,16,0 : defw putin_hit_1_spans,424 : defs 5
+    defb 0,16,0 : defw putin_hit_2_spans,458 : defs 5
 putin_m_ko
-    defb 0,16,0 : defw putin_ko_0_spans : defs 7
-    defb 0,32,-8 : defw putin_ko_1_spans : defs 7
-    defb 0,32,-8 : defw putin_ko_2_spans : defs 7
-    defb 0,32,-8 : defw putin_ko_3_spans : defs 7
+    defb 0,16,0 : defw putin_ko_0_spans,422 : defs 5
+    defb 0,32,-8 : defw putin_ko_1_spans,457 : defs 5
+    defb 0,32,-8 : defw putin_ko_2_spans,389 : defs 5
+    defb 0,32,-8 : defw putin_ko_3_spans,322 : defs 5
 putin_m_special
-    defb 0,16,0 : defw putin_special_0_spans : defs 7
-    defb 0,16,0 : defw putin_special_1_spans : defs 7
-    defb 0,16,0 : defw putin_special_2_spans : defs 7
-    defb 0,16,0 : defw putin_special_3_spans : defs 7
+    defb 0,16,0 : defw putin_special_0_spans,459 : defs 5
+    defb 0,16,0 : defw putin_special_1_spans,424 : defs 5
+    defb 0,16,0 : defw putin_special_2_spans,424 : defs 5
+    defb 0,16,0 : defw putin_special_3_spans,420 : defs 5
 putin_m_victory
-    defb 0,16,0 : defw putin_victory_0_spans : defs 7
-    defb 0,16,0 : defw putin_victory_1_spans : defs 7
-    defb 0,16,0 : defw putin_victory_2_spans : defs 7
+    defb 0,16,0 : defw putin_victory_0_spans,471 : defs 5
+    defb 0,16,0 : defw putin_victory_1_spans,454 : defs 5
+    defb 0,16,0 : defw putin_victory_2_spans,426 : defs 5
 
 putin_jump_1_spans  ; 16 bytes wide
     defb 11,56,51

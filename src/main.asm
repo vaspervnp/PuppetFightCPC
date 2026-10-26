@@ -463,6 +463,9 @@ jw_hl           defw 0
 jw_de           defw 0
 jw_lines        defb 0
 jw_sn           defw 0
+jw_size         defw 0
+jw_guessing     defb 0          ; the job in hand is a guess (jw_guess)
+jw_stage        defb 0          ; the slot's bank, if the frame is copied
 sn_next         defw SN_TAIL0   ; jit_init: where the next (s, n) table
 sn_left         defb 6          ; goes, room left in this tail, which tail
 sn_tail         defb 0
@@ -473,7 +476,9 @@ job_db          defs J_SIZE
 line_tab        EQU LINE_TAB_AT
 
 payload_end
-    ASSERT payload_end<=CACHE_AT    ; the compiled frame caches follow
+jit_stage       EQU payload_end     ; a frame on its way to another bank
+STAGE_SIZE      EQU 600             ; (sprite_codegen.py: largest stream 599)
+    ASSERT jit_stage+STAGE_SIZE<=CACHE_AT   ; the compiled frame caches follow
 
     RUN boot
     SAVE 'PFSPIKE.BIN',boot,payload_store-boot+payload_end-payload_start,DSK,'../build/pfspike.dsk'

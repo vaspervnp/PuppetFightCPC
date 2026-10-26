@@ -100,6 +100,8 @@ CACHE_SLOTS_B   EQU 2           ; Putin (who has more in bank 1)
 CACHE_SLOT      EQU 1744
 CACHE_AT        EQU #4000-(CACHE_SLOTS_A+CACHE_SLOTS_B)*CACHE_SLOT
 MAX_SLOTS       EQU 8           ; main + bank 1, per fighter
+GUESS_AGE       EQU 96          ; uses of the cache (~40 pictures) before a
+                                ; slot may go to a guessed frame
 ;; The slot tables live after line_tab in slice 0 (#C700-#C7FE), and each
 ;; slot's (s, n) table, which the compiler writes for build_restore, in the
 ;; tails of slices 2, 5 and 7: six 130-byte tables in each.

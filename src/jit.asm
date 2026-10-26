@@ -101,11 +101,79 @@ jw_turn
     ld ix,fighter_a
 jw_other
     call jw_next
+    jr z,jw_go
+    call irqs_left              ; nothing certain: a guess, if there is
+    cp 2                        ; time to look for one (it takes a while)
+    ret c
+    ld ix,fighter_a             ; A then B
+    call jw_guess
+    jr z,jw_go_guess
+    ld ix,fighter_b
+    call jw_guess
     ret nz                      ; nothing to do
-jw_go
+jw_go_guess
+    ld a,1
+    ld (jw_guessing),a
     call jw_start
     ret nz
     jr jw_pick
+jw_go
+    xor a
+    ld (jw_guessing),a
+    call jw_start
+    ret nz
+    jr jw_pick
+
+;; jw_guess - IX = fighter: Z (and jg_rec, jg_face set) for the first frame
+;; of a move it may well start next that isn't cached (guess_moves, in its
+;; facing; last, idle in the other facing), as long as the slot it would
+;; take is empty or unused for GUESS_AGE: a guess mustn't push out frames in
+;; use. Destroys AF, BC, DE, HL.
+jw_guess
+    ld hl,guess_moves
+jg_next
+    ld a,(hl)
+    inc hl
+    cp #FF
+    jp z,jw_no
+    push hl
+    ld c,0                      ; frame 0
+    cp MV_IDLE
+    ld b,(ix+F_FACE)
+    jr nz,jg_face_ok
+    ld a,b                      ; idle: the other facing
+    xor 1
+    ld b,a
+    ld a,MV_IDLE
+jg_face_ok
+    push bc
+    call rec_addr
+    pop bc
+    ld (jg_rec),hl
+    ld a,b
+    ld (jg_face),a
+    call jit_find
+    pop hl
+    jr z,jg_next                ; cached already
+    call jit_victim             ; is there room for a guess?
+    inc hl
+    ld a,(hl)                   ; empty
+    or a
+    ret z
+    inc hl
+    inc hl
+    ld a,(jit_clock)
+    sub (hl)
+    cp GUESS_AGE
+    jr nc,jg_yes
+    or 1                        ; NZ: the cache is in use
+    ret
+jg_yes
+    xor a
+    ret
+
+guess_moves                     ; moves whose first frame is worth having
+    defb MV_WALK,MV_PUNCH,MV_KICK,MV_CROUCH,MV_JUMP,MV_IDLE,#FF
 
 ;; jw_wanted - IX = fighter: Z (and jg_rec, jg_face set) if it is holding a
 ;; frame because the one it wants isn't cached. Destroys AF, BC, DE, HL.
@@ -155,7 +223,8 @@ jw_no
 
 ;; jw_start - IX = fighter, (jg_rec), (jg_face) = a frame to compile. Takes
 ;; a slot (jit_victim) and runs the job: Z and HL = the slot when it is
-;; done, NZ if it ran out of time (jit_work goes on with it next picture).
+;; done, NZ if it ran out of time (jit_work goes on with it next picture,
+;; or, if it had no time to start, picks again).
 ;; Destroys everything but IX.
 jw_start
     ld hl,(jg_rec)
@@ -174,9 +243,39 @@ jw_start
     ld e,(hl)
     inc hl
     ld d,(hl)                   ; DE = span stream
+    inc hl
+    ld c,(hl)
+    inc hl
+    ld b,(hl)
+    ld (jw_size),bc             ; and its size
     push de
-    call jit_victim             ; a slot the frame's bank can reach
+    call jit_victim
     ld (jw_slot),hl
+    ld de,SL_RAM                ; a bank 1 slot, a frame from bank 0: one
+    add hl,de                   ; bank at a time, so the frame goes to main
+    ld a,(hl)                   ; RAM first (~3.5 ms)
+    ld (jw_stage),a
+    cp #C0
+    jr z,js_direct
+    ld hl,jw_bank
+    cp (hl)
+    jr z,js_direct
+    ld a,(jit_force)            ; time for the copy and a line?
+    or a
+    jr nz,js_go
+    call irqs_left
+    cp 2
+    jr nc,js_go
+    pop de                      ; no: not now
+    ld bc,#7FC0
+    out (c),c
+    or 1                        ; NZ
+    ret
+js_direct
+    xor a
+    ld (jw_stage),a
+js_go
+    ld hl,(jw_slot)
     xor a
     ld (hl),a                   ; empty until the code is all there
     inc hl
@@ -196,6 +295,19 @@ jw_start
     ld a,(jw_bank)
     ld bc,#7F00
     out (c),a
+    ld a,(jw_stage)
+    or a
+    jr z,js_paged
+    ld (jw_bank),a              ; compile with the slot's bank in
+    push de
+    ld de,jit_stage
+    ld bc,(jw_size)
+    ldir
+    pop de
+    ld bc,#7F00
+    out (c),a
+    ld hl,jit_stage
+js_paged
     ld a,(hl)                   ; top
     ld (de),a
     inc hl
@@ -253,6 +365,16 @@ jr_back
     inc hl
     ld a,(jw_face)
     ld (hl),a
+    inc hl
+    ld a,(jit_clock)            ; last use: now, or for a guess long ago,
+    ld b,a                      ; so it goes first if nothing uses it
+    ld a,(jw_guessing)
+    or a
+    ld a,b
+    jr z,jr_stamp
+    sub GUESS_AGE
+jr_stamp
+    ld (hl),a
     ld hl,(jit_done)            ; (for the bench)
     inc hl
     ld (jit_done),hl
@@ -291,11 +413,10 @@ jf_next
     or 1                        ; NZ: not cached
     ret
 
-;; jit_victim - IX = fighter, (jw_bank) = the frame's bank: the slot to
-;; compile into. Of the slots that bank can reach (main RAM, or the same
-;; bank), an empty one, or else the one unused longest, but never the one
-;; holding the frame the fighter is set to show (F_CDRAW): the next window
-;; may draw it. Out: HL = slot. Destroys AF, BC, DE.
+;; jit_victim - IX = fighter: the slot to compile into. An empty one, or
+;; else the one unused longest, but never the one holding the frame the
+;; fighter is set to show (F_CDRAW): the next window may draw it. Out:
+;; HL = slot. Destroys AF, BC, DE.
 jit_victim
     ld l,(ix+F_STAB)
     ld h,(ix+F_STAB+1)
@@ -305,13 +426,6 @@ jv_slot
     push hl
     ld de,SL_RAM
     add hl,de
-    ld a,(hl)
-    cp #C0
-    jr z,jv_reach
-    ld a,(jw_bank)
-    cp (hl)
-    jr nz,jv_skip               ; another bank
-jv_reach
     dec hl
     ld a,(hl)                   ; SL_ADDR: on show?
     cp (ix+F_CDRAW+1)

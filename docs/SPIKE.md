@@ -344,6 +344,36 @@ The DEMO scenarios still show 2 frames between every pair of pictures,
 0 lines caught and no held frames. `SLACK=15` is clean, and at `SLACK=20`
 2 lines are caught (it was 26 before the raised floor).
 
+- **Any frame into any slot.** A frame from bank 0 can now go into a
+  bank 1 slot. It is copied to a 600-byte buffer after the payload first
+  (~3.5 ms, started only with two interrupt periods to spare). Its stream
+  size is in the frame record. This stopped Putin's kick (bank 0, three
+  frames) from recompiling in his two main RAM slots every time: Putin's
+  held pictures fell from 30 to 21. Trump's rose from 32 to 42, so the
+  total is about the same.
+
+Where the held frames in the play script come from now: the first time a
+move or a facing is used (walk at the start, both fighters turning after
+the jump-over, a first kick or uppercut), and Trump's idle after walking.
+His idle and walk loops are 8 frames and he has 7 slots. In other words,
+the compiler's speed (about one frame per picture) against a burst of 3-8
+new frames.
+
+- **Guesses when there's nothing certain to compile.** With no wanted
+  frame and both next frames cached, `jit_work` compiles the first frame of
+  a move a fighter may start next: walk, punch, kick, crouch, jump in its
+  facing, then idle in the other facing (a turn). A guess only takes a slot
+  that is empty or hasn't been used for 96 cache uses, and is stamped as
+  old, so it is the first to go if nothing uses it. Looking for one costs
+  time (a find per move), so it only happens with two interrupt periods to
+  spare. Most guesses are compiled at the start of a round, while the
+  fighters stand idle.
+
+| Play script | No guesses | With guesses |
+|---|---|---|
+| Pictures with a held frame (Trump / Putin) | 42 / 21 | 16 / 18 |
+| Frames compiled | 66 | 47 |
+
 What's left in the compiler is the byte loop itself: ~24 µs per opaque
 byte facing right and ~29 facing left (read, test, two stores and a step,
 count). The remaining tweaks (`exx` for the (s, n) pointer, the mask
@@ -351,8 +381,8 @@ worked out instead of looked up) are worth ~5%.
 
 ## Next (milestone 2 work this feeds)
 
-- Held frames in busy play: the compiler does about one frame per picture,
-  and a new move or a turn needs 3-4. Options: let the logic start a move
-  on a frame that is already cached, or compile a move's first frame ahead
-  when its input is likely (an attack button held, the opponent close).
+- Held frames in busy play (34 of 192 fighter-pictures in the script): the
+  compiler does about one frame per picture. Further options: guesses from
+  the game state (the opponent close, a button down), or letting the logic
+  start a move on a frame that is already cached.
 - Confirm on real hardware (CRTC types 0-2), as OverscanCPC did.
