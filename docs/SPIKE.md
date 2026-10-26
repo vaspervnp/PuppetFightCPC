@@ -188,14 +188,39 @@ of its rebuild and at the start of the next.
 Margin in the both-jumping case: clean at `SLACK=15` (1.5 ms late), 26
 lines caught at `SLACK=20`. That's 0.5 ms less than before the floor moved.
 
+## Milestone 2 step 1: characters in the banks
+
+Every frame of both characters (48 each, all 14 moves) now lives in the
+extra 64K. Trump is in banks 4-5 and Putin in 6-7, each found through a
+directory at &4000 of its first bank (GAME_PLAN §3.4). The engine payload
+dropped from &38D5 to &10BE.
+
+- **Fighter records.** Each fighter is an `F_*` record: position, facing,
+  move and frame. `load_frame` fills in what the directory says about that
+  frame, and the `F_O*` fields hold what is on the screen. The same
+  `setup_fighter` serves both fighters.
+- **Generic drawers for both facings** (`draw_r`, `draw_l`). They work in
+  8-line chunks like the compiled draws, because span streams are now
+  padded to whole chunks. They take their column in A from the job record,
+  so either fighter can face either way.
+- **Paging per job.** Each draw job carries the RAM configuration it runs
+  in. Restores always run with #C0 (the mirror), with a constant `OUT`
+  and no other loads. That's what won back the margin the paging had cost.
+- **Disc.** Each bank is a file, and `PFSPIKE.BAS` pages it in and loads it.
+  ASCII BASIC on a CPC disc needs CR LF line endings (`.gitattributes`
+  keeps them).
+
+Bench (every scanline pass judged, sprites read back from the banks):
+0 lines caught, 0 late, 0 wrong bytes in all three scenarios, and
+`SLACK=15` still clean in the both-jumping case.
+
 ## Next (milestone 2 work this feeds)
 
 - A runtime compiler: turn the current move's span frames into compiled
   code for the current facing, in a per-fighter cache. Overlaps need both
   fighters compiled: the generic drawer alone is 8.7 ms.
-- Fighter data in banks 4-7. The restore no longer reads sprite data inside
-  the window (the lists are prepared), so it can run with the mirror paged
-  in while the draws page the fighter's bank.
-- Let x patches live per job, not per routine, so both fighters can face the
-  same way (today the generic drawer's x is patched into its code).
+- Input for two players and the fighter state machine (walk, crouch, jump,
+  facing, walls). Close combat then needs the runtime compiler: only the
+  idle frames have compiled draws today, and generic draws don't fit a
+  shared window.
 - Confirm on real hardware (CRTC types 0-2), as OverscanCPC did.

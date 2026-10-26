@@ -47,18 +47,27 @@ LOOK_DRAW_B     EQU 0
 
 ;; Job record
 J_RESUME        EQU 0           ; where the job continues
-J_SP            EQU 2           ; its line_tab pointer
+J_SP            EQU 2           ; its line_tab pointer (or restore list)
 J_DE            EQU 4           ; stream pointer, or x for a compiled draw
 J_CUR           EQU 6           ; next scanline, relative to BAND_TOP
 J_LEFT          EQU 7           ; scanlines (or chunks) still to do
-J_SIZE          EQU 8
+J_RAM           EQU 8           ; RAM configuration it runs in (#C0: mirror)
+J_X             EQU 9           ; passed in A: a generic drawer's column
+J_SIZE          EQU 10
+
+;; Both RUN macros end in the same dispatch: page the job's RAM in, load
+;; its registers and run it from where it stopped. It yields to @ret with
+;; HL = where to resume. (Written out in each: rasm's @ labels are local to
+;; one macro level.)
 
 ;; ---------------------------------------------------------------------------
-;; RUN_LINES - run a job that can stop on any scanline, up to target.
+;; RUN_RESTORE - run a restore, which can stop on any scanline, up to
+;; target. The two restores run back to back and each is under ~0.75 ms
+;; with interrupts off, so only the second lets interrupts in.
 ;; RUN_CHUNKS - run a compiled draw for whole chunks, to the first chunk
 ;; boundary at or past target.
 ;; ---------------------------------------------------------------------------
-    MACRO RUN_LINES job,look,count,phase
+    MACRO RUN_RESTORE job,look,phase,window
     ld a,({job}+J_LEFT)
     or a
     jr z,@skip
@@ -73,7 +82,7 @@ J_SIZE          EQU 8
     jr c,@n_ok
     ld a,(hl)                   ; no more than are left
 @n_ok
-    ld ({count}),a
+    ld (rr_count),a
     ld c,a
     ld a,(hl)
     sub c
@@ -81,9 +90,10 @@ J_SIZE          EQU 8
     ld a,({job}+J_CUR)
     add a,c
     ld ({job}+J_CUR),a
+    ld bc,#7FC0                 ; a restore reads the mirror: always #C0,
+    out (c),c                   ; and it needs nothing but SP
     ld a,{phase}
     ld (bench_phase),a
-    ld de,({job}+J_DE)
     ld sp,({job}+J_SP)
     ld hl,({job}+J_RESUME)
     ld iy,@ret
@@ -91,10 +101,11 @@ J_SIZE          EQU 8
 @ret
     ld ({job}+J_SP),sp
     ld ({job}+J_RESUME),hl
-    ld ({job}+J_DE),de
     ld a,PH_SCHED
     ld (bench_phase),a
+    IF {window}
     INT_WINDOW
+    ENDIF
 @skip
     MEND
 
@@ -131,8 +142,12 @@ J_SIZE          EQU 8
     ld (hl),a
     ld a,c
     ld ixl,a
+    ld a,({job}+J_RAM)
+    ld bc,#7F00
+    out (c),a
     ld a,{phase}
     ld (bench_phase),a
+    ld a,({job}+J_X)
     ld de,({job}+J_DE)
     ld sp,({job}+J_SP)
     ld hl,({job}+J_RESUME)
@@ -141,6 +156,7 @@ J_SIZE          EQU 8
 @ret
     ld ({job}+J_SP),sp
     ld ({job}+J_RESUME),hl
+    ld ({job}+J_DE),de          ; a generic drawer's stream pointer
     ld a,PH_SCHED
     ld (bench_phase),a
     INT_WINDOW
@@ -158,14 +174,10 @@ rebuild
     ld a,PH_SCHED
     ld (bench_phase),a
 rb_band
-    RUN_LINES job_ra,LOOK_RESTORE,rr_count,PH_RESTORE_A
-    RUN_LINES job_rb,LOOK_RESTORE,rr_count,PH_RESTORE_B
+    RUN_RESTORE job_ra,LOOK_RESTORE,PH_RESTORE_A,0
+    RUN_RESTORE job_rb,LOOK_RESTORE,PH_RESTORE_B,1
     RUN_CHUNKS job_da,LOOK_DRAW_A,PH_DRAW_A
-    IF PUTIN_COMPILED
     RUN_CHUNKS job_db,LOOK_DRAW_B,PH_DRAW_B
-    ELSE
-    RUN_LINES job_db,LOOK_DRAW_B,dl_count,PH_DRAW_B
-    ENDIF
     ld a,(job_ra+J_LEFT)
     ld hl,job_rb+J_LEFT
     or (hl)
@@ -180,6 +192,8 @@ rb_band
     jp rb_band
 rb_done
     ld sp,(rebuild_sp)
+    ld bc,#7FC0                 ; the mirror back at #4000
+    out (c),c
     ei
     xor a
     ld (bench_phase),a
@@ -189,9 +203,9 @@ rb_done
 ;; Job set-up, before the rebuild (ordinary code, with a stack).
 ;;
 ;; prepare - set up the first window of the next picture: both fighters if
-;; their ground overlaps (together = 1), otherwise Trump; Putin's window is
-;; set up after Trump's rebuild, while the loop waits for the next tick.
-;; Done at the end of the logic so the rebuild can start on the tick itself.
+;; their ground overlaps (together = 1), otherwise A; B's window is set up
+;; after A's rebuild, while the loop waits for the next tick. Done at the
+;; end of the logic so the rebuild can start on the tick itself.
 ;; rebuild_clear - no jobs, and band_end as far down as it goes.
 ;; setup_a / setup_b - the restore and draw jobs for one fighter; each pulls
 ;; band_end up to its fighter's first scanline + BAND.
@@ -217,130 +231,151 @@ rebuild_clear
     ret
 
 setup_a
-    ld a,(fa_drawn)             ; restore: the frame still on the screen
-    or a
-    jr z,sa_draw
-    ld ix,job_ra
-    ld hl,(fa_old_sn)
-    ld de,RESTORE_LIST_A
-    ld a,(fa_old_x)
-    ld c,a
-    ld b,0                      ; facing right
-    ld a,(fa_old_y)
-    call setup_restore
-sa_draw
-    ld hl,(fa_sn)               ; what the next restore will take off
-    ld (fa_old_sn),hl
-    ld ix,job_da                ; draw: the new frame, compiled
-    ld hl,(fa_spans)
-    ld (fa_old_spans),hl
-    ld a,(fa_y)
-    ld (fa_old_y),a
-    ld bc,(fa_draw)
-    call setup_job
-    call to_chunks
-    ld a,(fa_x)
-    ld (fa_old_x),a
-    ld (job_da+J_DE),a
-    xor a
-    ld (job_da+J_DE+1),a
-    inc a
-    ld (fa_drawn),a
-    ret
+    ld ix,fighter_a
+    ld hl,job_ra
+    ld de,job_da
+    ld bc,RESTORE_LIST_A
+    jr setup_fighter
 
 setup_b
-    ld a,(fb_drawn)
+    ld ix,fighter_b
+    ld hl,job_rb
+    ld de,job_db
+    ld bc,RESTORE_LIST_B
+
+;; setup_fighter - IX = fighter, HL = its restore job, DE = its draw job,
+;; BC = its restore list. The restore takes off what is on the screen (the
+;; F_O* fields), the draw puts down the frame load_frame fetched, and the
+;; F_O* fields then describe that frame. Destroys everything but IX.
+setup_fighter
+    ld (sf_draw),de
+    ld (sf_list),bc
+    ld a,(ix+F_DRAWN)
     or a
-    jr z,sb_draw
-    ld ix,job_rb
-    ld hl,(fb_old_sn)
-    ld de,RESTORE_LIST_B
-    ld a,(fb_old_x)
-    ld c,a
-    ld b,1                      ; facing left
-    ld a,(fb_old_y)
+    jr z,sf_draw_job
+    push hl                     ; restore job
+    ld a,(ix+F_OBANK)           ; the old frame's (s, n) table is in its bank
+    ld bc,#7F00
+    out (c),a
+    ld a,(ix+F_OW)
+    ld (br_w),a
+    ld l,(ix+F_OSN)
+    ld h,(ix+F_OSN+1)
+    ld de,(sf_list)
+    ld c,(ix+F_OX)
+    ld b,(ix+F_OFACE)
+    ld a,(ix+F_OY)
+    pop iy
     call setup_restore
-sb_draw
-    ld hl,(fb_sn)
-    ld (fb_old_sn),hl
-    ld ix,job_db
-    ld hl,(fb_spans)
-    ld (fb_old_spans),hl
-    ld a,(fb_y)
-    ld (fb_old_y),a
-    IF PUTIN_COMPILED
-    ld bc,(fb_draw)
-    call setup_job
-    call to_chunks
-    ld a,(fb_x)
-    ld (fb_old_x),a
-    ld (job_db+J_DE),a
-    xor a
-    ld (job_db+J_DE+1),a
-    ELSE
-    ld bc,draw_l
-    call setup_job
-    ld a,(fb_x)
-    ld (fb_old_x),a
-    add a,SPR_W-1
-    ld (dl_xr+1),a
-    ENDIF
-    ld a,1
-    ld (fb_drawn),a
+sf_draw_job
+    ld a,(ix+F_FBANK)           ; the new frame's spans
+    ld bc,#7F00
+    out (c),a
+    ld a,(ix+F_X)               ; the frame's left edge: box x + offset
+    add a,(ix+F_OFF)
+    ld (sf_x),a
+    ld iy,(sf_draw)
+    ld l,(ix+F_SPANS)
+    ld h,(ix+F_SPANS+1)
+    ld a,(ix+F_Y)
+    call setup_job              ; lines are padded to whole chunks
+    ld a,(iy+J_LEFT)
+    rrca
+    rrca
+    rrca
+    and #1F
+    ld (iy+J_LEFT),a
+    ld a,(ix+F_CDRAW)
+    or (ix+F_CDRAW+1)
+    jr z,sf_generic
+    ld a,(ix+F_CDRAW)           ; compiled: runs from its bank, DE = x
+    ld (iy+J_RESUME),a
+    ld a,(ix+F_CDRAW+1)
+    ld (iy+J_RESUME+1),a
+    ld a,(ix+F_CBANK)
+    ld (iy+J_RAM),a
+    ld a,(sf_x)
+    ld (iy+J_DE),a
+    ld (iy+J_DE+1),0
+    jr sf_record
+sf_generic
+    ld a,(ix+F_FBANK)
+    ld (iy+J_RAM),a
+    ld a,(ix+F_FACE)
+    or a
+    ld a,(sf_x)
+    ld hl,draw_r
+    jr z,sf_gen_x
+    add a,(ix+F_W)              ; facing left: byte 0 lands at x + w - 1
+    dec a
+    ld hl,draw_l
+sf_gen_x
+    ld (iy+J_X),a
+    ld (iy+J_RESUME),l
+    ld (iy+J_RESUME+1),h
+sf_record
+    ld a,(sf_x)                 ; what is now on the screen
+    ld (ix+F_OX),a
+    ld a,(ix+F_Y)
+    ld (ix+F_OY),a
+    ld a,(ix+F_W)
+    ld (ix+F_OW),a
+    ld a,(ix+F_FACE)
+    ld (ix+F_OFACE),a
+    ld a,(ix+F_FBANK)
+    ld (ix+F_OBANK),a
+    ld a,(ix+F_SPANS)
+    ld (ix+F_OSPANS),a
+    ld a,(ix+F_SPANS+1)
+    ld (ix+F_OSPANS+1),a
+    ld a,(ix+F_SN)
+    ld (ix+F_OSN),a
+    ld a,(ix+F_SN+1)
+    ld (ix+F_OSN+1),a
+    ld (ix+F_DRAWN),1
+    ld bc,#7FC0
+    out (c),c
     ret
 
-;; setup_restore - IX = job, HL = (s, n) table, DE = list buffer, A = y,
-;; C = x, B = facing (0 right, 1 left). Builds the restore list and points
-;; the job at it. Destroys everything but IX.
+;; setup_restore - IY = job, HL = (s, n) table, DE = list buffer, A = y,
+;; C = x, B = facing (0 right, 1 left), (br_w) = frame width. Builds the
+;; restore list and points the job at it. Destroys everything but IX, IY.
 setup_restore
     push de
     call build_restore          ; HL = first scanline, A = lines
     pop de
-    ld (ix+J_SP),e
-    ld (ix+J_SP+1),d
-    ld (ix+J_LEFT),a
-    ld (ix+J_RESUME),restore AND #FF
-    ld (ix+J_RESUME+1),restore>>8
+    ld (iy+J_SP),e
+    ld (iy+J_SP+1),d
+    ld (iy+J_LEFT),a
+    ld (iy+J_RESUME),restore AND #FF
+    ld (iy+J_RESUME+1),restore>>8
+    ld (iy+J_RAM),#C0
     ld a,l
     jr sj_cur
 
-;; setup_job - IX = job, HL = span stream, A = sprite top scanline,
-;; BC = resume address. Sets the job up for every line of the frame.
-;; Destroys AF, BC, DE, HL.
+;; setup_job - IY = job, HL = span stream, A = sprite top scanline. Points
+;; the job at the stream's first line. Destroys AF, BC, DE, HL.
 setup_job
-    ld (ix+J_RESUME),c
-    ld (ix+J_RESUME+1),b
     add a,(hl)                  ; first drawn scanline (y + top < 256)
     inc hl
     ld c,(hl)                   ; lines
     inc hl
-    ld (ix+J_DE),l
-    ld (ix+J_DE+1),h
-    ld (ix+J_LEFT),c
+    ld (iy+J_DE),l
+    ld (iy+J_DE+1),h
+    ld (iy+J_LEFT),c
     ld e,a
     ld d,0
     ld hl,line_tab
     add hl,de
     add hl,de
-    ld (ix+J_SP),l
-    ld (ix+J_SP+1),h
+    ld (iy+J_SP),l
+    ld (iy+J_SP+1),h
 sj_cur
     sub BAND_TOP
-    ld (ix+J_CUR),a
+    ld (iy+J_CUR),a
     add a,BAND                  ; the first band ends BAND lines below the
     ld hl,band_end              ; highest job's first line
     cp (hl)
     ret nc
     ld (hl),a
-    ret
-
-;; to_chunks - turn IX's scanline count into a chunk count. Destroys AF.
-to_chunks
-    ld a,(ix+J_LEFT)
-    add a,CHUNK-1
-    rrca
-    rrca
-    rrca
-    and #1F
-    ld (ix+J_LEFT),a
     ret

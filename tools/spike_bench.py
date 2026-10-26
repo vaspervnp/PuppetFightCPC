@@ -29,7 +29,13 @@ import sys
 from collections import defaultdict
 
 sys.path.insert(0, os.path.expanduser("~/repos/CPCTools/cpcemu"))
+import ctypes  # noqa: E402
+import cpc as cpcmod  # noqa: E402
 from cpc import CPC  # noqa: E402
+
+_ram_ptr = cpcmod._lib.cpcemu_ram_ptr
+_ram_ptr.restype = ctypes.POINTER(ctypes.c_uint8)
+_ram_ptr.argtypes = [ctypes.c_void_p, ctypes.c_int]
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD = os.path.join(REPO, "build")
@@ -41,7 +47,6 @@ LINE_US = 64
 FRAME_US = 312 * LINE_US
 BLANK = 40          # scanlines from the start of VSYNC to display line 0
 LINES = 272
-W = 16
 PHASES = {1: "restore A (Trump, right)", 2: "restore B (Putin, left)",
           3: "draw A", 4: "draw B (Putin, left)",
           6: "scheduler overhead", 5: "logic + prepare"}
@@ -85,8 +90,18 @@ class Bench:
         """Display line the beam is on (negative: in the blanking)."""
         return ((self.t - self.vsync0) % FRAME_US) // LINE_US - BLANK
 
+    def field(self, fighter, name, size=1):
+        a = self.S[fighter] + self.S[name]
+        b = self.c.read_ram(a, size)
+        return b[0] if size == 1 else b[0] | b[1] << 8
+
+    def bank_read(self, config, addr, size):
+        """Read from the extra RAM that RAM configuration #C4-#C7 puts at #4000."""
+        p = _ram_ptr(self.c._h, config - 0xC0)
+        return bytes(p[addr - 0x4000 + i] for i in range(size))
+
     def jump_state(self):
-        fa, fb = self.peek("FA_Y"), self.peek("FB_Y")
+        fa, fb = self.field("FIGHTER_A", "F_Y"), self.field("FIGHTER_B", "F_Y")
         return (("A up" if fa < self.fighter_y else "A down") + ", " +
                 ("B up" if fb < self.fighter_y else "B down"))
 
@@ -164,23 +179,28 @@ class Bench:
             a = self.line_addr[L]
             m = ((a >> 8) & 0x3F | 0x40) << 8 | (a & 0xFF)
             out[L] = bytearray(self.c.read_ram(m, 96))
-        for spans_sym, x_sym, y_sym, flipped in (
-                ("FA_OLD_SPANS", "FA_OLD_X", "FA_OLD_Y", False),
-                ("FB_OLD_SPANS", "FB_OLD_X", "FB_OLD_Y", True)):
-            p = self.peek(spans_sym, 2)
-            x = self.peek(x_sym)
-            y = self.peek(y_sym)
-            top, lines = self.c.read_ram(p, 2)
+        for f in ("FIGHTER_A", "FIGHTER_B"):
+            if not self.field(f, "F_DRAWN"):
+                continue
+            p = self.field(f, "F_OSPANS", 2)
+            bank = self.field(f, "F_OBANK")
+            x = self.field(f, "F_OX")
+            y = self.field(f, "F_OY")
+            w = self.field(f, "F_OW")
+            flipped = self.field(f, "F_OFACE")
+            top, lines = self.bank_read(bank, p, 2)
             p += 2
             for i in range(lines):
-                s, n = self.c.read_ram(p, 2)
-                data = self.c.read_ram(p + 2, n)
+                s, n = self.bank_read(bank, p, 2)
+                data = self.bank_read(bank, p + 2, n)
                 p += 2 + n
+                if not n:
+                    continue
                 row = out[y + top + i]
                 for j, d in enumerate(data):
                     if flipped:
                         d = flip_of(d)
-                        col = x + W - 1 - s - j
+                        col = x + w - 1 - s - j
                     else:
                         col = x + s + j
                     row[col] = (row[col] & mask_of(d)) | d

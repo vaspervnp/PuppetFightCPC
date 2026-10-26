@@ -46,7 +46,8 @@ rs_line
 ;; ---------------------------------------------------------------------------
 ;; build_restore - make the restore list for a frame on the screen.
 ;;   in:  HL = the frame's (s, n) table, DE = list buffer, A = y,
-;;        C = x, B = 0 facing right or 1 facing left
+;;        C = x (the frame's left edge), B = 0 facing right or 1 facing
+;;        left, (br_w) = the frame's width in bytes
 ;;   out: HL = the list's first scanline (y + top), A = its line count
 ;; Ordinary code, run by prepare between pictures. An empty line gets a
 ;; one-byte copy into RESTORE_DUMMY, an unused byte of screen RAM, so the
@@ -92,7 +93,8 @@ br_span
     or a
     ld a,(br_x)
     jr z,br_right
-    add a,SPR_W                 ; facing left: x + W - n - s
+    ld hl,br_w                  ; facing left: x + w - n - s
+    add a,(hl)
     sub b
     sub c
     jr br_col
@@ -135,22 +137,103 @@ br_end
     ret
 
 ;; ---------------------------------------------------------------------------
-;; draw_l - draw a span stream mirrored (facing left).
-;;   in:  DE = line record, SP = line_tab entry, IY = yield
-;;        (dl_count) = scanlines to do now (>= 1)
-;;        (dl_xr+1) = x + SPR_W - 1  (the screen byte of the sprite's byte 0)
-;; Each byte goes through flip_tab (swap the two pixels) and then mask_tab,
-;; and the line is walked right to left. The unrolled chain is entered n
-;; blocks from its end through dl_entries.
+;; draw_r / draw_l - the generic drawers: a span stream drawn facing right,
+;; or mirrored (facing left). Jobs for the scheduler like a compiled draw:
+;; they run whole chunks (span streams are padded to them) and yield.
+;;   in:  DE = line record, SP = line_tab entry, IY = yield,
+;;        IXL = chunks to draw now (>= 1),
+;;        A = the frame's left edge                     for draw_r
+;;        A = its left edge + width - 1 (byte 0's place) for draw_l
+;; Every byte goes through mask_tab; draw_l also mirrors it through flip_tab
+;; and walks the line right to left. The unrolled chains are entered n
+;; blocks from their end through dr_entries / dl_entries. Every 8 lines they
+;; let a pending interrupt in on the real stack (see irq.asm), so the slow
+;; drawers never keep interrupts off for long.
 ;; Destroys AF, BC, HL.
 ;; ---------------------------------------------------------------------------
-DL_BLOCK        EQU 12          ; bytes of code per drawn byte
+DR_BLOCK        EQU 8           ; bytes of code per drawn byte
+DL_BLOCK        EQU 12
+
+    MACRO GEN_START xpatch,count
+    ld ({xpatch}+1),a
+    ld a,ixl
+    add a,a
+    add a,a
+    add a,a                     ; lines = chunks * 8
+    ld ({count}),a
+    MEND
+
+    MACRO GEN_NEXT count,line,resume
+    ld hl,{count}
+    dec (hl)
+    jr z,@done
+    ld a,(hl)
+    and 7
+    jp nz,{line}
+    ld (gen_sp),sp
+    ld sp,(rebuild_sp)
+    ei
+    nop
+    di
+    ld sp,(gen_sp)
+    jp {line}
+@done
+    ld hl,{resume}
+    jp (iy)
+    MEND
+
+draw_r
+    GEN_START dr_x,gen_count
+dr_line
+    pop hl
+dr_x
+    ld bc,0                     ; patched: x
+    add hl,bc
+    ld a,(de)                   ; s
+    inc de
+    add a,l
+    ld l,a
+    jr nc,dr_nc
+    inc h
+dr_nc
+    ld a,(de)                   ; n
+    inc de
+    or a
+    jp z,dr_next
+    add a,a
+    ld c,a
+    ld b,dr_entries/256
+    ld a,(bc)
+    ld (dr_jp+1),a
+    inc c
+    ld a,(bc)
+    ld (dr_jp+2),a
+    ld b,mask_tab/256
+dr_jp
+    jp 0                        ; patched: into the chain
+dr_chain
+    REPEAT SPR_W*2
+    ld a,(de)                   ; data byte
+    inc de
+    ld c,a
+    ld a,(bc)                   ; its mask
+    and (hl)
+    or c
+    ld (hl),a
+    inc hl
+    REND
+dr_chain_end
+dr_next
+    GEN_NEXT gen_count,dr_line,draw_r
+
+    ASSERT dr_chain_end-dr_chain==SPR_W*2*DR_BLOCK
 
 draw_l
+    GEN_START dl_xr,gen_count
 dl_line
     pop hl
 dl_xr
-    ld bc,0                     ; patched: x + SPR_W - 1
+    ld bc,0                     ; patched: x + w - 1
     add hl,bc
     ld a,(de)                   ; s: step left by it
     inc de
@@ -193,21 +276,6 @@ dl_chain
     REND
 dl_chain_end
 dl_next
-    ld hl,dl_count
-    dec (hl)
-    jr z,dl_done
-    ld a,(hl)
-    and 7
-    jp nz,dl_line
-    ld (dl_sp),sp               ; every 8 lines: let a pending interrupt in
-    ld sp,(rebuild_sp)          ; on the real stack (see irq.asm), so the
-    ei                          ; slow drawer never keeps them off for long
-    nop
-    di
-    ld sp,(dl_sp)
-    jp dl_line
-dl_done
-    ld hl,draw_l
-    jp (iy)
+    GEN_NEXT gen_count,dl_line,draw_l
 
     ASSERT dl_chain_end-dl_chain==SPR_W*2*DL_BLOCK

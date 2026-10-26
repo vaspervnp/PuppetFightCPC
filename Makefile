@@ -1,6 +1,7 @@
 # Puppet Fight CPC - build
 #
-#   make          build/pfspike.sna and build/pfspike.dsk (RUN"PFSPIKE)
+#   make          build/pfspike.sna and build/pfspike.dsk (RUN"PFSPIKE: the
+#                 BASIC loader pages each character bank in and loads it)
 #   make bench    run the spike on the headless 6128 and measure it
 #   make run      open the snapshot in Caprice32
 #
@@ -23,7 +24,8 @@ RASMFLAGS := $(if $(filter compiled,$(PUTIN_DRAW)),-DPUTIN_COMPILED=1,-DPUTIN_CO
              -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK)
 BUILD  := build
 
-GEN := src/gen/tables.asm src/gen/trump_idle.asm src/gen/putin_idle.asm
+GEN := src/gen/tables.asm src/gen/trump_bank0.asm src/gen/trump_bank1.asm \
+       src/gen/putin_bank0.asm src/gen/putin_bank1.asm
 SRC := $(wildcard src/*.asm) $(GEN)
 
 all: $(BUILD)/pfspike.sna
@@ -34,20 +36,21 @@ $(BUILD):
 src/gen/tables.asm: tools/sprite_codegen.py
 	$(PYTHON) tools/sprite_codegen.py tables
 
-src/gen/trump_idle.asm: tools/sprite_codegen.py art/sprites/trump/idle_0.png
-	$(PYTHON) tools/sprite_codegen.py frames $@ trump trump \
-	    idle_0 idle_1 idle_2 idle_3 --compiled idle_0 idle_1 idle_2 idle_3 \
-	    --right-unless-sym PUTIN_COMPILED --right-unless idle_1 idle_3
+# A character's two bank images come out of one run. The idle frames the
+# spike shows also get compiled draws, for the facing each fighter has.
+src/gen/trump_bank0.asm src/gen/trump_bank1.asm &: tools/sprite_codegen.py \
+        art/sprites/trump.json $(wildcard art/sprites/trump/*.png)
+	$(PYTHON) tools/sprite_codegen.py character trump --compiled-right idle_0 idle_2
 
-src/gen/putin_idle.asm: tools/sprite_codegen.py art/sprites/putin/idle_0.png
-	$(PYTHON) tools/sprite_codegen.py frames $@ putin putin \
-	    idle_0 idle_1 idle_2 idle_3 \
-	    --compiled-left idle_0 idle_2 --left-if PUTIN_COMPILED
+src/gen/putin_bank0.asm src/gen/putin_bank1.asm &: tools/sprite_codegen.py \
+        art/sprites/putin.json $(wildcard art/sprites/putin/*.png)
+	$(PYTHON) tools/sprite_codegen.py character putin --compiled-left idle_0 idle_2
 
 # One rasm pass writes the snapshot, the symbols and (via SAVE) the disc.
 $(BUILD)/pfspike.sna: $(SRC) FORCE | $(BUILD)
 	rm -f $(BUILD)/pfspike.dsk
 	cd src && $(RASM) main.asm -oi ../$@ -s -sl -sq -os ../$(BUILD)/pfspike.sym -eo -v2 $(RASMFLAGS)
+	iDSK $(BUILD)/pfspike.dsk -i src/pfspike.bas -t 0 -f >/dev/null
 
 bench: $(BUILD)/pfspike.sna
 	$(PYTHON) tools/spike_bench.py

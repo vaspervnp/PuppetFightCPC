@@ -90,6 +90,38 @@ wait_render
     ret
 
 ;; ---------------------------------------------------------------------------
+;; Fighters. Each is a record of F_* fields: where it is and what it shows,
+;; the frame load_frame fetched from its character's directory, and what is
+;; on the screen now (the F_O* fields, for the restore and the bench).
+;; ---------------------------------------------------------------------------
+F_RAM0          EQU 0           ; RAM configuration of the character's bank 0
+F_X             EQU 1           ; box x, bytes
+F_Y             EQU 2           ; top scanline
+F_FACE          EQU 3           ; 0 right, 1 left
+F_MOVE          EQU 4
+F_FRAME         EQU 5
+F_FBANK         EQU 6           ; the frame: RAM configuration of its data,
+F_W             EQU 7           ; width (bytes), x offset (bytes, signed),
+F_OFF           EQU 8
+F_SPANS         EQU 9           ; span stream, (s, n) table,
+F_SN            EQU 11
+F_CBANK         EQU 13          ; compiled draw for this facing (0: none)
+F_CDRAW         EQU 14
+F_DRAWN         EQU 16          ; what is on the screen
+F_OX            EQU 17          ; its left edge
+F_OY            EQU 18
+F_OW            EQU 19
+F_OFACE         EQU 20
+F_OBANK         EQU 21
+F_OSPANS        EQU 23
+F_OSN           EQU 25
+F_SIZE          EQU 27
+
+MOVE_IDLE       EQU 0
+DIR_MOVES       EQU #4004       ; move table in a character's bank 0
+REC_SIZE        EQU 12
+
+;; ---------------------------------------------------------------------------
 ;; logic - next picture's frames and positions. Idle advances every second
 ;; picture; both fighters sway a few bytes to and fro so the restore has
 ;; somewhere to put the ground back.
@@ -97,16 +129,17 @@ wait_render
 logic
     ld hl,render_count
     inc (hl)
-    ld hl,trump_frames
-    call frame_entry
-    ld (fa_spans),de
-    ld (fa_draw),bc
-    ld (fa_sn),hl
-    ld hl,putin_frames
-    call frame_entry
-    ld (fb_spans),de
-    ld (fb_draw),bc
-    ld (fb_sn),hl
+    ld a,(hl)
+    rra
+    and 3
+    IF PUTIN_COMPILED           ; overlaps need compiled draws: idle 0 and 2
+    and 2
+    ENDIF
+    ld (fighter_a+F_FRAME),a
+    ld (fighter_b+F_FRAME),a
+    xor a
+    ld (fighter_a+F_MOVE),a
+    ld (fighter_b+F_MOVE),a
 
     ld a,(render_count)
     rra
@@ -118,16 +151,16 @@ logic
     ld b,(hl)
     ld a,TRUMP_X0
     add a,b
-    ld (fa_x),a
+    ld (fighter_a+F_X),a
     ld a,PUTIN_X0
     sub b
-    ld (fb_x),a
+    ld (fighter_b+F_X),a
 
     ;; Jumps (JUMP=1): a 48-picture cycle - Trump jumps, then Putin, then
     ;; both together. Otherwise both stand.
     ld a,FIGHTER_Y
-    ld (fa_y),a
-    ld (fb_y),a
+    ld (fighter_a+F_Y),a
+    ld (fighter_b+F_Y),a
     IF JUMP
     ld a,(render_count)
 lg_mod48
@@ -151,78 +184,142 @@ lg_mod_ok
     cp 32
     jr c,lg_b_jumps
     ld a,b                      ; both
-    ld (fa_y),a
+    ld (fighter_a+F_Y),a
 lg_b_jumps
     ld a,b
-    ld (fb_y),a
-    ret
+    ld (fighter_b+F_Y),a
+    jr lg_frames
 lg_a_jumps
     ld a,b
-    ld (fa_y),a
+    ld (fighter_a+F_Y),a
+lg_frames
     ENDIF
-    ret
+    ld ix,fighter_a
+    call load_frame
+    ld ix,fighter_b
+    jp load_frame
 
 jump_arc                        ; rise and fall over 16 pictures, top at
     defb 7,21,32,42,50,55,59,60,60,59,55,50,42,32,21,7  ; JUMP_MAX lines
     ASSERT JUMP_MAX>=60
 
-;; frame_entry - HL = a fighter's frame table; picks the idle frame for this
-;; picture (12.5 fps animation). Out: DE = spans, BC = draw, HL = (s, n).
-;; Destroys AF.
-frame_entry
-    ld a,(render_count)
-    rra
-    and 3
-    ld c,a
-    add a,a
-    add a,c
-    add a,a                     ; 6 bytes per entry
-    ld c,a
-    ld b,0
-    add hl,bc
-    ld e,(hl)
-    inc hl
-    ld d,(hl)
-    inc hl
-    ld c,(hl)
-    inc hl
-    ld b,(hl)
-    inc hl
-    ld a,(hl)
-    inc hl
-    ld h,(hl)
-    ld l,a
-    ret
-
 sway                            ; -6..6, a triangle over 32 steps
     defb 0,1,2,3,4,5,6,6,6,5,4,3,2,1,0,0
     defb 0,-1,-2,-3,-4,-5,-6,-6,-6,-5,-4,-3,-2,-1,0,0
 
-;; ground_overlap - NZ if the bytes A covers (old or new) meet B's.
-;; Destroys AF, BC.
+;; load_frame - IX = fighter: fetch its F_MOVE / F_FRAME record from its
+;; character's directory into the F_FBANK..F_CDRAW fields (the compiled draw
+;; for its facing). Pages the character's bank 0 in and back out.
+;; Destroys AF, BC, DE, HL.
+load_frame
+    ld a,(ix+F_RAM0)
+    ld bc,#7F00
+    out (c),a
+    ld a,(ix+F_MOVE)            ; move table entry: frames, record list
+    ld l,a
+    add a,a
+    add a,l
+    ld l,a
+    ld h,0
+    ld de,DIR_MOVES+1
+    add hl,de
+    ld e,(hl)
+    inc hl
+    ld d,(hl)                   ; DE = the move's first record
+    ld a,(ix+F_FRAME)           ; + REC_SIZE * frame
+    add a,a
+    add a,a                     ; * 4
+    ld l,a
+    ld h,0
+    add hl,hl                   ; * 8
+    ld c,l
+    ld b,h
+    srl b
+    rr c                        ; BC = * 4
+    add hl,bc                   ; * 12
+    add hl,de
+    ld a,(hl)                   ; bank (0/1)
+    add a,(ix+F_RAM0)
+    ld (ix+F_FBANK),a
+    inc hl
+    ld a,(hl)
+    ld (ix+F_W),a
+    inc hl
+    ld a,(hl)
+    ld (ix+F_OFF),a
+    inc hl
+    ld a,(hl)
+    ld (ix+F_SPANS),a
+    inc hl
+    ld a,(hl)
+    ld (ix+F_SPANS+1),a
+    inc hl
+    ld a,(hl)
+    ld (ix+F_SN),a
+    inc hl
+    ld a,(hl)
+    ld (ix+F_SN+1),a
+    inc hl
+    ld a,(hl)                   ; compiled code's bank
+    add a,(ix+F_RAM0)
+    ld (ix+F_CBANK),a
+    inc hl                      ; facing right, then left
+    ld a,(ix+F_FACE)
+    or a
+    jr z,lf_draw
+    inc hl
+    inc hl
+lf_draw
+    ld a,(hl)
+    ld (ix+F_CDRAW),a
+    inc hl
+    ld a,(hl)
+    ld (ix+F_CDRAW+1),a
+    ld bc,#7FC0
+    out (c),c
+    ret
+
+;; ground_overlap - A = 1 if the bytes A covers (old and new) meet B's,
+;; whichever side each is on, else A = 0. Destroys AF, BC, DE, HL.
 ground_overlap
-    ld a,(fa_x)                 ; C = A's right edge (exclusive)
-    ld b,a
-    ld a,(fa_old_x)
-    cp b
-    jr nc,go_a_max
-    ld a,b
-go_a_max
-    add a,SPR_W
-    ld c,a
-    ld a,(fb_x)                 ; B = B's left edge
-    ld b,a
-    ld a,(fb_old_x)
-    cp b
-    jr c,go_b_min
-    ld a,b
-go_b_min
-    cp c                        ; B starts at or past A's end: apart
+    ld ix,fighter_a
+    call ground_span            ; D = left, E = right (exclusive)
+    push de
+    ld ix,fighter_b
+    call ground_span
+    pop bc                      ; B,C = A's span; D,E = B's
+    ld a,d                      ; apart if B starts at or past A's end
+    cp c
     jr nc,go_apart
-    or 1                        ; NZ: overlapping
+    ld a,b                      ; or A starts at or past B's end
+    cp e
+    jr nc,go_apart
+    ld a,1
     ret
 go_apart
-    xor a                       ; Z
+    xor a
+    ret
+
+;; ground_span - IX = fighter: D = the leftmost byte it covers (new frame
+;; and the one on the screen), E = one past the rightmost. Destroys AF, HL.
+ground_span
+    ld a,(ix+F_X)
+    add a,(ix+F_OFF)
+    ld d,a
+    add a,(ix+F_W)
+    ld e,a
+    ld a,(ix+F_DRAWN)
+    or a
+    ret z
+    ld a,(ix+F_OX)
+    cp d
+    jr nc,gs_left
+    ld d,a
+gs_left
+    add a,(ix+F_OW)
+    cp e
+    ret c
+    ld e,a
     ret
 
     include "crtc.asm"
@@ -241,34 +338,20 @@ dl_entries                      ; draw_l chain entry for n drawn bytes
     REPEAT SPR_W*2+1,n
     defw dl_chain_end-(n-1)*DL_BLOCK
     REND
+    ALIGN 256
+dr_entries                      ; draw_r chain entry for n drawn bytes
+    REPEAT SPR_W*2+1,n
+    defw dr_chain_end-(n-1)*DR_BLOCK
+    REND
 
-trump_frames                    ; spans, compiled draw, (s, n) table
-    IF PUTIN_COMPILED               ; overlaps: two compiled frames, for room
-    defw trump_idle_0_spans,trump_idle_0_draw,trump_idle_0_sn
-    defw trump_idle_2_spans,trump_idle_2_draw,trump_idle_2_sn
-    defw trump_idle_0_spans,trump_idle_0_draw,trump_idle_0_sn
-    defw trump_idle_2_spans,trump_idle_2_draw,trump_idle_2_sn
-    ELSE
-    defw trump_idle_0_spans,trump_idle_0_draw,trump_idle_0_sn
-    defw trump_idle_1_spans,trump_idle_1_draw,trump_idle_1_sn
-    defw trump_idle_2_spans,trump_idle_2_draw,trump_idle_2_sn
-    defw trump_idle_3_spans,trump_idle_3_draw,trump_idle_3_sn
-    ENDIF
-putin_frames                    ; spans, compiled left-facing draw, (s, n)
-    IF PUTIN_COMPILED               ; only two frames fit compiled
-    defw putin_idle_0_spans,putin_idle_0_drawl,putin_idle_0_sn
-    defw putin_idle_2_spans,putin_idle_2_drawl,putin_idle_2_sn
-    defw putin_idle_0_spans,putin_idle_0_drawl,putin_idle_0_sn
-    defw putin_idle_2_spans,putin_idle_2_drawl,putin_idle_2_sn
-    ELSE
-    defw putin_idle_0_spans,0,putin_idle_0_sn
-    defw putin_idle_1_spans,0,putin_idle_1_sn
-    defw putin_idle_2_spans,0,putin_idle_2_sn
-    defw putin_idle_3_spans,0,putin_idle_3_sn
-    ENDIF
-
-    include "gen/trump_idle.asm"
-    include "gen/putin_idle.asm"
+;; The two fighters: Trump in banks 4-5 facing right, Putin in banks 6-7
+;; facing left. Everything else in a record is filled in at run time.
+fighter_a
+    defb #C4,TRUMP_X0,FIGHTER_Y,0
+    defs F_SIZE-4
+fighter_b
+    defb #C6,PUTIN_X0,FIGHTER_Y,1
+    defs F_SIZE-4
 
 ;; ---------------------------------------------------------------------------
 ;; Workspace (carried in the file for the spike; costs ~600 bytes)
@@ -279,8 +362,6 @@ irq_count       defb 0
 tick_count      defb 0
 last_render     defb 0
 render_count    defb 0
-fa_drawn        defb 0
-fb_drawn        defb 0
 rebuild_sp      defw 0
 band_end        defb 0
 rr_count        defb 0
@@ -289,31 +370,17 @@ br_x            defb 0          ; build_restore: x, then facing
 br_dir          defb 0
 br_first        defb 0
 br_lines        defb 0
-dl_count        defb 0
-dl_sp           defw 0
 fr_h            defb 0
 fr_x            defb 0
 fr_w            defb 0
 fr_b            defb 0
-fa_x            defb 0
-fa_y            defb 0
-fa_old_x        defb 0
-fa_old_y        defb 0
-fa_spans        defw 0
-fa_old_spans    defw 0
-fa_draw         defw 0
-fa_sn           defw 0
-fa_old_sn       defw 0
-fb_x            defb 0
-fb_y            defb 0
-fb_old_x        defb 0
-fb_old_y        defb 0
-fb_spans        defw 0
-fb_old_spans    defw 0
-fb_draw         defw 0
-fb_sn           defw 0
-fb_old_sn       defw 0
 together        defb 0
+sf_draw         defw 0
+sf_list         defw 0
+sf_x            defb 0
+br_w            defb 0
+gen_count       defb 0
+gen_sp          defw 0
 job_ra          defs J_SIZE     ; restore A, restore B, draw A, draw B
 job_rb          defs J_SIZE
 job_da          defs J_SIZE
@@ -325,3 +392,20 @@ payload_end
 
     RUN boot
     SAVE 'PFSPIKE.BIN',boot,payload_store-boot+payload_end-payload_start,DSK,'../build/pfspike.dsk'
+
+;; ---------------------------------------------------------------------------
+;; The characters, in the extra 64K. On the disc each bank is its own file,
+;; and PFSPIKE.BAS pages the bank in before loading it at #4000.
+;; ---------------------------------------------------------------------------
+BANK 4
+    include "gen/trump_bank0.asm"
+    SAVE 'TRUMP0.BIN',#4000,$-#4000,DSK,'../build/pfspike.dsk'
+BANK 5
+    include "gen/trump_bank1.asm"
+    SAVE 'TRUMP1.BIN',#4000,$-#4000,DSK,'../build/pfspike.dsk'
+BANK 6
+    include "gen/putin_bank0.asm"
+    SAVE 'PUTIN0.BIN',#4000,$-#4000,DSK,'../build/pfspike.dsk'
+BANK 7
+    include "gen/putin_bank1.asm"
+    SAVE 'PUTIN1.BIN',#4000,$-#4000,DSK,'../build/pfspike.dsk'

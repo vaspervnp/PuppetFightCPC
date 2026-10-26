@@ -250,18 +250,37 @@ dark red, and pastel yellow (FFFF80) → olive (808000).
 |---|---|---|
 | &0038 | 3 | interrupt jump (both ROMs are off, so this is RAM) |
 | &0100-&01FF | 256 | stack |
-| &0200-&3FFF | 15.5K | engine, tables (flip, mask, line_tab), hot compiled frames |
+| &0200-&3FFF | 15.5K | engine and tables (flip, mask, chain entries). The spike ends at &10BE, ~12K free |
 | &4000-&7FFF | 16K | background mirror of the fighter band, lines 88-211 (~12K used, ~4K free in 512-byte gaps at &x240-&x43F) |
 | &8000-&FFFF | 32K | overscan screen (26K used). The unused 800-byte tails of page 3 hold `line_tab` (&C4E0) and the two restore lists (&CCE0, &D4E0); ~4K of tails are still free |
-| Bank 4-5 | 32K | fighter A: span frames, move data, compiled cache |
-| Bank 6-7 | 32K | fighter B |
+| Bank 4-5 | 32K | fighter A's character: directory, all 48 frames (span stream + (s, n) table), compiled frames |
+| Bank 6-7 | 32K | fighter B's character |
 
 The load image starts at &4000, where AMSDOS hands over. It moves itself
-down to &0200 before the mirror is built. In the spike, the engine plus
-four compiled frames and eight span frames fill the payload to &38D2 (the
-overlap build, with two compiled frames per fighter, to &367F).
-Stage graphics and music have to come from the gaps or be ZX0-packed and
-unpacked at round start.
+down to &0200 before the mirror is built.
+
+**Characters live in the banks** (milestone 2). `tools/sprite_codegen.py
+character` writes each character as two bank images. Bank 0 starts with a
+directory at &4000: per move, the frame count and a list of 12-byte frame
+records (bank, width, x offset, span stream, (s, n) table, compiled bank,
+compiled draw facing right and facing left). The engine finds every frame
+through it, so no character label appears in the engine. Trump uses 32,496
+of 32,768 bytes (two compiled idle frames included), Putin 26,940.
+
+Paging rules:
+- Logic and job set-up page the character's bank in to read the directory,
+  a frame header, or an (s, n) table, then page #C0 back.
+- In the rebuild every draw job carries its RAM configuration (its frame's
+  bank, or the bank its compiled code is in) and is paged in when it runs.
+  Restores always run with #C0, because they read the mirror.
+- Nothing else in &4000-&7FFF is touched while a bank is in: the screen,
+  `line_tab`, the restore lists and the tables are all outside it.
+
+On the disc each bank is its own file (`TRUMP0.BIN` ...). `PFSPIKE.BAS` does
+`OUT &7F00,&C4` and so on, then `LOAD`s each one at &4000 before loading the
+engine. Checked on the emulated 6128: `RUN"PFSPIKE` loads all five files and
+the fight starts. Stage graphics and music have to come from the gaps or be
+ZX0-packed and unpacked at round start.
 
 ### 3.5 Character file format (`TRUMP.PFC` etc.)
 
@@ -269,8 +288,9 @@ unpacked at round start.
 header      magic "PF", version, name, personal colours (4 firmware colours)
 move table  14+ moves: frame count, per-frame duration, hitbox/hurtbox,
             damage/stun data, special-move input pattern
-frames      span-encoded masked frames (pens 0-9)
-hot frames  compiled idle/walk routines (generated for the right-facing side)
+frames      span-encoded masked frames (pens 0-9): today's bank layout
+            (directory + frame records, §3.4) is the start of this format
+hot frames  compiled routines, both facings where they fit
 projectile  small sprite + speed/behaviour id
 text        victory taunt, select-screen title ("The Greatest American 2.0")
 ```
