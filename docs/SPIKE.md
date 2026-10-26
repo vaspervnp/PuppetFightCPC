@@ -261,10 +261,66 @@ Close combat in the game still flickers. Only the idle frames have
 compiled draws, and two generic draws (~8.5 + 7.5 ms) don't fit a shared
 window. That's the runtime compiler's job.
 
+## Milestone 2 step 3: runtime compiler (in progress)
+
+Every frame is now drawn by compiled code, compiled at run time
+(`src/jit.asm`). With both fighters compiled, a single window always fits,
+so the two-window "apart" mode, the generic drawers and the precompiled
+idle frames are gone.
+
+- **Compiler.** Reads the span stream and writes, per line,
+  `pop hl : add hl,de : ld bc,col : add hl,bc`, then one store per byte, with
+  a yield every 8 lines. Facing left, the line starts at column w − 1 − s and
+  steps left (`dec hl`), with each byte through `flip_tab`, so both facings
+  read the bytes in the same order. Span streams are escaped: an opaque byte
+  is itself, and a hole or a byte with a pen 0 pixel is 0 then the byte, so
+  the common case costs one test. The compiler also writes each frame's
+  (s, n) table for `build_restore`, so the banks no longer carry them.
+- **Cache.** Trump has 4 slots in main RAM and Putin 2 (1,872 bytes each,
+  &1420-&3FFF). On top of those, each character has the slots its directory
+  puts at the top of bank 1: 3 for Trump, 5 for Putin. A bank slot only
+  takes frames whose spans are in bank 1, because the compiler reads and
+  writes with that one bank paged in. So `sprite_codegen.py` puts the moves
+  a fight shows most (idle, walk, crouch, jump, punch, and kick for Trump)
+  in bank 1, and as many slots as fit above them. The idle and walk loops
+  (4 frames each) now stay cached. Slot tables sit at &C700, the (s, n)
+  tables in the tails of screen slices 2, 5 and 7, and `flip_tab` /
+  `mask_tab` are built at boot in slice 1's tail. That frees 512 bytes of
+  payload, enough for Trump's fourth main slot.
+- **Scheduling.** `load_frame` takes the logic's frame from the cache. On a
+  miss the fighter keeps the frame it shows, and the frame is marked as
+  wanted. After `prepare`, `jit_work` compiles wanted frames first, then
+  each fighter's likely next frame. Before every line, the compiler checks
+  whether it has reached the last interrupt period before the tick. If so,
+  it stops and carries on in the next picture, so a picture is never late.
+- **Restore lists are kept** when a fighter shows the same frame in the
+  same place: 5.4 → 3.2 ms per picture in play.
+
+| Scenario | Frames between pictures | Lines caught | Pictures with a held frame (Trump / Putin, of 96) |
+|---|---|---|---|
+| Apart | 2 every time | 0 | 0 / 0 |
+| Toe to toe | 2 every time | 0 | 0 / 0 |
+| Toe to toe + jumps | 2 every time | 0 | 0 / 0 |
+| Play script (close combat) | 2 every time | 0 | 52 / 23 |
+
+Margin: `SLACK=15` is clean again in the both-jumping case.
+
+**What's left.** In the play script the compiler is busy almost all the
+time. It changes move every few pictures, and every new move or turn needs
+3-4 frames at 13-17 ms each, about one frame per picture. Fighters hold a
+frame while they wait, mostly at the start of a move and after a turn.
+
+A `PUSH` compiler doesn't help. An opaque byte's code is 3 bytes
+(`36 b 23`), so pushes need extra register loads or an `inc sp`: about
+23 µs per byte against 24 now. `LDI`/`LDIR` drawing from the span data
+would make compiling cheap, but on the CPC `LDIR` costs 6 µs a byte
+against 5 for `ld (hl),n : inc hl`. Facing left also needs flipped data.
+
 ## Next (milestone 2 work this feeds)
 
-- A runtime compiler: turn the current move's span frames into compiled
-  code for the current facing, in a per-fighter cache. Overlaps need both
-  fighters compiled: the generic drawer alone is 8.7 ms. `make bench-play`
-  must then report 0 lines caught as well.
+- Compiler: shave the byte loop (~24 → ~18 µs), line headers and masked
+  bytes. Expect ~35% faster, not 2×.
+- Skip a fighter's restore and draw when it shows the same frame in the
+  same place and the other fighter doesn't touch it. That gives the
+  compiler the time back.
 - Confirm on real hardware (CRTC types 0-2), as OverscanCPC did.

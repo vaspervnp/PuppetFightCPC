@@ -52,8 +52,7 @@ J_DE            EQU 4           ; stream pointer, or x for a compiled draw
 J_CUR           EQU 6           ; next scanline, relative to BAND_TOP
 J_LEFT          EQU 7           ; scanlines (or chunks) still to do
 J_RAM           EQU 8           ; RAM configuration it runs in (#C0: mirror)
-J_X             EQU 9           ; passed in A: a generic drawer's column
-J_SIZE          EQU 10
+J_SIZE          EQU 9
 
 ;; Both RUN macros end in the same dispatch: page the job's RAM in, load
 ;; its registers and run it from where it stopped. It yields to @ret with
@@ -142,12 +141,11 @@ J_SIZE          EQU 10
     ld (hl),a
     ld a,c
     ld ixl,a
-    ld a,({job}+J_RAM)
+    ld a,({job}+J_RAM)          ; main RAM, or the bank the code is in
     ld bc,#7F00
     out (c),a
     ld a,{phase}
     ld (bench_phase),a
-    ld a,({job}+J_X)
     ld de,({job}+J_DE)
     ld sp,({job}+J_SP)
     ld hl,({job}+J_RESUME)
@@ -156,7 +154,6 @@ J_SIZE          EQU 10
 @ret
     ld ({job}+J_SP),sp
     ld ({job}+J_RESUME),hl
-    ld ({job}+J_DE),de          ; a generic drawer's stream pointer
     ld a,PH_SCHED
     ld (bench_phase),a
     INT_WINDOW
@@ -202,22 +199,16 @@ rb_done
 ;; ---------------------------------------------------------------------------
 ;; Job set-up, before the rebuild (ordinary code, with a stack).
 ;;
-;; prepare - set up the first window of the next picture: both fighters if
-;; their ground overlaps (together = 1), otherwise A; B's window is set up
-;; after A's rebuild, while the loop waits for the next tick. Done at the
-;; end of the logic so the rebuild can start on the tick itself.
+;; prepare - set up the next picture's window: both fighters, always in one
+;; window, since every frame is drawn by compiled code. Done at the end of
+;; the logic so the rebuild can start on the tick itself.
 ;; rebuild_clear - no jobs, and band_end as far down as it goes.
 ;; setup_a / setup_b - the restore and draw jobs for one fighter; each pulls
 ;; band_end up to its fighter's first scanline + BAND.
 ;; ---------------------------------------------------------------------------
 prepare
     call rebuild_clear
-    call ground_overlap
-    ld (together),a
     call setup_a
-    ld a,(together)
-    or a
-    ret z
     jp setup_b
 
 rebuild_clear
@@ -275,10 +266,7 @@ sf_draw_job
     rrca
     and #1F
     ld (iy+J_LEFT),a
-    ld a,(ix+F_CDRAW)
-    or (ix+F_CDRAW+1)
-    jr z,sf_generic
-    ld a,(ix+F_CDRAW)           ; compiled: runs from its bank, DE = x
+    ld a,(ix+F_CDRAW)           ; compiled: runs from where it is, DE = x
     ld (iy+J_RESUME),a
     ld a,(ix+F_CDRAW+1)
     ld (iy+J_RESUME+1),a
@@ -287,22 +275,6 @@ sf_draw_job
     ld a,(sf_x)
     ld (iy+J_DE),a
     ld (iy+J_DE+1),0
-    jr sf_record
-sf_generic
-    ld a,(ix+F_FBANK)
-    ld (iy+J_RAM),a
-    ld a,(ix+F_FACE)
-    or a
-    ld a,(sf_x)
-    ld hl,draw_r
-    jr z,sf_gen_x
-    add a,(ix+F_W)              ; facing left: byte 0 lands at x + w - 1
-    dec a
-    ld hl,draw_l
-sf_gen_x
-    ld (iy+J_X),a
-    ld (iy+J_RESUME),l
-    ld (iy+J_RESUME+1),h
 sf_record
     ld a,(sf_x)                 ; what is now on the screen
     ld (ix+F_OX),a
@@ -310,7 +282,7 @@ sf_record
     ld (ix+F_OY),a
     ld a,(ix+F_W)
     ld (ix+F_OW),a
-    ld a,(ix+F_FACE)
+    ld a,(ix+F_DFACE)
     ld (ix+F_OFACE),a
     ld a,(ix+F_FBANK)
     ld (ix+F_OBANK),a
@@ -343,15 +315,37 @@ setup_restore
 ;; say is on the screen (or will be, once a pending window has run), into
 ;; the fighter's other list, for the next setup_fighter. The main loop runs
 ;; it in the time between windows, so the set-up after the logic is cheap.
+;; A fighter showing the same frame in the same place keeps its list.
 ;; Destroys everything but IX.
 prebuild
     ld a,(ix+F_DRAWN)
     or a
     ret z
-    ld a,(ix+F_OBANK)           ; the (s, n) table is in the frame's bank
-    ld bc,#7F00
-    out (c),a
-    ld a,(ix+F_OW)
+    push ix                     ; the same frame in the same place as when
+    pop hl                      ; the list was made: it still holds
+    ld de,F_OX
+    add hl,de
+    push hl
+    ld de,F_PKEY-F_OX
+    add hl,de
+    ex de,hl                    ; DE = F_PKEY, HL = F_OX
+    pop hl
+    ld b,F_OSN+2-F_OX
+    ld c,0
+pb_cmp
+    ld a,(de)
+    xor (hl)
+    or c
+    ld c,a
+    ld a,(hl)
+    ld (de),a                   ; (and the key becomes this)
+    inc hl
+    inc de
+    djnz pb_cmp
+    ld a,c
+    or a
+    ret z
+    ld a,(ix+F_OW)              ; (the (s, n) table is in a screen tail)
     ld (br_w),a
     ld a,(ix+F_RLIST+1)         ; the list not in use
     xor RESTORE_FLIP
@@ -366,8 +360,6 @@ prebuild
     call build_restore
     ld (ix+F_RFIRST),l
     ld (ix+F_RLINES),a
-    ld bc,#7FC0
-    out (c),c
     ret
 
 ;; setup_job - IY = job, HL = span stream, A = sprite top scanline. Points

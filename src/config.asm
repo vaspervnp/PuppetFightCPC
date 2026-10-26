@@ -86,6 +86,31 @@ RESTORE_LIST_B  EQU #E4E0       ; slices 4 and 6: #x4E0-#x7FF free
 RESTORE_FLIP    EQU #10         ; high byte: one list of a pair to the other
     ASSERT (RESTORE_LIST_A AND #FF)==(RESTORE_LIST_B AND #FF)
 RESTORE_DUMMY   EQU #C7FF       ; past line_tab in slice 0
+flip_tab        EQU #CE00       ; built at boot (make_tables), in the rest
+mask_tab        EQU #CF00       ; of slice 1's tail: page aligned
+    ASSERT RESTORE_LIST_A+256<=flip_tab
+
+;; Compiled frame caches (jit.asm). Each fighter has slots at the top of
+;; main RAM below the mirror, which take any frame, and the slots its
+;; character's directory puts at the top of bank 1, which take the frames
+;; whose spans are in bank 1 (Trump 3, Putin 5). A slot fits any frame's
+;; compiled draw in either facing (tools/sprite_codegen.py checks: --slot).
+CACHE_SLOTS_A   EQU 4           ; main RAM slots: Trump,
+CACHE_SLOTS_B   EQU 2           ; Putin (who has more in bank 1)
+CACHE_SLOT      EQU 1872
+CACHE_AT        EQU #4000-(CACHE_SLOTS_A+CACHE_SLOTS_B)*CACHE_SLOT
+MAX_SLOTS       EQU 8           ; main + bank 1, per fighter
+;; The slot tables live after line_tab in slice 0 (#C700-#C7FE), and each
+;; slot's (s, n) table, which the compiler writes for build_restore, in the
+;; tails of slices 2, 5 and 7: six 130-byte tables in each.
+SLOT_TAB_A      EQU #C700
+SLOT_TAB_B      EQU SLOT_TAB_A+MAX_SLOTS*9
+    ASSERT SLOT_TAB_B+MAX_SLOTS*9<=RESTORE_DUMMY
+SN_SIZE         EQU 2+2*SPR_H
+SN_TAIL0        EQU #D4E0
+SN_TAIL1        EQU #ECE0
+SN_TAIL2        EQU #FCE0
+    ASSERT 6*SN_SIZE<=#320
 
 ;; --- Spike scene ---------------------------------------------------------
 HUD_LINES       EQU 24
@@ -128,6 +153,7 @@ PH_LOGIC        EQU 5
 PH_SCHED        EQU 6           ; the banded scheduler between jobs
 PH_PREPARE      EQU 7           ; job set-up for the next picture
 PH_PREBUILD     EQU 8           ; restore lists for the next set-up
+PH_COMPILE      EQU 9           ; the runtime compiler
 
     IFNDEF DEMO
 DEMO            EQU 0           ; -DDEMO=1: scripted fighters (the bench)
@@ -140,5 +166,4 @@ SLACK           EQU 0           ; -DSLACK=n: margin test, rebuild n*100 us late
 ;; (rasm exports EQUs with -sq, but not command-line defines.)
 SCN_CLOSE_UP    EQU CLOSE_UP
 SCN_JUMP        EQU JUMP
-SCN_PUTIN_COMPILED EQU PUTIN_COMPILED
 SCN_DEMO        EQU DEMO

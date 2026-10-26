@@ -55,7 +55,7 @@ LINES = 272
 PHASES = {1: "restore A (Trump, right)", 2: "restore B (Putin, left)",
           3: "draw A", 4: "draw B (Putin, left)",
           6: "scheduler overhead", 5: "logic", 7: "prepare",
-          8: "restore lists (both)"}
+          8: "restore lists (both)", 9: "compile"}
 REBUILD_PHASES = (1, 2, 3, 4, 6)
 
 
@@ -114,12 +114,10 @@ class Bench:
     def scenario(self):
         close = self.S.get("SCN_CLOSE_UP", 0)
         jump = self.S.get("SCN_JUMP", 0)
-        comp = self.S.get("SCN_PUTIN_COMPILED", 0)
         if not self.S.get("SCN_DEMO", 0):
             return "play (controls)" + (": " + self.keys if self.keys else "")
-        return "%s%s, Putin %s" % ("toe to toe (one shared window)" if close else "apart (two windows)",
-                                   ", taking turns to jump then jumping together" if jump else "",
-                                   "compiled" if comp else "generic")
+        return "%s%s" % ("toe to toe" if close else "apart",
+                         ", taking turns to jump then jumping together" if jump else "")
 
     def peek(self, name, size=1):
         b = self.c.read_ram(self.S[name], size)
@@ -161,12 +159,17 @@ class Bench:
         start_line = []                     # beam line at each rebuild start
         self.pic_starts = []                # time each picture's first rebuild starts
         self.pic_tick = self.peek("LAST_RENDER")
+        self.waits = defaultdict(int)       # pictures each fighter waited for a frame
         self.trace = []                     # (time, beam, phase) for --trace
         last_beam = None
         state = None
         done = 0
+        last_done_t = self.t
         while done < renders:
             self.step()
+            if self.t - last_done_t > 50 * FRAME_US:
+                sys.exit("stuck: no picture for 50 frames (pc %04X, phase %d)"
+                         % (self.c.pc, self.peek("BENCH_PHASE")))
             pic = self.peek("RENDER_COUNT")
             if pic != last_pic:
                 last_pic = pic
@@ -184,15 +187,18 @@ class Bench:
                     state = self.jump_state()
                 if ph in (0, 5) and last_ph in REBUILD_PHASES and state:
                     self.windows[state].append(self.beam())
-                if ph == 5:
+                if ph == 5 and last_ph != 9:
                     for k, v in acc.items():
                         durations[k].append(v)
                     acc.clear()
                     done += 1
+                    last_done_t = self.t
                 if ph == 7:                         # prepare: the picture is drawn
+                    for f in ("FIGHTER_A", "FIGHTER_B"):
+                        self.waits[f] += self.field(f, "F_HELD")
                     if done in getattr(self, "shots", ()):
                         self.c.screenshot(os.path.join(BUILD, "play_%03d.png" % done), scale=1)
-                if last_ph == 5:
+                if last_ph == 5 and ph != 9:
                     durations[5].append(acc.pop(5, 0))
                 last_ph, ph_start = ph, self.t
                 self.trace.append((self.t, self.beam(), ph, done))
@@ -233,12 +239,19 @@ class Bench:
             y = self.field(f, "F_OY")
             w = self.field(f, "F_OW")
             flipped = self.field(f, "F_OFACE")
-            top, lines = self.bank_read(bank, p, 2)
-            p += 2
+            top, lines, _drawn = self.bank_read(bank, p, 3)
+            p += 3
             for i in range(lines):
                 s, n = self.bank_read(bank, p, 2)
-                data = self.bank_read(bank, p + 2, n)
-                p += 2 + n
+                p += 2
+                data = []
+                for _ in range(n):              # escaped: 0, b for any
+                    b = self.bank_read(bank, p, 1)[0]   # byte not opaque
+                    p += 1
+                    if b == 0:
+                        b = self.bank_read(bank, p, 1)[0]
+                        p += 1
+                    data.append(b)
                 if not n:
                     continue
                 row = out[y + top + i]
@@ -285,6 +298,8 @@ def main():
         gaps[round((t1 - t0) / FRAME_US)] += 1
     print("  frames between pictures: %s (2 = 25 fps)" % ", ".join(
         "%d x%d" % (k, gaps[k]) for k in sorted(gaps)))
+    print("  frame held (not compiled yet): Trump %d, Putin %d pictures of %d" % (
+        b.waits["FIGHTER_A"], b.waits["FIGHTER_B"], npics))
     print("  fighter band: lines %d-%d; a standing fighter's top is line %d" % (
         b.band_top, b.band_end - 1, b.fighter_y))
     print("  rebuilds end with the beam on line (next frame), by jump state:")

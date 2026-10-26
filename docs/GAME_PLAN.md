@@ -218,7 +218,7 @@ buy 0.5 ms back. This margin is the budget for projectiles and HUD changes
 in a shared window, until the on-demand compiler and further restore work
 add more.
 
-**Time between windows.** With the fighters apart, only ~5.5 ms are left
+**Time between windows** (written for the two-window schedule; since the runtime compiler there is always one window, see SPIKE.md). With the fighters apart, only ~5.5 ms are left
 after each window before the next tick. Job set-up used to cost ~3.5 ms
 per fighter, nearly all of it the restore list, and the game dropped to
 3 frames per picture. Now `prebuild` makes each fighter's restore list
@@ -276,10 +276,10 @@ dark red, and pastel yellow (FFFF80) → olive (808000).
 |---|---|---|
 | &0038 | 3 | interrupt jump (both ROMs are off, so this is RAM) |
 | &0100-&01FF | 256 | stack |
-| &0200-&3FFF | 15.5K | engine and tables (flip, mask, chain entries). The spike ends at &10BE, ~12K free |
+| &0200-&3FFF | 15.5K | engine (to &1229), then the compiled frame cache: 4 slots for fighter A and 2 for B, 1,872 bytes each, from &1420 |
 | &4000-&7FFF | 16K | background mirror of the fighter band, lines 88-211 (~12K used, ~4K free in 512-byte gaps at &x240-&x43F) |
-| &8000-&FFFF | 32K | overscan screen (26K used). The unused 800-byte tails of page 3 hold `line_tab` (&C4E0) and four restore lists, two per fighter (&CCE0/&DCE0, &E4E0/&F4E0); &D4E0, &ECE0 and &FCE0 (~2.4K) are still free |
-| Bank 4-5 | 32K | fighter A's character: directory, all 48 frames (span stream + (s, n) table), compiled frames |
+| &8000-&FFFF | 32K | overscan screen (26K used). The unused 800-byte tails of page 3 hold `line_tab` (&C4E0), the cache slot tables (&C700), four restore lists (&CCE0/&DCE0, &E4E0/&F4E0), `flip_tab`/`mask_tab` built at boot (&CE00) and the compiler's (s, n) tables (&D4E0, &ECE0, &FCE0) |
+| Bank 4-5 | 32K | fighter A's character: directory, all 48 frames (escaped span streams), and compiled frame cache slots at the top of bank 1 |
 | Bank 6-7 | 32K | fighter B's character |
 
 The load image starts at &4000, where AMSDOS hands over. It moves itself

@@ -41,6 +41,17 @@ start
     call draw_stage
     call copy_mirror
     call clear_lists
+    call make_tables
+    ld ix,fighter_a             ; the compiled frame caches
+    ld hl,SLOT_TAB_A
+    xor a
+    ld c,CACHE_SLOTS_A
+    call jit_init
+    ld ix,fighter_b
+    ld hl,SLOT_TAB_B
+    ld a,CACHE_SLOTS_A
+    ld c,CACHE_SLOTS_B
+    call jit_init
     call setup_crtc
     ld hl,palette_game
     call set_palette
@@ -52,7 +63,9 @@ start
     ld a,MV_IDLE
     call start_move
     call logic                  ; positions and frames for the first picture
-    call prepare
+    call prepare                ; (compiled whatever the time)
+    xor a
+    ld (jit_force),a
 
 main_loop
     call wait_render            ; first frame of the picture
@@ -65,28 +78,14 @@ ml_slack_in
     jr nz,ml_slack_in
     djnz ml_slack
     ENDIF
-    call rebuild                ; jobs set up by prepare, last picture
-    ld a,(together)
-    or a
-    jr nz,ml_together
-    call rebuild_clear          ; apart: Putin gets the next window
-    call setup_b
-    ld ix,fighter_a             ; A's next restore list, while the beam
-    call ml_prebuild            ; goes round to the tick
-    call wait_tick
-    call rebuild
+    call rebuild                ; both fighters, set up by prepare
+    ld ix,fighter_a             ; then, while the beam goes round twice:
+    call ml_prebuild            ; restore lists for the next set-up,
     ld ix,fighter_b
     call ml_prebuild
-    call ml_logic
-    call ml_prepare
-    jr main_loop
-ml_together
-    ld ix,fighter_a
-    call ml_prebuild
-    ld ix,fighter_b
-    call ml_prebuild
-    call ml_logic
-    call ml_prepare
+    call ml_logic               ; the logic (compiling new frames),
+    call ml_prepare             ; the next picture's jobs,
+    call jit_work               ; and compiling, in the time that's left
     jr main_loop
 
 ml_logic
@@ -111,6 +110,41 @@ ml_prebuild
     call prebuild
     xor a
     ld (bench_phase),a
+    ret
+
+;; make_tables - flip_tab (the two pixels of a Mode 0 byte swapped) and
+;; mask_tab (#AA / #55 set where a pixel is pen 0), which the compiler
+;; uses. Built here rather than carried: 512 bytes of payload is a cache
+;; slot's worth with the rest. Destroys AF, C, HL.
+make_tables
+    ld hl,flip_tab
+mt_byte
+    ld a,l                      ; left pixel bits 7 5 3 1, right 6 4 2 0
+    and #AA
+    rrca
+    ld c,a
+    ld a,l
+    and #55
+    rlca
+    or c
+    ld (hl),a
+    inc h                       ; mask_tab
+    ld c,0
+    ld a,l
+    and #AA
+    jr nz,mt_left
+    ld c,#AA
+mt_left
+    ld a,l
+    and #55
+    ld a,c
+    jr nz,mt_right
+    or #55
+mt_right
+    ld (hl),a
+    dec h
+    inc l
+    jr nz,mt_byte
     ret
 
 ;; clear_lists - zero the four restore lists: build_restore never writes
@@ -182,10 +216,18 @@ F_NFR           EQU 31
 F_RLIST         EQU 32          ; restore list for what is on the screen,
 F_RFIRST        EQU 34          ; built by prebuild: buffer, first scanline,
 F_RLINES        EQU 35          ; lines
-F_SIZE          EQU 36
+F_DFACE         EQU 36          ; the facing its frame is drawn in
+F_WANT          EQU 37          ; the frame it would show if it were
+F_WFACE         EQU 39          ; compiled (record, facing), and whether it
+F_HELD          EQU 40          ; is waiting for it
+F_STAB          EQU 41          ; its cache (jit.asm): slot table, slots
+F_NSLOTS        EQU 43
+F_PKEY          EQU 44          ; F_OX..F_OSN when its restore list was made
+F_SIZE          EQU F_PKEY+F_OSN+2-F_OX
 
 MOVE_IDLE       EQU 0
-DIR_MOVES       EQU #4004       ; move table in a character's bank 0
+DIR_SLOTS       EQU #4004       ; in a character's bank 0: bank 1 cache
+DIR_MOVES       EQU #4007       ; slots (count, first), then the moves
 REC_SIZE        EQU 12
 
 ;; ---------------------------------------------------------------------------
@@ -228,9 +270,6 @@ logic_demo
     ld a,(hl)
     rra
     and 3
-    IF PUTIN_COMPILED           ; overlaps need compiled draws: idle 0 and 2
-    and 2
-    ENDIF
     ld (fighter_a+F_FRAME),a
     ld (fighter_b+F_FRAME),a
     xor a
@@ -303,37 +342,44 @@ sway                            ; -6..6, a triangle over 32 steps
     defb 0,1,2,3,4,5,6,6,6,5,4,3,2,1,0,0
     defb 0,-1,-2,-3,-4,-5,-6,-6,-6,-5,-4,-3,-2,-1,0,0
 
-;; load_frame - IX = fighter: fetch its F_MOVE / F_FRAME record from its
-;; character's directory into the F_FBANK..F_CDRAW fields (the compiled draw
-;; for its facing). Pages the character's bank 0 in and back out.
-;; Destroys AF, BC, DE, HL.
+;; load_frame - IX = fighter: show its F_MOVE / F_FRAME in its F_FACE
+;; facing. The frame's compiled draw comes from the fighter's cache (jit.asm);
+;; if it isn't there, the fighter keeps the frame it shows and waits for
+;; jit_work to compile it (F_HELD). Otherwise the frame's record fills in
+;; F_FBANK..F_CDRAW and F_DFACE, the facing it is drawn in. Destroys
+;; everything but IX.
 load_frame
+    ld a,(ix+F_MOVE)
+    ld c,(ix+F_FRAME)
+    call rec_addr
+    ld (ix+F_WANT),l
+    ld (ix+F_WANT+1),h
+    ld a,(ix+F_FACE)
+    ld (ix+F_WFACE),a
+    ld (ix+F_HELD),1
+    push hl
+    call jit_get
+    pop de
+    ret c                       ; held
+    ld (ix+F_HELD),0
+    push hl                     ; the slot: code, its RAM, (s, n) table
+    pop iy
+    ld a,(iy+SL_ADDR)
+    ld (ix+F_CDRAW),a
+    ld a,(iy+SL_ADDR+1)
+    ld (ix+F_CDRAW+1),a
+    ld a,(iy+SL_RAM)
+    ld (ix+F_CBANK),a
+    ld a,(iy+SL_SN)
+    ld (ix+F_SN),a
+    ld a,(iy+SL_SN+1)
+    ld (ix+F_SN+1),a
+    ld a,(ix+F_FACE)
+    ld (ix+F_DFACE),a
     ld a,(ix+F_RAM0)
     ld bc,#7F00
     out (c),a
-    ld a,(ix+F_MOVE)            ; move table entry: frames, record list
-    ld l,a
-    add a,a
-    add a,l
-    ld l,a
-    ld h,0
-    ld de,DIR_MOVES+1
-    add hl,de
-    ld e,(hl)
-    inc hl
-    ld d,(hl)                   ; DE = the move's first record
-    ld a,(ix+F_FRAME)           ; + REC_SIZE * frame
-    add a,a
-    add a,a                     ; * 4
-    ld l,a
-    ld h,0
-    add hl,hl                   ; * 8
-    ld c,l
-    ld b,h
-    srl b
-    rr c                        ; BC = * 4
-    add hl,bc                   ; * 12
-    add hl,de
+    ex de,hl
     ld a,(hl)                   ; bank (0/1)
     add a,(ix+F_RAM0)
     ld (ix+F_FBANK),a
@@ -349,75 +395,11 @@ load_frame
     inc hl
     ld a,(hl)
     ld (ix+F_SPANS+1),a
-    inc hl
-    ld a,(hl)
-    ld (ix+F_SN),a
-    inc hl
-    ld a,(hl)
-    ld (ix+F_SN+1),a
-    inc hl
-    ld a,(hl)                   ; compiled code's bank
-    add a,(ix+F_RAM0)
-    ld (ix+F_CBANK),a
-    inc hl                      ; facing right, then left
-    ld a,(ix+F_FACE)
-    or a
-    jr z,lf_draw
-    inc hl
-    inc hl
-lf_draw
-    ld a,(hl)
-    ld (ix+F_CDRAW),a
-    inc hl
-    ld a,(hl)
-    ld (ix+F_CDRAW+1),a
     ld bc,#7FC0
     out (c),c
     ret
 
-;; ground_overlap - A = 1 if the bytes A covers (old and new) meet B's,
-;; whichever side each is on, else A = 0. Destroys AF, BC, DE, HL.
-ground_overlap
-    ld ix,fighter_a
-    call ground_span            ; D = left, E = right (exclusive)
-    push de
-    ld ix,fighter_b
-    call ground_span
-    pop bc                      ; B,C = A's span; D,E = B's
-    ld a,d                      ; apart if B starts at or past A's end
-    cp c
-    jr nc,go_apart
-    ld a,b                      ; or A starts at or past B's end
-    cp e
-    jr nc,go_apart
-    ld a,1
-    ret
-go_apart
-    xor a
-    ret
-
-;; ground_span - IX = fighter: D = the leftmost byte it covers (new frame
-;; and the one on the screen), E = one past the rightmost. Destroys AF, HL.
-ground_span
-    ld a,(ix+F_X)
-    add a,(ix+F_OFF)
-    ld d,a
-    add a,(ix+F_W)
-    ld e,a
-    ld a,(ix+F_DRAWN)
-    or a
-    ret z
-    ld a,(ix+F_OX)
-    cp d
-    jr nc,gs_left
-    ld d,a
-gs_left
-    add a,(ix+F_OW)
-    cp e
-    ret c
-    ld e,a
-    ret
-
+    include "jit.asm"
     include "crtc.asm"
     include "irq.asm"
     include "video.asm"
@@ -429,18 +411,7 @@ gs_left
 ;; ---------------------------------------------------------------------------
 ;; Tables and sprite data
 ;; ---------------------------------------------------------------------------
-    include "gen/tables.asm"    ; flip_tab, mask_tab (page aligned)
 
-    ALIGN 256
-dl_entries                      ; draw_l chain entry for n drawn bytes
-    REPEAT SPR_W*2+1,n
-    defw dl_chain_end-(n-1)*DL_BLOCK
-    REND
-    ALIGN 256
-dr_entries                      ; draw_r chain entry for n drawn bytes
-    REPEAT SPR_W*2+1,n
-    defw dr_chain_end-(n-1)*DR_BLOCK
-    REND
 
 ;; The two fighters: Trump in banks 4-5 facing right, Putin in banks 6-7
 ;; facing left. Everything else in a record is filled in at run time.
@@ -477,15 +448,32 @@ fr_h            defb 0
 fr_x            defb 0
 fr_w            defb 0
 fr_b            defb 0
-together        defb 0
 key_rows        defs 10
 p1_ctl          defb 0
 p2_ctl          defb 0
 sf_draw         defw 0
 sf_x            defb 0
 br_w            defb 0
-gen_count       defb 0
-gen_sp          defw 0
+jit_clock       defb 0          ; jit.asm: cache use counter,
+jit_force       defb 1          ; compile whatever the time (at boot),
+jg_rec          defw 0          ; the frame asked for,
+jg_face         defb 0
+jv_best         defw 0
+jc_phase        defb 0
+pf_turn         defb 0          ; which fighter prefetches first
+jw_busy         defb 0          ; a compile in hand: its slot, frame,
+jw_slot         defw 0          ; facing, frame bank, width - 1, and where
+jw_rec          defw 0          ; it stopped (code, spans, lines left)
+jw_face         defb 0
+jw_bank         defb 0
+jw_w            defb 0
+jw_hl           defw 0
+jw_de           defw 0
+jw_lines        defb 0
+jw_sn           defw 0
+sn_next         defw SN_TAIL0   ; jit_init: where the next (s, n) table
+sn_left         defb 6          ; goes, room left in this tail, which tail
+sn_tail         defb 0
 job_ra          defs J_SIZE     ; restore A, restore B, draw A, draw B
 job_rb          defs J_SIZE
 job_da          defs J_SIZE
@@ -493,7 +481,7 @@ job_db          defs J_SIZE
 line_tab        EQU LINE_TAB_AT
 
 payload_end
-    ASSERT payload_end<=LOAD_ORG    ; must not reach the load image it came from
+    ASSERT payload_end<=CACHE_AT    ; the compiled frame caches follow
 
     RUN boot
     SAVE 'PFSPIKE.BIN',boot,payload_store-boot+payload_end-payload_start,DSK,'../build/pfspike.dsk'

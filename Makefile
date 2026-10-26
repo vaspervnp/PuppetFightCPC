@@ -5,8 +5,8 @@
 #   make bench    run the spike on the headless 6128 and measure it
 #   make run      open the snapshot in Caprice32
 #
-# PUTIN_DRAW=generic (default) draws Putin with the generic mirrored span
-# drawer; PUTIN_DRAW=compiled uses compiled left-facing routines instead.
+# DEMO=1 replaces the controls with a script (idle, swaying); the bench
+# scenarios use it.
 # CLOSE_UP=1 puts the fighters toe to toe, so both are rebuilt in one window.
 # JUMP=1 makes them take turns to jump, then jump together (top at line 144).
 # SLACK=n starts every rebuild n*100 us late: the margin test (SLACK=15
@@ -16,16 +16,15 @@
 
 RASM   ?= rasm
 PYTHON ?= python3
-PUTIN_DRAW ?= generic
 CLOSE_UP ?= 0
 JUMP ?= 0
 DEMO ?= 0
 SLACK ?= 0
-RASMFLAGS := $(if $(filter compiled,$(PUTIN_DRAW)),-DPUTIN_COMPILED=1,-DPUTIN_COMPILED=0) \
-             -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEMO)
+CACHE_SLOT := $(shell awk '$$1=="CACHE_SLOT"{print $$3}' src/config.asm)
+RASMFLAGS := -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEMO)
 BUILD  := build
 
-GEN := src/gen/tables.asm src/gen/trump_bank0.asm src/gen/trump_bank1.asm \
+GEN := src/gen/trump_bank0.asm src/gen/trump_bank1.asm \
        src/gen/putin_bank0.asm src/gen/putin_bank1.asm
 SRC := $(wildcard src/*.asm) $(GEN)
 
@@ -37,15 +36,15 @@ $(BUILD):
 src/gen/tables.asm: tools/sprite_codegen.py
 	$(PYTHON) tools/sprite_codegen.py tables
 
-# A character's two bank images come out of one run. The idle frames the
-# spike shows also get compiled draws, for the facing each fighter has.
+# A character's two bank images come out of one run. Draws are compiled at
+# run time (src/jit.asm); --slot checks every frame fits a cache slot.
 src/gen/trump_bank0.asm src/gen/trump_bank1.asm &: tools/sprite_codegen.py \
         art/sprites/trump.json $(wildcard art/sprites/trump/*.png)
-	$(PYTHON) tools/sprite_codegen.py character trump --compiled-right idle_0 idle_2
+	$(PYTHON) tools/sprite_codegen.py character trump --slot $(CACHE_SLOT)
 
 src/gen/putin_bank0.asm src/gen/putin_bank1.asm &: tools/sprite_codegen.py \
         art/sprites/putin.json $(wildcard art/sprites/putin/*.png)
-	$(PYTHON) tools/sprite_codegen.py character putin --compiled-left idle_0 idle_2
+	$(PYTHON) tools/sprite_codegen.py character putin --slot $(CACHE_SLOT)
 
 # One rasm pass writes the snapshot, the symbols and (via SAVE) the disc.
 $(BUILD)/pfspike.sna: $(SRC) FORCE | $(BUILD)
@@ -60,8 +59,8 @@ bench: $(BUILD)/pfspike.sna
 # Overlaps need compiled draws for both fighters: see GAME_PLAN 3.2b.
 bench-all:
 	$(MAKE) --no-print-directory bench DEMO=1
-	$(MAKE) --no-print-directory bench DEMO=1 PUTIN_DRAW=compiled CLOSE_UP=1
-	$(MAKE) --no-print-directory bench DEMO=1 PUTIN_DRAW=compiled CLOSE_UP=1 JUMP=1
+	$(MAKE) --no-print-directory bench DEMO=1 CLOSE_UP=1
+	$(MAKE) --no-print-directory bench DEMO=1 CLOSE_UP=1 JUMP=1
 
 run: $(BUILD)/pfspike.sna
 	caprice32 $(abspath $(BUILD)/pfspike.sna)

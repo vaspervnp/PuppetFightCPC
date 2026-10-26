@@ -2,7 +2,8 @@
 ;; trump, bank 0 of 2: directory, frames
     ORG #4000
 trump_dir
-    defb "P","F",1,14
+    defb "P","F",2,14
+    defb 3 : defw #6A10        ; cache slots in bank 1
     defb 4 : defw trump_m_idle
     defb 4 : defw trump_m_walk
     defb 3 : defw trump_m_crouch
@@ -18,1649 +19,194 @@ trump_dir
     defb 4 : defw trump_m_special
     defb 3 : defw trump_m_victory
 trump_m_idle
-    defb 0,16,0 : defw trump_idle_0_spans,trump_idle_0_sn : defb 1 : defw trump_idle_0_draw,0
-    defb 0,16,0 : defw trump_idle_1_spans,trump_idle_1_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_idle_2_spans,trump_idle_2_sn : defb 1 : defw trump_idle_2_draw,0
-    defb 0,16,0 : defw trump_idle_3_spans,trump_idle_3_sn : defb 0 : defw 0,0
+    defb 1,16,0 : defw trump_idle_0_spans : defs 7
+    defb 1,16,0 : defw trump_idle_1_spans : defs 7
+    defb 1,16,0 : defw trump_idle_2_spans : defs 7
+    defb 1,16,0 : defw trump_idle_3_spans : defs 7
 trump_m_walk
-    defb 0,16,0 : defw trump_walk_0_spans,trump_walk_0_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_walk_1_spans,trump_walk_1_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_walk_2_spans,trump_walk_2_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_walk_3_spans,trump_walk_3_sn : defb 0 : defw 0,0
+    defb 1,16,0 : defw trump_walk_0_spans : defs 7
+    defb 1,16,0 : defw trump_walk_1_spans : defs 7
+    defb 1,16,0 : defw trump_walk_2_spans : defs 7
+    defb 1,16,0 : defw trump_walk_3_spans : defs 7
 trump_m_crouch
-    defb 0,16,0 : defw trump_crouch_0_spans,trump_crouch_0_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_crouch_1_spans,trump_crouch_1_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_crouch_2_spans,trump_crouch_2_sn : defb 0 : defw 0,0
+    defb 1,16,0 : defw trump_crouch_0_spans : defs 7
+    defb 1,16,0 : defw trump_crouch_1_spans : defs 7
+    defb 1,16,0 : defw trump_crouch_2_spans : defs 7
 trump_m_jump
-    defb 0,16,0 : defw trump_jump_0_spans,trump_jump_0_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_jump_1_spans,trump_jump_1_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_jump_2_spans,trump_jump_2_sn : defb 0 : defw 0,0
+    defb 1,16,0 : defw trump_jump_0_spans : defs 7
+    defb 1,16,0 : defw trump_jump_1_spans : defs 7
+    defb 1,16,0 : defw trump_jump_2_spans : defs 7
 trump_m_punch
-    defb 0,16,0 : defw trump_punch_0_spans,trump_punch_0_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_punch_1_spans,trump_punch_1_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_punch_2_spans,trump_punch_2_sn : defb 0 : defw 0,0
+    defb 1,16,0 : defw trump_punch_0_spans : defs 7
+    defb 1,16,0 : defw trump_punch_1_spans : defs 7
+    defb 1,16,0 : defw trump_punch_2_spans : defs 7
 trump_m_kick
-    defb 0,16,0 : defw trump_kick_0_spans,trump_kick_0_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_kick_1_spans,trump_kick_1_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_kick_2_spans,trump_kick_2_sn : defb 0 : defw 0,0
+    defb 1,16,0 : defw trump_kick_0_spans : defs 7
+    defb 1,16,0 : defw trump_kick_1_spans : defs 7
+    defb 0,16,0 : defw trump_kick_2_spans : defs 7
 trump_m_sweep
-    defb 0,16,0 : defw trump_sweep_0_spans,trump_sweep_0_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_sweep_1_spans,trump_sweep_1_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_sweep_2_spans,trump_sweep_2_sn : defb 0 : defw 0,0
+    defb 0,16,0 : defw trump_sweep_0_spans : defs 7
+    defb 0,16,0 : defw trump_sweep_1_spans : defs 7
+    defb 0,16,0 : defw trump_sweep_2_spans : defs 7
 trump_m_uppercut
-    defb 0,16,0 : defw trump_uppercut_0_spans,trump_uppercut_0_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_uppercut_1_spans,trump_uppercut_1_sn : defb 0 : defw 0,0
-    defb 0,16,0 : defw trump_uppercut_2_spans,trump_uppercut_2_sn : defb 0 : defw 0,0
-    defb 1,16,0 : defw trump_uppercut_3_spans,trump_uppercut_3_sn : defb 0 : defw 0,0
+    defb 0,16,0 : defw trump_uppercut_0_spans : defs 7
+    defb 0,16,0 : defw trump_uppercut_1_spans : defs 7
+    defb 0,16,0 : defw trump_uppercut_2_spans : defs 7
+    defb 0,16,0 : defw trump_uppercut_3_spans : defs 7
 trump_m_backkick
-    defb 1,16,0 : defw trump_backkick_0_spans,trump_backkick_0_sn : defb 0 : defw 0,0
-    defb 1,16,0 : defw trump_backkick_1_spans,trump_backkick_1_sn : defb 0 : defw 0,0
-    defb 1,16,0 : defw trump_backkick_2_spans,trump_backkick_2_sn : defb 0 : defw 0,0
-    defb 1,16,0 : defw trump_backkick_3_spans,trump_backkick_3_sn : defb 0 : defw 0,0
+    defb 0,16,0 : defw trump_backkick_0_spans : defs 7
+    defb 0,16,0 : defw trump_backkick_1_spans : defs 7
+    defb 0,16,0 : defw trump_backkick_2_spans : defs 7
+    defb 0,16,0 : defw trump_backkick_3_spans : defs 7
 trump_m_block
-    defb 1,16,0 : defw trump_block_0_spans,trump_block_0_sn : defb 0 : defw 0,0
-    defb 1,16,0 : defw trump_block_1_spans,trump_block_1_sn : defb 0 : defw 0,0
-    defb 1,16,0 : defw trump_block_2_spans,trump_block_2_sn : defb 0 : defw 0,0
+    defb 0,16,0 : defw trump_block_0_spans : defs 7
+    defb 0,16,0 : defw trump_block_1_spans : defs 7
+    defb 0,16,0 : defw trump_block_2_spans : defs 7
 trump_m_hit
-    defb 1,16,0 : defw trump_hit_0_spans,trump_hit_0_sn : defb 0 : defw 0,0
-    defb 1,16,0 : defw trump_hit_1_spans,trump_hit_1_sn : defb 0 : defw 0,0
-    defb 1,16,0 : defw trump_hit_2_spans,trump_hit_2_sn : defb 0 : defw 0,0
+    defb 0,16,0 : defw trump_hit_0_spans : defs 7
+    defb 0,16,0 : defw trump_hit_1_spans : defs 7
+    defb 0,16,0 : defw trump_hit_2_spans : defs 7
 trump_m_ko
-    defb 1,16,0 : defw trump_ko_0_spans,trump_ko_0_sn : defb 0 : defw 0,0
-    defb 1,32,-8 : defw trump_ko_1_spans,trump_ko_1_sn : defb 0 : defw 0,0
-    defb 1,32,-8 : defw trump_ko_2_spans,trump_ko_2_sn : defb 0 : defw 0,0
-    defb 1,32,-8 : defw trump_ko_3_spans,trump_ko_3_sn : defb 0 : defw 0,0
+    defb 0,16,0 : defw trump_ko_0_spans : defs 7
+    defb 0,32,-8 : defw trump_ko_1_spans : defs 7
+    defb 0,32,-8 : defw trump_ko_2_spans : defs 7
+    defb 0,32,-8 : defw trump_ko_3_spans : defs 7
 trump_m_special
-    defb 1,16,0 : defw trump_special_0_spans,trump_special_0_sn : defb 0 : defw 0,0
-    defb 1,16,0 : defw trump_special_1_spans,trump_special_1_sn : defb 0 : defw 0,0
-    defb 1,16,0 : defw trump_special_2_spans,trump_special_2_sn : defb 0 : defw 0,0
-    defb 1,16,0 : defw trump_special_3_spans,trump_special_3_sn : defb 0 : defw 0,0
+    defb 0,16,0 : defw trump_special_0_spans : defs 7
+    defb 0,16,0 : defw trump_special_1_spans : defs 7
+    defb 0,16,0 : defw trump_special_2_spans : defs 7
+    defb 0,16,0 : defw trump_special_3_spans : defs 7
 trump_m_victory
-    defb 1,16,0 : defw trump_victory_0_spans,trump_victory_0_sn : defb 0 : defw 0,0
-    defb 1,16,0 : defw trump_victory_1_spans,trump_victory_1_sn : defb 0 : defw 0,0
-    defb 1,16,0 : defw trump_victory_2_spans,trump_victory_2_sn : defb 0 : defw 0,0
-
-trump_idle_0_spans  ; 16 bytes wide
-    defb 1,64
-    defb 6,3,#55,#FF,#FF
-    defb 5,5,#55,#BB,#33,#23,#AA
-    defb 5,5,#BB,#33,#33,#33,#57
-    defb 5,6,#BB,#33,#33,#33,#23,#AA
-    defb 4,7,#55,#33,#FC,#FC,#33,#33,#57
-    defb 4,7,#55,#33,#FC,#FC,#33,#23,#57
-    defb 4,7,#55,#33,#76,#33,#33,#03,#57
-    defb 4,7,#55,#33,#33,#03,#03,#03,#57
-    defb 4,7,#55,#A9,#33,#23,#03,#03,#57
-    defb 4,8,#BB,#F8,#B1,#33,#03,#03,#03,#AA
-    defb 4,8,#BB,#F8,#B1,#72,#5F,#A1,#AB,#AA
-    defb 4,7,#BB,#F8,#F0,#F0,#5F,#A5,#FF
-    defb 4,7,#BB,#72,#F0,#F0,#5F,#A5,#AA
-    defb 4,7,#BB,#72,#F0,#F0,#F0,#F0,#DD
-    defb 4,7,#55,#72,#F0,#F0,#F0,#E4,#DD
-    defb 4,7,#55,#52,#F0,#F0,#F0,#E4,#DD
-    defb 4,7,#55,#52,#B1,#72,#F0,#CC,#DD
-    defb 5,6,#FA,#F0,#72,#E4,#CC,#DD
-    defb 5,6,#FA,#F0,#F0,#F0,#CC,#DD
-    defb 5,6,#FA,#F0,#F0,#F0,#E4,#DD
-    defb 5,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 5,6,#55,#D8,#F0,#F0,#CC,#AA
-    defb 6,5,#EE,#CC,#CC,#CC,#AA
-    defb 6,6,#EE,#CC,#CC,#DD,#00,#AA
-    defb 6,6,#55,#F0,#8D,#AA,#55,#F5
-    defb 6,6,#EA,#C0,#85,#DF,#55,#F5
-    defb 5,7,#55,#5D,#C0,#85,#DF,#AF,#F5
-    defb 5,7,#AE,#0C,#EA,#D0,#DF,#AE,#F5
-    defb 5,7,#FF,#0C,#EA,#FA,#DD,#0C,#D5
-    defb 4,8,#55,#D5,#0C,#FF,#58,#C0,#EA,#D5
-    defb 4,8,#55,#D5,#0C,#AE,#4D,#C0,#EA,#D5
-    defb 4,8,#55,#D5,#0C,#0C,#48,#EA,#EA,#D5
-    defb 4,8,#55,#D5,#0C,#0C,#48,#EA,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#EA,#C0,#EA,#AA
-    defb 4,7,#55,#C0,#AE,#48,#EA,#C0,#FF
-    defb 4,7,#55,#C0,#D5,#48,#EA,#C0,#AA
-    defb 5,6,#EA,#D5,#D5,#C0,#C0,#AA
-    defb 5,5,#EA,#C0,#EA,#C0,#DD
-    defb 5,5,#EA,#C0,#C0,#C0,#DD
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,5,#55,#84,#C0,#C0,#75
-    defb 5,5,#55,#84,#C0,#D5,#75
-    defb 5,5,#55,#84,#C0,#FF,#75
-    defb 5,5,#55,#84,#C0,#FF,#75
-    defb 6,4,#EA,#C0,#AA,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 5,4,#55,#0C,#48,#AA
-    defb 5,4,#55,#0C,#C0,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,4,#55,#C2,#D7,#AA
-    defb 5,4,#55,#FF,#C3,#AA
-    defb 6,3,#FF,#FF,#AA
-    defb 7,1,#FF
-    defb 0,0
-    defb 0,0
-trump_idle_0_sn
-    defb 1,62
-    defb 6,3,5,5,5,5,5,6,4,7,4,7,4,7,4,7
-    defb 4,7,4,8,4,8,4,7,4,7,4,7,4,7,4,7
-    defb 4,7,5,6,5,6,5,6,5,6,5,6,6,5,6,6
-    defb 6,6,6,6,5,7,5,7,5,7,4,8,4,8,4,8
-    defb 4,8,4,8,4,8,4,8,4,7,4,7,5,6,5,5
-    defb 5,5,5,5,5,5,5,5,5,5,5,5,6,4,6,3
-    defb 6,3,6,3,6,3,5,4,5,4,5,4,5,4,5,4
-    defb 5,4,5,4,5,4,5,4,6,3,7,1
-
-trump_idle_1_spans  ; 16 bytes wide
-    defb 1,64
-    defb 6,4,#55,#FF,#FF,#AA
-    defb 6,4,#BB,#33,#23,#57
-    defb 5,6,#55,#33,#33,#33,#03,#AA
-    defb 5,6,#BB,#33,#33,#33,#23,#57
-    defb 5,6,#BB,#FC,#B9,#33,#33,#57
-    defb 5,7,#BB,#FC,#FC,#B9,#33,#03,#AA
-    defb 5,7,#BB,#76,#33,#33,#23,#03,#AA
-    defb 4,8,#55,#33,#33,#33,#03,#03,#03,#AA
-    defb 4,8,#55,#23,#33,#23,#03,#03,#03,#AA
-    defb 4,8,#55,#FC,#B1,#33,#23,#03,#03,#AA
-    defb 4,8,#55,#76,#B1,#72,#0F,#52,#03,#AA
-    defb 4,7,#55,#72,#F0,#72,#5F,#0F,#FF
-    defb 4,7,#55,#72,#F0,#F0,#5F,#F0,#FF
-    defb 4,7,#55,#72,#F0,#F0,#F0,#F0,#DD
-    defb 4,7,#55,#52,#F0,#F0,#F0,#F0,#DD
-    defb 4,7,#55,#52,#F0,#F0,#F0,#E4,#DD
-    defb 5,6,#FA,#F0,#72,#F0,#CC,#DD
-    defb 5,6,#FA,#F0,#72,#F0,#CC,#DD
-    defb 5,6,#FA,#F0,#F0,#F0,#CC,#DD
-    defb 5,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 5,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 5,6,#55,#D8,#F0,#F0,#CC,#DD
-    defb 6,5,#EE,#CC,#CC,#CC,#AA
-    defb 6,6,#55,#CC,#CC,#DD,#00,#AA
-    defb 6,6,#55,#D0,#CC,#AA,#55,#F5
-    defb 6,6,#FF,#C0,#85,#5F,#FA,#F5
-    defb 5,7,#55,#0C,#EA,#85,#5F,#AF,#F5
-    defb 5,7,#55,#0C,#EA,#D0,#CE,#AE,#DF
-    defb 5,7,#55,#0C,#EA,#D0,#CE,#0C,#D5
-    defb 5,7,#FF,#0C,#FF,#5A,#C0,#EA,#D5
-    defb 4,8,#55,#D5,#0C,#0C,#4D,#C0,#EA,#D5
-    defb 4,8,#55,#D5,#0C,#0C,#48,#EA,#EA,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#48,#EA,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,7,#55,#C0,#AE,#48,#EA,#C0,#FF
-    defb 4,7,#55,#C0,#D5,#48,#EA,#C0,#AA
-    defb 5,6,#EA,#D5,#D5,#C0,#C0,#AA
-    defb 5,6,#EA,#C0,#EA,#C0,#CC,#AA
-    defb 5,5,#EA,#C0,#C0,#C0,#DD
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,5,#55,#84,#C0,#C0,#75
-    defb 5,5,#55,#84,#C0,#D5,#75
-    defb 5,5,#55,#84,#C0,#FF,#75
-    defb 5,5,#55,#84,#C0,#FF,#75
-    defb 6,4,#EA,#C0,#AA,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 5,4,#55,#48,#C0,#AA
-    defb 5,4,#55,#0C,#C0,#AA
-    defb 5,4,#55,#0C,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,3,#EA,#C0,#D5
-    defb 5,4,#EB,#C2,#C0,#AA
-    defb 5,3,#55,#C2,#D7
-    defb 5,4,#55,#FF,#D7,#AA
-    defb 6,3,#55,#FF,#AA
-    defb 7,1,#FF
-    defb 0,0
-    defb 0,0
-trump_idle_1_sn
-    defb 1,62
-    defb 6,4,6,4,5,6,5,6,5,6,5,7,5,7,4,8
-    defb 4,8,4,8,4,8,4,7,4,7,4,7,4,7,4,7
-    defb 5,6,5,6,5,6,5,6,5,6,5,6,6,5,6,6
-    defb 6,6,6,6,5,7,5,7,5,7,5,7,4,8,4,8
-    defb 4,8,4,8,4,8,4,8,4,7,4,7,5,6,5,6
-    defb 5,5,5,5,5,5,5,5,5,5,5,5,6,4,6,3
-    defb 6,3,6,3,5,4,5,4,5,4,5,4,5,4,5,4
-    defb 5,3,5,4,5,3,5,4,6,3,7,1
-
-trump_idle_2_spans  ; 16 bytes wide
-    defb 1,64
-    defb 6,4,#55,#FF,#FF,#AA
-    defb 6,4,#BB,#33,#33,#57
-    defb 5,6,#55,#33,#33,#33,#23,#AA
-    defb 5,6,#55,#33,#33,#33,#23,#57
-    defb 5,7,#55,#76,#FC,#33,#33,#03,#AA
-    defb 5,7,#BB,#76,#FC,#FC,#33,#23,#AA
-    defb 5,7,#BB,#33,#B9,#B9,#33,#03,#AA
-    defb 5,7,#BB,#33,#33,#33,#23,#03,#57
-    defb 5,7,#FE,#13,#23,#03,#03,#03,#AA
-    defb 4,8,#55,#76,#F0,#33,#03,#03,#03,#AA
-    defb 4,8,#55,#76,#F0,#33,#A1,#03,#03,#57
-    defb 4,8,#55,#33,#F0,#72,#A5,#FA,#03,#57
-    defb 4,8,#55,#33,#F0,#F0,#A5,#FA,#5F,#AA
-    defb 5,6,#BB,#F0,#F0,#A5,#FA,#5F
-    defb 5,7,#AB,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 5,7,#AB,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 5,7,#55,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 5,6,#55,#F0,#33,#F0,#E4,#DD
-    defb 5,7,#55,#F0,#F0,#F0,#CC,#CC,#AA
-    defb 5,7,#55,#F0,#F0,#F0,#CC,#CC,#AA
-    defb 5,7,#55,#F0,#F0,#F0,#E4,#CC,#AA
-    defb 6,5,#FA,#F0,#F0,#E4,#DD
-    defb 6,5,#EE,#D8,#E4,#CC,#DD
-    defb 6,6,#55,#CC,#CC,#CC,#AA,#AA
-    defb 6,6,#55,#D0,#CC,#DD,#55,#F5
-    defb 6,6,#FF,#C0,#C0,#5F,#55,#F5
-    defb 5,7,#55,#0C,#EA,#85,#4F,#FA,#F5
-    defb 5,7,#55,#0C,#EA,#D0,#4F,#AE,#F5
-    defb 5,7,#55,#0C,#EA,#5A,#4E,#AE,#D5
-    defb 5,7,#FF,#0C,#FF,#58,#C5,#0C,#D5
-    defb 4,8,#55,#D5,#0C,#0C,#4D,#C0,#EA,#D5
-    defb 4,8,#55,#D5,#0C,#0C,#48,#EA,#EA,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#48,#EA,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#5D,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#D5,#48,#EA,#C0,#EA,#AA
-    defb 5,6,#EA,#D5,#48,#EA,#C0,#FF
-    defb 5,6,#EA,#D5,#C0,#EA,#C0,#AA
-    defb 5,6,#EA,#C0,#FF,#C0,#C0,#AA
-    defb 5,5,#EA,#C0,#C0,#C0,#DD
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,5,#55,#84,#C0,#C0,#75
-    defb 5,5,#55,#84,#C0,#D5,#75
-    defb 5,5,#55,#84,#C0,#FF,#75
-    defb 6,4,#AE,#C0,#FF,#75
-    defb 6,4,#EA,#C0,#FF,#75
-    defb 6,4,#EA,#C0,#AA,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 5,4,#55,#0C,#C0,#AA
-    defb 5,4,#55,#0C,#C0,#AA
-    defb 5,4,#55,#0C,#C0,#AA
-    defb 5,4,#EA,#84,#C0,#AA
-    defb 5,3,#EA,#C0,#D5
-    defb 5,3,#EA,#C0,#D5
-    defb 5,3,#EA,#C0,#D5
-    defb 5,3,#EB,#C2,#D5
-    defb 5,3,#55,#EB,#D7
-    defb 6,3,#FF,#D7,#AA
-    defb 6,2,#55,#FF
-    defb 7,1,#AA
-    defb 0,0
-    defb 0,0
-trump_idle_2_sn
-    defb 1,62
-    defb 6,4,6,4,5,6,5,6,5,7,5,7,5,7,5,7
-    defb 5,7,4,8,4,8,4,8,4,8,5,6,5,7,5,7
-    defb 5,7,5,6,5,7,5,7,5,7,6,5,6,5,6,6
-    defb 6,6,6,6,5,7,5,7,5,7,5,7,4,8,4,8
-    defb 4,8,4,8,4,8,4,8,4,8,5,6,5,6,5,6
-    defb 5,5,5,5,5,5,5,5,5,5,6,4,6,4,6,4
-    defb 6,3,6,3,5,4,5,4,5,4,5,4,5,3,5,3
-    defb 5,3,5,3,5,3,6,3,6,2,7,1
-
-trump_idle_3_spans  ; 16 bytes wide
-    defb 1,64
-    defb 6,4,#55,#FF,#FF,#AA
-    defb 6,4,#BB,#33,#23,#57
-    defb 5,6,#55,#33,#33,#33,#03,#AA
-    defb 5,6,#BB,#33,#33,#33,#23,#57
-    defb 5,6,#BB,#FC,#B9,#33,#33,#57
-    defb 5,7,#BB,#FC,#FC,#B9,#33,#03,#AA
-    defb 5,7,#BB,#76,#33,#33,#23,#03,#AA
-    defb 4,8,#55,#33,#33,#33,#03,#03,#03,#AA
-    defb 4,8,#55,#23,#33,#23,#03,#03,#03,#AA
-    defb 4,8,#55,#FC,#B1,#33,#23,#03,#03,#AA
-    defb 4,8,#55,#76,#B1,#72,#0F,#52,#03,#AA
-    defb 4,7,#55,#72,#F0,#72,#5F,#0F,#FF
-    defb 4,7,#55,#72,#F0,#F0,#5F,#F0,#FF
-    defb 4,7,#55,#72,#F0,#F0,#F0,#F0,#DD
-    defb 4,7,#55,#52,#F0,#F0,#F0,#F0,#DD
-    defb 4,7,#55,#52,#F0,#F0,#F0,#E4,#DD
-    defb 5,6,#FA,#F0,#72,#F0,#CC,#DD
-    defb 5,6,#FA,#F0,#72,#F0,#CC,#DD
-    defb 5,6,#FA,#F0,#F0,#F0,#CC,#DD
-    defb 5,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 5,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 5,6,#55,#D8,#F0,#F0,#CC,#DD
-    defb 6,5,#EE,#CC,#CC,#CC,#AA
-    defb 6,6,#55,#CC,#CC,#DD,#00,#AA
-    defb 6,6,#55,#D0,#CC,#AA,#55,#F5
-    defb 6,6,#FF,#C0,#85,#5F,#FA,#F5
-    defb 5,7,#55,#0C,#EA,#85,#5F,#AF,#F5
-    defb 5,7,#55,#0C,#EA,#D0,#CE,#AE,#DF
-    defb 5,7,#55,#0C,#EA,#D0,#CE,#0C,#D5
-    defb 5,7,#FF,#0C,#FF,#5A,#C0,#EA,#D5
-    defb 4,8,#55,#D5,#0C,#0C,#4D,#C0,#EA,#D5
-    defb 4,8,#55,#D5,#0C,#0C,#48,#EA,#EA,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#48,#EA,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,7,#55,#C0,#AE,#48,#EA,#C0,#FF
-    defb 4,7,#55,#C0,#D5,#48,#EA,#C0,#AA
-    defb 5,6,#EA,#D5,#D5,#C0,#C0,#AA
-    defb 5,6,#EA,#C0,#EA,#C0,#CC,#AA
-    defb 5,5,#EA,#C0,#C0,#C0,#DD
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,5,#55,#84,#C0,#C0,#75
-    defb 5,5,#55,#84,#C0,#D5,#75
-    defb 5,5,#55,#84,#C0,#FF,#75
-    defb 5,5,#55,#84,#C0,#FF,#75
-    defb 6,4,#EA,#C0,#AA,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 5,4,#55,#48,#C0,#AA
-    defb 5,4,#55,#0C,#C0,#AA
-    defb 5,4,#55,#0C,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,3,#EA,#C0,#D5
-    defb 5,4,#EB,#C2,#C0,#AA
-    defb 5,3,#55,#C2,#D7
-    defb 5,4,#55,#FF,#D7,#AA
-    defb 6,3,#55,#FF,#AA
-    defb 7,1,#FF
-    defb 0,0
-    defb 0,0
-trump_idle_3_sn
-    defb 1,62
-    defb 6,4,6,4,5,6,5,6,5,6,5,7,5,7,4,8
-    defb 4,8,4,8,4,8,4,7,4,7,4,7,4,7,4,7
-    defb 5,6,5,6,5,6,5,6,5,6,5,6,6,5,6,6
-    defb 6,6,6,6,5,7,5,7,5,7,5,7,4,8,4,8
-    defb 4,8,4,8,4,8,4,8,4,7,4,7,5,6,5,6
-    defb 5,5,5,5,5,5,5,5,5,5,5,5,6,4,6,3
-    defb 6,3,6,3,5,4,5,4,5,4,5,4,5,4,5,4
-    defb 5,3,5,4,5,3,5,4,6,3,7,1
-
-trump_walk_0_spans  ; 16 bytes wide
-    defb 2,64
-    defb 7,2,#FF,#FF
-    defb 6,4,#55,#33,#23,#FF
-    defb 6,5,#BB,#33,#33,#23,#AA
-    defb 5,6,#55,#33,#33,#33,#23,#57
-    defb 5,6,#BB,#76,#FC,#33,#33,#57
-    defb 5,7,#BB,#76,#FC,#B9,#33,#03,#AA
-    defb 5,7,#BB,#76,#B9,#B9,#33,#03,#AA
-    defb 5,7,#BB,#33,#33,#33,#03,#03,#AA
-    defb 5,7,#FE,#13,#23,#03,#03,#03,#AA
-    defb 4,8,#55,#76,#F0,#33,#03,#03,#03,#AA
-    defb 4,8,#55,#76,#F0,#33,#A1,#03,#03,#57
-    defb 4,8,#55,#76,#F0,#72,#A5,#FA,#03,#57
-    defb 4,8,#55,#33,#F0,#F0,#A5,#FA,#5F,#AA
-    defb 4,7,#55,#33,#F0,#F0,#A5,#FA,#5F
-    defb 5,7,#BB,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 5,7,#AB,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 5,7,#FA,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 5,6,#55,#F0,#33,#F0,#CC,#DD
-    defb 5,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 5,7,#55,#F0,#F0,#F0,#CC,#CC,#AA
-    defb 5,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 6,5,#FA,#F0,#F0,#E4,#DD
-    defb 6,5,#EE,#F0,#F0,#CC,#DD
-    defb 6,5,#55,#CC,#CC,#CC,#AA
-    defb 6,4,#55,#E4,#CC,#DD
-    defb 6,6,#FF,#C0,#C0,#5F,#00,#FF
-    defb 5,8,#55,#0C,#EA,#85,#4F,#FF,#F0,#AA
-    defb 5,8,#55,#0C,#EA,#85,#4F,#AF,#F0,#AA
-    defb 5,8,#55,#0C,#EA,#C0,#E4,#AE,#4E,#AA
-    defb 5,8,#55,#0C,#EA,#FA,#E5,#AE,#C5,#AA
-    defb 5,7,#FF,#0C,#5D,#58,#E0,#AE,#D5
-    defb 4,8,#55,#D5,#0C,#5D,#0C,#EA,#EA,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#0C,#EA,#EA,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#48,#EA,#EA,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#5D,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,7,#55,#C0,#D5,#48,#EA,#C0,#FF
-    defb 5,6,#EA,#D5,#C0,#EA,#C0,#AA
-    defb 5,6,#EA,#C0,#FF,#C0,#C0,#AA
-    defb 5,5,#EA,#C0,#C0,#C0,#DD
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,5,#55,#84,#C0,#C0,#75
-    defb 5,5,#55,#84,#C0,#D5,#75
-    defb 6,4,#AE,#C0,#FF,#75
-    defb 6,4,#EA,#C0,#FF,#75
-    defb 6,4,#EA,#C0,#FF,#75
-    defb 6,4,#EA,#C0,#AA,#AA
-    defb 5,4,#55,#C0,#C0,#D5
-    defb 5,4,#55,#C0,#C0,#D5
-    defb 5,4,#55,#48,#84,#D5
-    defb 5,4,#AE,#48,#84,#D5
-    defb 5,4,#AE,#C0,#84,#D5
-    defb 4,5,#55,#C0,#C0,#AE,#D5
-    defb 4,5,#55,#C0,#D5,#EA,#D5
-    defb 4,6,#55,#C0,#D5,#EA,#C0,#AA
-    defb 4,6,#55,#C3,#AA,#EA,#D5,#AA
-    defb 5,5,#FF,#AA,#EA,#C3,#AA
-    defb 5,5,#55,#AA,#55,#FF,#AA
-    defb 8,2,#FF,#AA
-    defb 0,0
-    defb 0,0
-    defb 0,0
-    defb 0,0
-trump_walk_0_sn
-    defb 2,60
-    defb 7,2,6,4,6,5,5,6,5,6,5,7,5,7,5,7
-    defb 5,7,4,8,4,8,4,8,4,8,4,7,5,7,5,7
-    defb 5,7,5,6,5,6,5,7,5,6,6,5,6,5,6,5
-    defb 6,4,6,6,5,8,5,8,5,8,5,8,5,7,4,8
-    defb 4,8,4,8,4,8,4,8,4,8,4,7,5,6,5,6
-    defb 5,5,5,5,5,5,5,5,6,4,6,4,6,4,6,4
-    defb 5,4,5,4,5,4,5,4,5,4,4,5,4,5,4,6
-    defb 4,6,5,5,5,5,8,2
-
-trump_walk_1_spans  ; 16 bytes wide
-    defb 0,64
-    defb 7,2,#FF,#FF
-    defb 6,4,#FF,#33,#23,#AA
-    defb 5,5,#55,#33,#33,#33,#57
-    defb 5,6,#55,#33,#33,#33,#23,#AA
-    defb 5,6,#BB,#76,#B9,#33,#33,#57
-    defb 5,6,#BB,#FC,#FC,#B9,#33,#57
-    defb 5,7,#BB,#76,#76,#33,#23,#03,#AA
-    defb 5,7,#BB,#33,#33,#33,#03,#03,#AA
-    defb 4,8,#55,#23,#33,#23,#03,#03,#03,#AA
-    defb 4,8,#55,#FC,#13,#33,#23,#03,#03,#AA
-    defb 4,8,#55,#FC,#B1,#72,#23,#03,#03,#AA
-    defb 4,8,#55,#76,#F0,#72,#5F,#5A,#03,#AA
-    defb 4,7,#55,#72,#F0,#F0,#5F,#0F,#FF
-    defb 4,7,#55,#72,#F0,#F0,#F5,#F0,#AA
-    defb 4,7,#55,#72,#F0,#F0,#F0,#F0,#DD
-    defb 4,7,#55,#52,#F0,#F0,#F0,#F0,#DD
-    defb 5,6,#FA,#F0,#F0,#F0,#E4,#DD
-    defb 5,6,#FA,#F0,#72,#F0,#CC,#DD
-    defb 5,6,#FA,#F0,#F0,#F0,#CC,#DD
-    defb 5,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 5,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 5,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 6,5,#EE,#F0,#E4,#CC,#AA
-    defb 6,5,#EE,#CC,#CC,#CC,#AA
-    defb 6,6,#55,#E4,#CC,#DD,#00,#AA
-    defb 6,6,#EA,#C0,#D5,#5F,#55,#F5
-    defb 5,8,#55,#5D,#C0,#85,#5F,#55,#F0,#AA
-    defb 5,8,#55,#0C,#EA,#85,#5F,#AF,#F0,#AA
-    defb 5,7,#55,#0C,#EA,#D0,#E4,#AE,#5F
-    defb 5,7,#FF,#0C,#EA,#5A,#E5,#AE,#D5
-    defb 4,8,#55,#D5,#0C,#FF,#58,#C0,#AE,#D5
-    defb 4,8,#55,#D5,#0C,#5D,#4D,#C0,#EA,#D5
-    defb 4,8,#55,#D5,#0C,#0C,#48,#EA,#EA,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#48,#EA,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#48,#EA,#C0,#EA,#AA
-    defb 4,7,#55,#C0,#D5,#48,#EA,#C0,#FF
-    defb 5,6,#EA,#D5,#48,#EA,#C0,#AA
-    defb 5,6,#EA,#C0,#FF,#C0,#C0,#AA
-    defb 5,5,#EA,#C0,#C0,#C0,#DD
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,5,#55,#0C,#C0,#D5,#75
-    defb 5,5,#55,#0C,#C0,#D5,#75
-    defb 5,5,#55,#C0,#C0,#D5,#75
-    defb 5,5,#55,#C0,#C0,#D5,#75
-    defb 5,5,#55,#C0,#C0,#D5,#AA
-    defb 5,4,#55,#C0,#C0,#D5
-    defb 5,4,#55,#C0,#C0,#D5
-    defb 5,4,#55,#C0,#C0,#D5
-    defb 5,4,#55,#48,#C0,#D5
-    defb 5,4,#55,#48,#C0,#AA
-    defb 5,4,#EA,#48,#48,#AA
-    defb 5,4,#EA,#C0,#48,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 4,5,#55,#C0,#C0,#C0,#AA
-    defb 5,3,#EB,#FF,#D5
-    defb 5,4,#FF,#D7,#D7,#AA
-    defb 5,4,#55,#FF,#FF,#AA
-    defb 6,3,#FF,#FF,#AA
-    defb 0,0
-    defb 0,0
-trump_walk_1_sn
-    defb 0,62
-    defb 7,2,6,4,5,5,5,6,5,6,5,6,5,7,5,7
-    defb 4,8,4,8,4,8,4,8,4,7,4,7,4,7,4,7
-    defb 5,6,5,6,5,6,5,6,5,6,5,6,6,5,6,5
-    defb 6,6,6,6,5,8,5,8,5,7,5,7,4,8,4,8
-    defb 4,8,4,8,4,8,4,8,4,8,4,7,5,6,5,6
-    defb 5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
-    defb 5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4
-    defb 5,4,4,5,5,3,5,4,5,4,6,3
-
-trump_walk_2_spans  ; 16 bytes wide
-    defb 2,64
-    defb 7,2,#FF,#FF
-    defb 6,4,#55,#33,#23,#FF
-    defb 6,5,#BB,#33,#33,#23,#AA
-    defb 5,6,#55,#33,#33,#33,#23,#57
-    defb 5,6,#BB,#76,#FC,#33,#33,#57
-    defb 5,7,#BB,#76,#FC,#B9,#33,#03,#AA
-    defb 5,7,#BB,#76,#B9,#B9,#33,#03,#AA
-    defb 5,7,#BB,#33,#33,#33,#03,#03,#AA
-    defb 5,7,#FE,#13,#23,#03,#03,#03,#AA
-    defb 4,8,#55,#76,#F0,#33,#03,#03,#03,#AA
-    defb 4,8,#55,#76,#F0,#33,#A1,#03,#03,#57
-    defb 4,8,#55,#76,#F0,#72,#A5,#FA,#03,#57
-    defb 4,8,#55,#33,#F0,#F0,#A5,#FA,#5F,#AA
-    defb 4,7,#55,#33,#F0,#F0,#A5,#FA,#5F
-    defb 5,7,#BB,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 5,7,#AB,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 5,7,#FA,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 5,6,#55,#F0,#33,#F0,#CC,#DD
-    defb 5,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 5,7,#55,#F0,#F0,#F0,#CC,#CC,#AA
-    defb 5,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 6,5,#FA,#F0,#F0,#E4,#DD
-    defb 6,5,#EE,#F0,#F0,#CC,#DD
-    defb 6,5,#55,#CC,#CC,#CC,#AA
-    defb 6,4,#55,#E4,#CC,#DD
-    defb 6,6,#FF,#C0,#C0,#5F,#00,#FF
-    defb 5,8,#55,#0C,#EA,#85,#4F,#FF,#F0,#AA
-    defb 5,8,#55,#0C,#EA,#85,#4F,#AF,#F0,#AA
-    defb 5,8,#55,#0C,#EA,#C0,#E4,#AE,#4E,#AA
-    defb 5,8,#55,#0C,#EA,#FA,#E5,#AE,#C5,#AA
-    defb 5,7,#FF,#0C,#5D,#58,#E0,#AE,#D5
-    defb 4,8,#55,#D5,#0C,#5D,#0C,#EA,#EA,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#0C,#EA,#EA,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#48,#EA,#EA,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#5D,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,7,#55,#C0,#D5,#48,#EA,#C0,#FF
-    defb 5,6,#EA,#D5,#C0,#EA,#C0,#AA
-    defb 5,6,#EA,#C0,#FF,#C0,#C0,#AA
-    defb 5,5,#EA,#C0,#C0,#C0,#DD
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,5,#55,#48,#C0,#C0,#75
-    defb 5,5,#55,#48,#C0,#D5,#75
-    defb 5,5,#EA,#48,#84,#D5,#75
-    defb 5,5,#EA,#C0,#AE,#C0,#75
-    defb 5,5,#EA,#C0,#EA,#C0,#75
-    defb 5,5,#EA,#C0,#EA,#C0,#AA
-    defb 5,5,#EA,#C0,#EA,#C0,#AA
-    defb 4,6,#55,#C0,#D5,#55,#C0,#D5
-    defb 4,6,#55,#48,#D5,#55,#84,#D5
-    defb 4,6,#AE,#48,#D5,#55,#84,#D5
-    defb 4,6,#AE,#C0,#AA,#55,#84,#D5
-    defb 3,7,#55,#C0,#C0,#AA,#55,#84,#D5
-    defb 3,7,#55,#C0,#D5,#00,#00,#EA,#D5
-    defb 3,7,#55,#C0,#D5,#00,#00,#EA,#D5
-    defb 4,7,#EB,#AA,#00,#00,#EA,#D5,#AA
-    defb 4,7,#FF,#FF,#00,#00,#EA,#C3,#AA
-    defb 4,7,#55,#AA,#00,#00,#55,#FF,#AA
-    defb 9,2,#FF,#AA
-    defb 0,0
-    defb 0,0
-    defb 0,0
-    defb 0,0
-trump_walk_2_sn
-    defb 2,60
-    defb 7,2,6,4,6,5,5,6,5,6,5,7,5,7,5,7
-    defb 5,7,4,8,4,8,4,8,4,8,4,7,5,7,5,7
-    defb 5,7,5,6,5,6,5,7,5,6,6,5,6,5,6,5
-    defb 6,4,6,6,5,8,5,8,5,8,5,8,5,7,4,8
-    defb 4,8,4,8,4,8,4,8,4,8,4,7,5,6,5,6
-    defb 5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
-    defb 5,5,4,6,4,6,4,6,4,6,3,7,3,7,3,7
-    defb 4,7,4,7,4,7,9,2
-
-trump_walk_3_spans  ; 16 bytes wide
-    defb 0,64
-    defb 7,2,#FF,#FF
-    defb 6,4,#FF,#33,#23,#AA
-    defb 5,5,#55,#33,#33,#33,#57
-    defb 5,6,#55,#33,#33,#33,#23,#AA
-    defb 5,6,#BB,#76,#B9,#33,#33,#57
-    defb 5,6,#BB,#FC,#FC,#B9,#33,#57
-    defb 5,7,#BB,#76,#76,#33,#23,#03,#AA
-    defb 5,7,#BB,#33,#33,#33,#03,#03,#AA
-    defb 4,8,#55,#23,#33,#23,#03,#03,#03,#AA
-    defb 4,8,#55,#FC,#13,#33,#23,#03,#03,#AA
-    defb 4,8,#55,#FC,#B1,#72,#23,#03,#03,#AA
-    defb 4,8,#55,#76,#F0,#72,#5F,#5A,#03,#AA
-    defb 4,7,#55,#72,#F0,#F0,#5F,#0F,#FF
-    defb 4,7,#55,#72,#F0,#F0,#F5,#F0,#AA
-    defb 4,7,#55,#72,#F0,#F0,#F0,#F0,#DD
-    defb 4,7,#55,#52,#F0,#F0,#F0,#F0,#DD
-    defb 5,6,#FA,#F0,#F0,#F0,#E4,#DD
-    defb 5,6,#FA,#F0,#72,#F0,#CC,#DD
-    defb 5,6,#FA,#F0,#F0,#F0,#CC,#DD
-    defb 5,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 5,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 5,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 6,5,#EE,#F0,#E4,#CC,#AA
-    defb 6,5,#EE,#CC,#CC,#CC,#AA
-    defb 6,6,#55,#E4,#CC,#DD,#00,#AA
-    defb 6,6,#EA,#C0,#D5,#5F,#55,#F5
-    defb 5,8,#55,#5D,#C0,#85,#5F,#55,#F0,#AA
-    defb 5,8,#55,#0C,#EA,#85,#5F,#AF,#F0,#AA
-    defb 5,7,#55,#0C,#EA,#D0,#E4,#AE,#5F
-    defb 5,7,#FF,#0C,#EA,#5A,#E5,#AE,#D5
-    defb 4,8,#55,#D5,#0C,#FF,#58,#C0,#AE,#D5
-    defb 4,8,#55,#D5,#0C,#5D,#4D,#C0,#EA,#D5
-    defb 4,8,#55,#D5,#0C,#0C,#48,#EA,#EA,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#48,#EA,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#0C,#D5,#C0,#EA,#AA
-    defb 4,8,#55,#C0,#AE,#48,#EA,#C0,#EA,#AA
-    defb 4,7,#55,#C0,#D5,#48,#EA,#C0,#FF
-    defb 5,6,#EA,#D5,#48,#EA,#C0,#AA
-    defb 5,6,#EA,#C0,#FF,#C0,#C0,#AA
-    defb 5,5,#EA,#C0,#C0,#C0,#DD
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,5,#55,#48,#C0,#D5,#75
-    defb 5,5,#55,#48,#C0,#D5,#75
-    defb 5,5,#55,#48,#C0,#D5,#75
-    defb 5,5,#55,#C0,#C0,#D5,#75
-    defb 5,5,#55,#C0,#C0,#D5,#AA
-    defb 5,4,#55,#C0,#C0,#D5
-    defb 5,4,#55,#C0,#C0,#D5
-    defb 5,4,#55,#C0,#C0,#D5
-    defb 5,4,#55,#C0,#C0,#D5
-    defb 5,4,#55,#48,#48,#D5
-    defb 5,4,#55,#48,#C0,#AA
-    defb 5,4,#55,#48,#C0,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,3,#EA,#C0,#D5
-    defb 5,3,#EA,#C0,#D5
-    defb 5,3,#EA,#C0,#FF
-    defb 5,3,#55,#C3,#FF
-    defb 5,3,#55,#EB,#FF
-    defb 6,2,#FF,#AA
-    defb 0,0
-    defb 0,0
-trump_walk_3_sn
-    defb 0,62
-    defb 7,2,6,4,5,5,5,6,5,6,5,6,5,7,5,7
-    defb 4,8,4,8,4,8,4,8,4,7,4,7,4,7,4,7
-    defb 5,6,5,6,5,6,5,6,5,6,5,6,6,5,6,5
-    defb 6,6,6,6,5,8,5,8,5,7,5,7,4,8,4,8
-    defb 4,8,4,8,4,8,4,8,4,8,4,7,5,6,5,6
-    defb 5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
-    defb 5,4,5,4,5,4,5,4,5,4,5,4,5,4,5,4
-    defb 5,3,5,3,5,3,5,3,5,3,6,2
-
-trump_crouch_0_spans  ; 16 bytes wide
-    defb 2,64
-    defb 7,3,#FF,#FF,#AA
-    defb 6,4,#55,#33,#33,#57
-    defb 6,5,#BB,#33,#33,#23,#AA
-    defb 5,6,#55,#33,#33,#33,#33,#57
-    defb 5,7,#55,#76,#FC,#33,#33,#03,#AA
-    defb 5,7,#55,#76,#FC,#FC,#33,#23,#AA
-    defb 5,7,#55,#33,#FC,#FC,#33,#23,#57
-    defb 5,7,#BB,#33,#33,#33,#33,#03,#57
-    defb 5,7,#BB,#13,#33,#03,#03,#03,#57
-    defb 5,7,#FE,#F8,#33,#03,#03,#03,#57
-    defb 5,7,#BB,#F8,#33,#B1,#03,#03,#57
-    defb 5,7,#BB,#F0,#B1,#A5,#0B,#A1,#57
-    defb 5,7,#BB,#F0,#F0,#A5,#AF,#5F,#5F
-    defb 5,7,#BB,#F0,#F0,#A5,#FA,#5F,#5F
-    defb 5,7,#BB,#F0,#F0,#F0,#F0,#F5,#AA
-    defb 5,7,#AB,#F0,#F0,#F0,#F0,#E4,#AA
-    defb 5,7,#55,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 5,7,#55,#F0,#33,#F0,#E4,#CC,#AA
-    defb 5,7,#55,#F0,#F0,#F0,#E4,#CC,#AA
-    defb 5,7,#55,#F0,#F0,#F0,#E4,#CC,#AA
-    defb 6,6,#FA,#F0,#F0,#E4,#CC,#AA
-    defb 6,6,#FA,#F0,#F0,#F0,#CC,#AA
-    defb 6,5,#EE,#D8,#F0,#CC,#DD
-    defb 6,5,#55,#CC,#CC,#CC,#DD
-    defb 6,5,#55,#D0,#CC,#CC,#AA
-    defb 6,6,#FF,#C0,#C0,#5F,#00,#FF
-    defb 5,8,#55,#0C,#EA,#C0,#4F,#FF,#F0,#AA
-    defb 5,8,#55,#0C,#EA,#C0,#4F,#FF,#F0,#AA
-    defb 5,8,#55,#0C,#EA,#C0,#4F,#AE,#5A,#AA
-    defb 5,8,#55,#0C,#5D,#FA,#E5,#AE,#C5,#AA
-    defb 5,8,#FF,#0C,#5D,#58,#E0,#AE,#C0,#AA
-    defb 4,8,#55,#C0,#AE,#5D,#0D,#C0,#AE,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#0C,#EA,#D5,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#48,#EA,#D5,#D5
-    defb 4,8,#55,#C0,#AE,#0C,#48,#EA,#D5,#AA
-    defb 4,7,#55,#C0,#AE,#0C,#D5,#C0,#D5
-    defb 4,8,#55,#C0,#D5,#0C,#D5,#C0,#EA,#AA
-    defb 5,6,#EA,#D5,#48,#EA,#C0,#FF
-    defb 5,6,#EA,#D5,#48,#EA,#C0,#AA
-    defb 5,6,#EA,#C0,#FF,#C0,#C0,#AA
-    defb 5,6,#EA,#C0,#C0,#C0,#CC,#AA
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,5,#55,#84,#C0,#C0,#75
-    defb 5,5,#55,#84,#C0,#D5,#75
-    defb 6,4,#AE,#C0,#D5,#75
-    defb 6,4,#EA,#48,#D5,#DD
-    defb 6,4,#EA,#C0,#D5,#DD
-    defb 6,4,#55,#C0,#D5,#AA
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#AE,#48,#D5
-    defb 6,3,#AE,#48,#AA
-    defb 5,4,#55,#84,#48,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,3,#EB,#C2,#D5
-    defb 5,4,#55,#C3,#D7,#AA
-    defb 6,3,#FF,#FF,#AA
-    defb 6,3,#FF,#FF,#AA
-    defb 0,0
-    defb 0,0
-    defb 0,0
-    defb 0,0
-trump_crouch_0_sn
-    defb 2,60
-    defb 7,3,6,4,6,5,5,6,5,7,5,7,5,7,5,7
-    defb 5,7,5,7,5,7,5,7,5,7,5,7,5,7,5,7
-    defb 5,7,5,7,5,7,5,7,6,6,6,6,6,5,6,5
-    defb 6,5,6,6,5,8,5,8,5,8,5,8,5,8,4,8
-    defb 4,8,4,8,4,8,4,7,4,8,5,6,5,6,5,6
-    defb 5,6,5,5,5,5,5,5,6,4,6,4,6,4,6,4
-    defb 6,3,6,3,6,3,6,3,5,4,5,4,5,4,5,4
-    defb 5,3,5,4,6,3,6,3
-
-trump_crouch_1_spans  ; 16 bytes wide
-    defb 5,64
-    defb 8,2,#FF,#AA
-    defb 7,4,#55,#33,#57,#AA
-    defb 7,4,#BB,#33,#23,#57
-    defb 6,6,#55,#33,#33,#33,#03,#AA
-    defb 6,6,#55,#76,#B9,#33,#23,#57
-    defb 6,6,#BB,#76,#FC,#33,#23,#57
-    defb 6,7,#BB,#76,#FC,#33,#33,#03,#AA
-    defb 6,7,#BB,#33,#FC,#B9,#33,#03,#AA
-    defb 5,8,#55,#76,#33,#33,#33,#33,#03,#AA
-    defb 5,8,#55,#76,#B1,#23,#03,#03,#03,#AA
-    defb 5,8,#55,#76,#F0,#33,#03,#03,#03,#AA
-    defb 5,8,#55,#33,#F0,#72,#23,#03,#03,#AA
-    defb 5,8,#55,#33,#F0,#F0,#0F,#03,#03,#AA
-    defb 5,8,#55,#72,#F0,#F0,#0F,#FA,#03,#AA
-    defb 5,7,#55,#52,#F0,#F0,#F5,#FA,#5F
-    defb 6,6,#FA,#F0,#F0,#F0,#F0,#FF
-    defb 6,6,#FA,#F0,#F0,#F0,#F0,#DD
-    defb 6,6,#FA,#B1,#F0,#F0,#F0,#DD
-    defb 6,6,#FA,#F0,#72,#F0,#E4,#DD
-    defb 6,6,#FA,#F0,#F0,#F0,#CC,#DD
-    defb 6,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 6,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 6,6,#55,#D8,#F0,#F0,#E4,#DD
-    defb 7,5,#EE,#D8,#E4,#CC,#AA
-    defb 6,6,#55,#C0,#CC,#CC,#CC,#AA
-    defb 6,5,#55,#C0,#C4,#CC,#DD
-    defb 6,6,#AE,#EA,#C0,#85,#AA,#55
-    defb 6,7,#AE,#5D,#C0,#0F,#AA,#FA,#AA
-    defb 5,8,#55,#AE,#5D,#C0,#0F,#DF,#FA,#F5
-    defb 5,8,#EA,#AE,#5D,#C0,#4F,#DD,#5A,#F5
-    defb 5,8,#EA,#AE,#5D,#D5,#E5,#DD,#0D,#AA
-    defb 5,8,#EA,#AE,#5D,#AE,#E0,#D5,#48,#AA
-    defb 5,8,#EA,#AE,#48,#0C,#E0,#D5,#C0,#AA
-    defb 5,8,#EA,#AE,#0C,#0C,#CA,#D5,#C0,#AA
-    defb 5,7,#EA,#AE,#0C,#0C,#D5,#D5,#D5
-    defb 5,7,#EA,#D5,#0C,#48,#EA,#D5,#D5
-    defb 5,7,#EA,#D5,#0C,#D5,#C0,#D5,#AA
-    defb 5,6,#EA,#D5,#0C,#D5,#C0,#D5
-    defb 5,7,#EA,#D5,#48,#EA,#C0,#EA,#AA
-    defb 5,6,#EA,#D5,#C0,#EA,#C0,#FF
-    defb 5,6,#EA,#C0,#FF,#C0,#C0,#AA
-    defb 5,6,#EA,#C0,#C0,#C0,#CC,#AA
-    defb 5,5,#55,#84,#48,#C0,#75
-    defb 5,5,#55,#C0,#0C,#C0,#DD
-    defb 6,4,#EA,#C0,#C0,#DD
-    defb 6,4,#55,#C0,#C0,#DD
-    defb 7,3,#AE,#C0,#DD
-    defb 6,4,#55,#84,#C0,#DD
-    defb 6,4,#55,#48,#C0,#AA
-    defb 6,4,#55,#C0,#C0,#AA
-    defb 6,4,#EA,#C0,#C0,#AA
-    defb 5,5,#55,#C0,#C0,#C0,#AA
-    defb 5,4,#55,#C2,#C0,#FF
-    defb 6,3,#FF,#D7,#AA
-    defb 6,3,#FF,#FF,#AA
-    defb 6,3,#55,#FF,#AA
-    defb 7,1,#AA
-    defb 0,0
-    defb 0,0
-    defb 0,0
-    defb 0,0
-    defb 0,0
-    defb 0,0
-    defb 0,0
-trump_crouch_1_sn
-    defb 5,57
-    defb 8,2,7,4,7,4,6,6,6,6,6,6,6,7,6,7
-    defb 5,8,5,8,5,8,5,8,5,8,5,8,5,7,6,6
-    defb 6,6,6,6,6,6,6,6,6,6,6,6,6,6,7,5
-    defb 6,6,6,5,6,6,6,7,5,8,5,8,5,8,5,8
-    defb 5,8,5,8,5,7,5,7,5,7,5,6,5,7,5,6
-    defb 5,6,5,6,5,5,5,5,6,4,6,4,7,3,6,4
-    defb 6,4,6,4,6,4,5,5,5,4,6,3,6,3,6,3
-    defb 7,1
-
-trump_crouch_2_spans  ; 16 bytes wide
-    defb 9,56
-    defb 8,2,#FF,#AA
-    defb 7,4,#55,#33,#77,#AA
-    defb 7,4,#BB,#33,#33,#57
-    defb 6,6,#55,#33,#33,#33,#23,#AA
-    defb 6,6,#55,#76,#FC,#33,#23,#57
-    defb 6,7,#55,#76,#FC,#33,#33,#03,#AA
-    defb 6,7,#BB,#33,#FC,#FC,#33,#23,#AA
-    defb 6,7,#BB,#33,#33,#33,#33,#23,#57
-    defb 6,7,#FE,#13,#33,#13,#03,#03,#57
-    defb 6,7,#FE,#F8,#33,#03,#03,#03,#57
-    defb 5,8,#55,#76,#F0,#33,#B1,#03,#03,#AA
-    defb 5,8,#55,#33,#F0,#33,#A5,#03,#03,#AA
-    defb 5,8,#55,#33,#F0,#F0,#A5,#FA,#23,#57
-    defb 6,7,#BB,#F0,#F0,#A5,#FA,#5F,#57
-    defb 6,7,#BB,#F0,#F0,#F0,#F0,#5F,#AA
-    defb 6,6,#AB,#F0,#F0,#F0,#F0,#DD
-    defb 6,7,#FA,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 6,7,#55,#F0,#72,#F0,#F0,#CC,#AA
-    defb 6,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 6,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 6,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 6,6,#55,#D8,#F0,#F0,#E4,#DD
-    defb 7,5,#EE,#F0,#F0,#E4,#DD
-    defb 7,5,#FF,#CC,#CC,#CC,#DD
-    defb 6,6,#55,#C0,#E4,#CC,#CC,#AA
-    defb 6,5,#55,#EA,#D0,#CC,#FF
-    defb 6,5,#AE,#5D,#C0,#D5,#AA
-    defb 6,7,#AE,#5D,#C0,#85,#DF,#55,#AA
-    defb 5,8,#55,#AE,#5D,#C0,#85,#DF,#FA,#F5
-    defb 5,8,#EA,#AE,#5D,#C0,#85,#DF,#FA,#F5
-    defb 5,8,#EA,#AE,#5D,#C0,#C5,#DD,#0D,#F5
-    defb 5,8,#EA,#AE,#0C,#FF,#F0,#D5,#48,#DF
-    defb 5,8,#EA,#AE,#0C,#AE,#F0,#D5,#48,#D5
-    defb 5,8,#EA,#D5,#0C,#0C,#CA,#D5,#C0,#AA
-    defb 5,8,#EA,#D5,#0C,#0C,#D5,#D5,#C0,#AA
-    defb 5,7,#EA,#D5,#0C,#0C,#D5,#D5,#D5
-    defb 5,7,#EA,#D5,#0C,#48,#EA,#D5,#D5
-    defb 5,7,#EA,#D5,#0C,#D5,#C0,#D5,#AA
-    defb 5,6,#55,#D5,#48,#D5,#C0,#D5
-    defb 5,6,#EA,#C0,#EA,#EA,#C0,#D5
-    defb 5,6,#EA,#C0,#D5,#C0,#C0,#AA
-    defb 5,6,#55,#C0,#84,#48,#CC,#AA
-    defb 5,5,#55,#C0,#C0,#C0,#DD
-    defb 6,4,#EA,#84,#C0,#DD
-    defb 6,4,#55,#0C,#C0,#DD
-    defb 6,4,#EA,#C0,#90,#DD
-    defb 6,4,#EA,#C0,#90,#DD
-    defb 6,4,#EA,#C0,#90,#DD
-    defb 6,4,#EB,#D7,#C0,#D5
-    defb 6,4,#55,#D7,#C0,#AA
-    defb 6,3,#55,#FF,#FF
-    defb 7,2,#FF,#AA
-    defb 7,1,#55
-    defb 0,0
-    defb 0,0
-    defb 0,0
-trump_crouch_2_sn
-    defb 9,53
-    defb 8,2,7,4,7,4,6,6,6,6,6,7,6,7,6,7
-    defb 6,7,6,7,5,8,5,8,5,8,6,7,6,7,6,6
-    defb 6,7,6,7,6,6,6,6,6,6,6,6,7,5,7,5
-    defb 6,6,6,5,6,5,6,7,5,8,5,8,5,8,5,8
-    defb 5,8,5,8,5,8,5,7,5,7,5,7,5,6,5,6
-    defb 5,6,5,6,5,5,6,4,6,4,6,4,6,4,6,4
-    defb 6,4,6,4,6,3,7,2,7,1
-
-trump_jump_0_spans  ; 16 bytes wide
-    defb 4,64
-    defb 8,2,#FF,#FF
-    defb 7,4,#55,#33,#23,#AA
-    defb 7,4,#BB,#33,#33,#57
-    defb 6,6,#55,#33,#33,#33,#23,#AA
-    defb 6,6,#55,#76,#B9,#33,#23,#57
-    defb 6,7,#55,#76,#FC,#33,#33,#03,#AA
-    defb 6,7,#BB,#76,#FC,#33,#33,#03,#AA
-    defb 6,7,#BB,#33,#FC,#FC,#33,#23,#AA
-    defb 6,7,#FE,#B9,#33,#33,#33,#23,#57
-    defb 6,7,#FE,#F8,#33,#13,#33,#03,#57
-    defb 6,7,#FE,#F0,#33,#03,#03,#03,#57
-    defb 6,7,#BB,#F0,#33,#A1,#03,#03,#57
-    defb 6,7,#BB,#F0,#F0,#A5,#03,#03,#AA
-    defb 6,7,#BB,#F0,#F0,#A5,#AB,#23,#57
-    defb 6,7,#AB,#F0,#F0,#A5,#FA,#5F,#57
-    defb 6,7,#FA,#F0,#F0,#F0,#FA,#5F,#AA
-    defb 6,6,#FA,#F0,#F0,#F0,#F0,#DD
-    defb 6,7,#55,#F0,#72,#F0,#F0,#CC,#AA
-    defb 6,6,#55,#F0,#72,#F0,#E4,#DD
-    defb 6,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 6,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 6,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 7,5,#FA,#F0,#F0,#E4,#DD
-    defb 7,5,#EE,#D8,#F0,#CC,#DD
-    defb 6,6,#55,#C0,#CC,#CC,#CC,#AA
-    defb 6,5,#55,#EA,#D0,#CC,#DD
-    defb 6,5,#AE,#5D,#C0,#85,#AA
-    defb 6,5,#AE,#5D,#C0,#85,#DF
-    defb 5,6,#55,#AE,#5D,#C0,#0F,#DF
-    defb 5,8,#EA,#AE,#5D,#C0,#85,#DF,#55,#FF
-    defb 5,9,#EA,#AE,#5D,#C0,#C5,#DD,#EF,#F0,#AA
-    defb 5,9,#EA,#AE,#48,#EA,#C0,#D5,#84,#F0,#AA
-    defb 5,8,#EA,#AE,#48,#EA,#C0,#D5,#0C,#F5
-    defb 5,8,#EA,#AE,#0C,#FF,#DA,#D5,#48,#DF
-    defb 5,8,#EA,#D5,#0C,#0C,#58,#D5,#C0,#D5
-    defb 5,8,#EA,#D5,#0C,#0C,#DA,#D5,#C0,#AA
-    defb 5,7,#EA,#D5,#0C,#0C,#4D,#D5,#D5
-    defb 5,7,#EA,#D5,#0C,#48,#D5,#D5,#AA
-    defb 5,7,#EA,#D5,#48,#D5,#EA,#EA,#AA
-    defb 5,6,#EA,#C0,#EA,#EA,#C0,#FF
-    defb 5,6,#EA,#C0,#D5,#C0,#C0,#AA
-    defb 5,6,#EA,#84,#C0,#C0,#CC,#AA
-    defb 5,5,#55,#84,#48,#C0,#75
-    defb 6,4,#EA,#48,#90,#DD
-    defb 6,4,#EA,#C0,#D5,#DD
-    defb 6,4,#55,#C0,#90,#DD
-    defb 6,4,#55,#C0,#90,#DD
-    defb 7,3,#AE,#C0,#DD
-    defb 6,4,#55,#0C,#C0,#AA
-    defb 6,4,#55,#48,#C0,#AA
-    defb 6,4,#EA,#C0,#C0,#AA
-    defb 6,3,#EA,#C0,#D5
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,2,#EB,#D7
-    defb 6,3,#FF,#FF,#AA
-    defb 6,3,#55,#FF,#AA
-    defb 7,1,#FF
-    defb 0,0
-    defb 0,0
-    defb 0,0
-    defb 0,0
-    defb 0,0
-    defb 0,0
-trump_jump_0_sn
-    defb 4,58
-    defb 8,2,7,4,7,4,6,6,6,6,6,7,6,7,6,7
-    defb 6,7,6,7,6,7,6,7,6,7,6,7,6,7,6,7
-    defb 6,6,6,7,6,6,6,6,6,6,6,6,7,5,7,5
-    defb 6,6,6,5,6,5,6,5,5,6,5,8,5,9,5,9
-    defb 5,8,5,8,5,8,5,8,5,7,5,7,5,7,5,6
-    defb 5,6,5,6,5,5,6,4,6,4,6,4,6,4,7,3
-    defb 6,4,6,4,6,4,6,3,5,4,6,3,6,2,6,3
-    defb 6,3,7,1
-
-trump_jump_1_spans  ; 16 bytes wide
-    defb 6,56
-    defb 6,3,#55,#FF,#AA
-    defb 6,4,#BB,#33,#57,#AA
-    defb 5,5,#55,#33,#33,#33,#57
-    defb 5,6,#BB,#33,#33,#33,#03,#AA
-    defb 4,7,#55,#33,#FC,#33,#33,#23,#AA
-    defb 4,7,#55,#76,#FC,#FC,#33,#23,#57
-    defb 4,7,#55,#33,#B9,#33,#33,#03,#57
-    defb 4,7,#55,#33,#33,#23,#03,#03,#57
-    defb 4,7,#55,#33,#33,#03,#03,#03,#57
-    defb 4,7,#BB,#A9,#33,#33,#03,#03,#57
-    defb 4,7,#BB,#F8,#B1,#72,#0B,#A1,#57
-    defb 4,7,#BB,#F8,#B1,#A5,#5F,#A5,#AA
-    defb 4,7,#BB,#72,#F0,#F0,#FF,#A5,#AA
-    defb 4,7,#BB,#72,#F0,#F0,#F0,#E4,#DD
-    defb 4,7,#BB,#72,#F0,#F0,#F0,#E4,#DD
-    defb 4,7,#55,#72,#F0,#F0,#F0,#E4,#DD
-    defb 4,7,#55,#52,#F0,#F0,#F0,#CC,#DD
-    defb 4,8,#55,#F0,#B1,#72,#E4,#CC,#DD,#55
-    defb 5,8,#FA,#F0,#F0,#E4,#CC,#DD,#FA,#AA
-    defb 5,8,#FA,#F0,#F0,#F0,#CC,#DD,#F0,#AA
-    defb 5,8,#FA,#F0,#F0,#F0,#E4,#DD,#F0,#AA
-    defb 5,8,#55,#F0,#F0,#F0,#CC,#FF,#4D,#AA
-    defb 5,8,#55,#D8,#F0,#CC,#D8,#A4,#48,#AA
-    defb 6,7,#EE,#CC,#CC,#D8,#A4,#C0,#AA
-    defb 6,7,#55,#CC,#CC,#58,#8C,#C0,#AA
-    defb 6,7,#EA,#C0,#AE,#4D,#EA,#C0,#AA
-    defb 5,7,#55,#5D,#EA,#AE,#48,#EA,#D5
-    defb 5,7,#AE,#0C,#5D,#AE,#48,#EA,#D5
-    defb 5,7,#AE,#0C,#0C,#0C,#D5,#48,#D5
-    defb 5,7,#AE,#0C,#0C,#0C,#D5,#C0,#D5
-    defb 4,8,#55,#D5,#84,#0C,#48,#EA,#EA,#D5
-    defb 4,8,#55,#C0,#EA,#0C,#48,#EA,#EA,#AA
-    defb 4,7,#55,#84,#5D,#EA,#C0,#EA,#FF
-    defb 4,7,#55,#C0,#0C,#5D,#FF,#C0,#AA
-    defb 4,7,#55,#C0,#0C,#C0,#C0,#C0,#AA
-    defb 4,7,#55,#C0,#C0,#C0,#C0,#C0,#AA
-    defb 4,7,#55,#C0,#C0,#C0,#C0,#C0,#AA
-    defb 4,7,#55,#C0,#C0,#C0,#C0,#C0,#AA
-    defb 4,7,#55,#C0,#C0,#C0,#C0,#C0,#AA
-    defb 5,6,#EA,#C0,#C0,#C0,#CC,#AA
-    defb 5,5,#EA,#C0,#C0,#C0,#DD
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,5,#EA,#84,#48,#C0,#75
-    defb 5,5,#55,#C0,#0C,#C0,#75
-    defb 6,5,#EA,#C0,#48,#64,#AA
-    defb 6,5,#55,#C0,#C0,#64,#AA
-    defb 7,4,#AE,#C0,#C0,#AA
-    defb 7,4,#AE,#C0,#C0,#AA
-    defb 6,5,#55,#C0,#C0,#C0,#AA
-    defb 6,4,#55,#C0,#C0,#D5
-    defb 6,4,#EA,#C0,#C0,#AA
-    defb 6,3,#EA,#C0,#D5
-    defb 6,3,#55,#D7,#AA
-    defb 6,3,#55,#EB,#AA
-    defb 7,2,#FF,#FF
-    defb 7,2,#55,#AA
-trump_jump_1_sn
-    defb 6,56
-    defb 6,3,6,4,5,5,5,6,4,7,4,7,4,7,4,7
-    defb 4,7,4,7,4,7,4,7,4,7,4,7,4,7,4,7
-    defb 4,7,4,8,5,8,5,8,5,8,5,8,5,8,6,7
-    defb 6,7,6,7,5,7,5,7,5,7,5,7,4,8,4,8
-    defb 4,7,4,7,4,7,4,7,4,7,4,7,4,7,5,6
-    defb 5,5,5,5,5,5,5,5,6,5,6,5,7,4,7,4
-    defb 6,5,6,4,6,4,6,3,6,3,6,3,7,2,7,2
-
-trump_jump_2_spans  ; 16 bytes wide
-    defb 1,64
-    defb 5,4,#55,#FF,#FF,#AA
-    defb 5,5,#BB,#33,#33,#57,#AA
-    defb 4,6,#55,#33,#33,#33,#33,#57
-    defb 4,6,#BB,#33,#B9,#B9,#33,#57
-    defb 4,7,#BB,#FC,#FC,#33,#23,#03,#AA
-    defb 4,7,#BB,#FC,#33,#33,#03,#03,#AA
-    defb 4,7,#BB,#76,#33,#03,#03,#03,#AA
-    defb 4,7,#BB,#33,#23,#03,#03,#03,#AA
-    defb 3,8,#55,#23,#33,#33,#33,#23,#33,#AA
-    defb 3,7,#55,#76,#52,#33,#5F,#FA,#5F
-    defb 3,7,#55,#76,#F0,#33,#5F,#FA,#FF
-    defb 3,7,#55,#76,#F0,#F0,#F5,#F0,#FF
-    defb 3,8,#55,#72,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 3,8,#55,#33,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 3,8,#55,#33,#F0,#F0,#F0,#E4,#CC,#AA
-    defb 3,8,#55,#13,#F0,#F0,#F0,#CC,#CC,#AA
-    defb 4,7,#AB,#F0,#33,#F0,#CC,#CC,#AA
-    defb 4,7,#AB,#F0,#F0,#F0,#E4,#CC,#AA
-    defb 4,7,#55,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 4,7,#55,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 4,8,#55,#F0,#F0,#F0,#E4,#DD,#00,#FF
-    defb 5,8,#EE,#F0,#E4,#CC,#DD,#55,#F0,#AA
-    defb 5,8,#EE,#CC,#CC,#CC,#AA,#AF,#F0,#AA
-    defb 5,8,#55,#CC,#CC,#8D,#F5,#AE,#4E,#AA
-    defb 6,7,#EA,#C0,#0F,#F0,#AE,#C5,#AA
-    defb 5,7,#55,#EA,#C0,#0F,#F5,#AE,#D5
-    defb 5,7,#AE,#5D,#D5,#0C,#DF,#84,#D5
-    defb 5,7,#AE,#0C,#FF,#0C,#D5,#C0,#D5
-    defb 5,7,#AE,#0C,#FF,#0C,#D5,#C0,#D5
-    defb 5,7,#AE,#0C,#0C,#0C,#FF,#C0,#AA
-    defb 4,8,#55,#D5,#0C,#0C,#48,#EA,#EA,#AA
-    defb 4,8,#55,#84,#AE,#0C,#48,#EA,#EA,#AA
-    defb 4,8,#55,#84,#EA,#0C,#D5,#C0,#EA,#AA
-    defb 4,7,#55,#C0,#5D,#0C,#D5,#C0,#FF
-    defb 4,7,#55,#C0,#C0,#EA,#EA,#C0,#AA
-    defb 4,7,#55,#C0,#C0,#D5,#C0,#C0,#AA
-    defb 4,7,#55,#C0,#C0,#C0,#C0,#C0,#AA
-    defb 4,7,#55,#C0,#C0,#C0,#C0,#C0,#AA
-    defb 4,6,#55,#C0,#C0,#C0,#C0,#DD
-    defb 5,5,#EA,#C0,#C0,#C0,#DD
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,5,#EA,#C0,#C0,#C0,#75
-    defb 5,6,#55,#84,#C0,#D5,#64,#AA
-    defb 5,6,#55,#84,#C0,#D5,#64,#AA
-    defb 5,6,#55,#84,#C0,#FF,#64,#AA
-    defb 6,4,#AE,#C0,#AA,#FF
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#AE,#48,#AA
-    defb 5,4,#55,#84,#C0,#AA
-    defb 5,4,#55,#84,#C0,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,3,#EA,#C0,#D5
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,3,#55,#C2,#D7
-    defb 6,3,#FF,#D7,#AA
-    defb 6,3,#55,#FF,#AA
-    defb 7,1,#FF
-    defb 0,0
-    defb 0,0
-trump_jump_2_sn
-    defb 1,62
-    defb 5,4,5,5,4,6,4,6,4,7,4,7,4,7,4,7
-    defb 3,8,3,7,3,7,3,7,3,8,3,8,3,8,3,8
-    defb 4,7,4,7,4,7,4,7,4,8,5,8,5,8,5,8
-    defb 6,7,5,7,5,7,5,7,5,7,5,7,4,8,4,8
-    defb 4,8,4,7,4,7,4,7,4,7,4,7,4,6,5,5
-    defb 5,5,5,5,5,6,5,6,5,6,6,4,6,3,6,3
-    defb 6,3,6,3,6,3,6,3,5,4,5,4,5,4,5,4
-    defb 5,3,5,4,5,3,6,3,6,3,7,1
-
-trump_punch_0_spans  ; 16 bytes wide
-    defb 1,64
-    defb 5,4,#55,#FF,#FF,#AA
-    defb 5,4,#BB,#33,#33,#57
-    defb 4,6,#55,#33,#33,#33,#23,#AA
-    defb 4,6,#BB,#33,#33,#B9,#33,#57
-    defb 4,6,#BB,#FC,#FC,#33,#23,#57
-    defb 4,7,#BB,#FC,#33,#33,#03,#03,#AA
-    defb 3,8,#55,#33,#33,#33,#03,#03,#03,#AA
-    defb 3,8,#55,#33,#33,#03,#03,#03,#03,#AA
-    defb 4,7,#AB,#33,#33,#33,#33,#33,#AA
-    defb 3,8,#55,#23,#52,#33,#5F,#B1,#AF,#AA
-    defb 3,8,#55,#76,#F0,#72,#5F,#A5,#AF,#AA
-    defb 3,7,#55,#76,#F0,#F0,#5F,#F0,#FF
-    defb 3,8,#55,#72,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 3,8,#55,#72,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 3,8,#55,#33,#F0,#F0,#F0,#E4,#CC,#AA
-    defb 3,7,#55,#52,#F0,#F0,#F0,#CC,#DD
-    defb 4,7,#AB,#F0,#33,#F0,#CC,#CC,#AA
-    defb 4,7,#FA,#F0,#F0,#F0,#CC,#CC,#AA
-    defb 4,7,#55,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 4,7,#55,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 4,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 5,5,#FA,#F0,#E4,#CC,#DD
-    defb 5,5,#EE,#CC,#CC,#CC,#AA
-    defb 5,4,#55,#CC,#CC,#DD
-    defb 6,5,#EA,#85,#4F,#AA,#55
-    defb 5,7,#FF,#C0,#85,#4F,#AA,#FA,#AA
-    defb 4,8,#55,#0C,#EA,#85,#4F,#FF,#F0,#DD
-    defb 4,8,#AE,#0C,#EA,#C0,#4F,#D5,#5A,#AA
-    defb 4,8,#AE,#0C,#AE,#48,#C0,#D5,#0D,#DF
-    defb 4,8,#AE,#0C,#FA,#48,#C0,#D5,#48,#AA
-    defb 4,8,#55,#0C,#5A,#48,#C0,#D5,#C0,#AA
-    defb 4,8,#55,#0C,#0D,#48,#C0,#D5,#C0,#AA
-    defb 4,8,#55,#0C,#0D,#C0,#C0,#C0,#EA,#AA
-    defb 4,8,#55,#0C,#48,#EA,#C0,#C0,#EA,#AA
-    defb 4,7,#55,#0C,#48,#EA,#C0,#C0,#FF
-    defb 4,7,#55,#0C,#D5,#C0,#C0,#C0,#AA
-    defb 4,7,#55,#0C,#D5,#C0,#C0,#D5,#D5
-    defb 4,7,#55,#48,#D5,#C0,#C0,#D5,#D5
-    defb 4,7,#55,#48,#EA,#C0,#C4,#D5,#AA
-    defb 4,6,#55,#C0,#EA,#C0,#C4,#D5
-    defb 5,5,#FF,#C0,#C0,#C4,#AA
-    defb 5,5,#EA,#C0,#C0,#C4,#AA
-    defb 5,5,#55,#84,#C0,#C4,#DD
-    defb 5,5,#55,#84,#C0,#C4,#DD
-    defb 5,5,#55,#84,#C0,#EE,#AA
-    defb 5,4,#55,#84,#C0,#FF
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 5,4,#55,#0C,#48,#AA
-    defb 5,4,#55,#0C,#C0,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,4,#EA,#C0,#C0,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,4,#55,#C2,#D7,#AA
-    defb 5,4,#55,#FF,#C3,#AA
-    defb 6,3,#FF,#FF,#AA
-    defb 7,1,#FF
-    defb 0,0
-    defb 0,0
-trump_punch_0_sn
-    defb 1,62
-    defb 5,4,5,4,4,6,4,6,4,6,4,7,3,8,3,8
-    defb 4,7,3,8,3,8,3,7,3,8,3,8,3,8,3,7
-    defb 4,7,4,7,4,7,4,7,4,6,5,5,5,5,5,4
-    defb 6,5,5,7,4,8,4,8,4,8,4,8,4,8,4,8
-    defb 4,8,4,8,4,7,4,7,4,7,4,7,4,7,4,6
-    defb 5,5,5,5,5,5,5,5,5,5,5,4,6,3,6,3
-    defb 6,3,6,3,6,3,5,4,5,4,5,4,5,4,5,4
-    defb 5,4,5,4,5,4,5,4,6,3,7,1
-
-trump_punch_1_spans  ; 16 bytes wide
-    defb 2,64
-    defb 8,3,#55,#FF,#AA
-    defb 8,4,#BB,#33,#77,#AA
-    defb 7,5,#55,#33,#33,#33,#57
-    defb 7,6,#55,#76,#B9,#33,#23,#AA
-    defb 7,6,#BB,#76,#FC,#FC,#33,#57
-    defb 7,7,#BB,#76,#FC,#B9,#33,#03,#AA
-    defb 7,7,#BB,#33,#33,#33,#33,#03,#AA
-    defb 6,8,#55,#76,#33,#33,#03,#03,#03,#57
-    defb 6,8,#55,#76,#F0,#72,#23,#03,#03,#57
-    defb 6,8,#55,#76,#B1,#72,#F4,#03,#03,#AA
-    defb 6,8,#55,#76,#B1,#72,#A5,#0B,#03,#AA
-    defb 6,8,#55,#33,#B1,#72,#A5,#FF,#A9,#AA
-    defb 6,8,#55,#72,#F0,#F0,#F0,#FA,#0B,#57
-    defb 6,8,#55,#72,#F0,#F0,#F0,#F0,#5F,#AA
-    defb 6,7,#55,#52,#F0,#F0,#F0,#F0,#5F
-    defb 6,7,#55,#52,#F0,#F0,#F0,#F0,#DD
-    defb 7,6,#FA,#B1,#72,#F0,#F0,#DD
-    defb 7,6,#FA,#F0,#F0,#F0,#CC,#DD
-    defb 7,6,#FA,#F0,#F0,#F0,#CC,#DD
-    defb 7,6,#FA,#F0,#F0,#F0,#CC,#DD
-    defb 7,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 7,6,#55,#D8,#F0,#F0,#E4,#DD
-    defb 8,5,#EE,#D8,#E4,#CC,#AA
-    defb 7,6,#55,#EE,#CC,#CC,#CC,#AA
-    defb 7,5,#EA,#C0,#E4,#CC,#DD
-    defb 6,6,#55,#C0,#C0,#FF,#FF,#AA
-    defb 6,6,#55,#84,#5D,#0C,#0D,#AA
-    defb 6,6,#EA,#0C,#5D,#0C,#0C,#AA
-    defb 6,7,#EA,#0C,#5D,#0C,#0C,#D5,#AA
-    defb 6,7,#EA,#0C,#5D,#84,#0C,#48,#5D
-    defb 5,9,#55,#C0,#0C,#48,#EA,#0C,#48,#0C,#FF
-    defb 5,10,#55,#C0,#0C,#48,#D5,#C0,#C0,#0C,#48,#AA
-    defb 5,10,#55,#C0,#0C,#48,#C0,#FF,#C0,#0C,#48,#AA
-    defb 5,10,#55,#C0,#0C,#C0,#C0,#C0,#EA,#0C,#48,#F5
-    defb 5,10,#55,#C0,#C0,#C0,#C0,#C0,#D5,#C0,#C0,#F5
-    defb 5,10,#55,#C0,#C0,#C0,#C0,#C0,#D5,#FF,#C0,#F5
-    defb 5,10,#55,#C0,#C0,#C0,#C0,#C0,#AA,#00,#FF,#AA
-    defb 6,6,#EA,#C0,#C0,#C0,#C0,#AA
-    defb 6,6,#EA,#C0,#C0,#C0,#C0,#AA
-    defb 6,6,#EA,#48,#C0,#C0,#C0,#AA
-    defb 6,5,#EA,#C0,#C0,#C0,#D5
-    defb 6,5,#EA,#48,#C0,#C0,#75
-    defb 6,5,#EA,#48,#C0,#C0,#75
-    defb 6,5,#55,#84,#C0,#FF,#75
-    defb 6,5,#55,#84,#C0,#FF,#75
-    defb 6,5,#55,#C0,#D5,#55,#75
-    defb 6,5,#55,#C0,#C0,#BA,#75
-    defb 6,5,#55,#C0,#C0,#FF,#AA
-    defb 6,4,#55,#C0,#C0,#AA
-    defb 6,4,#55,#C0,#C0,#AA
-    defb 6,4,#55,#48,#48,#AA
-    defb 6,4,#EA,#48,#48,#AA
-    defb 6,4,#AE,#C0,#48,#AA
-    defb 6,4,#EA,#C0,#C0,#AA
-    defb 6,4,#EA,#C0,#C0,#AA
-    defb 5,5,#55,#C0,#C0,#C0,#AA
-    defb 6,4,#EA,#FF,#C0,#AA
-    defb 6,4,#EB,#D7,#C3,#D7
-    defb 6,4,#55,#FF,#FF,#FF
-    defb 6,4,#55,#FF,#FF,#AA
-    defb 0,0
-    defb 0,0
-    defb 0,0
-    defb 0,0
-trump_punch_1_sn
-    defb 2,60
-    defb 8,3,8,4,7,5,7,6,7,6,7,7,7,7,6,8
-    defb 6,8,6,8,6,8,6,8,6,8,6,8,6,7,6,7
-    defb 7,6,7,6,7,6,7,6,7,6,7,6,8,5,7,6
-    defb 7,5,6,6,6,6,6,6,6,7,6,7,5,9,5,10
-    defb 5,10,5,10,5,10,5,10,5,10,6,6,6,6,6,6
-    defb 6,5,6,5,6,5,6,5,6,5,6,5,6,5,6,5
-    defb 6,4,6,4,6,4,6,4,6,4,6,4,6,4,5,5
-    defb 6,4,6,4,6,4,6,4
-
-trump_punch_2_spans  ; 16 bytes wide
-    defb 1,64
-    defb 7,3,#55,#FF,#AA
-    defb 6,5,#55,#BB,#33,#57,#AA
-    defb 6,5,#BB,#33,#33,#23,#57
-    defb 6,6,#BB,#33,#33,#33,#03,#AA
-    defb 5,7,#55,#33,#FC,#B9,#33,#23,#AA
-    defb 5,7,#55,#33,#FC,#FC,#33,#23,#57
-    defb 5,7,#55,#33,#76,#33,#33,#23,#57
-    defb 5,7,#55,#33,#33,#33,#03,#03,#57
-    defb 5,7,#BB,#A9,#33,#23,#03,#03,#57
-    defb 5,7,#BB,#F8,#B1,#72,#A9,#03,#57
-    defb 5,8,#BB,#F8,#B1,#72,#0B,#03,#03,#AA
-    defb 5,8,#BB,#F8,#B1,#F0,#5F,#A5,#AB,#AA
-    defb 5,7,#BB,#72,#F0,#F0,#5F,#A5,#FF
-    defb 5,7,#BB,#72,#F0,#F0,#F0,#A5,#AA
-    defb 5,7,#AB,#72,#F0,#F0,#F0,#E4,#DD
-    defb 5,7,#55,#F0,#F0,#F0,#F0,#E4,#DD
-    defb 5,7,#55,#F0,#B1,#F0,#F0,#CC,#AA
-    defb 5,7,#55,#F0,#B1,#F0,#E4,#CC,#AA
-    defb 6,6,#FA,#F0,#F0,#E4,#CC,#AA
-    defb 6,6,#FA,#F0,#F0,#F0,#CC,#AA
-    defb 6,6,#FA,#F0,#F0,#F0,#E4,#AA
-    defb 6,6,#55,#F0,#F0,#F0,#CC,#AA
-    defb 6,6,#55,#CC,#F0,#CC,#CC,#AA
-    defb 7,4,#EE,#CC,#CC,#DD
-    defb 6,5,#55,#FA,#E4,#CC,#AA
-    defb 6,5,#EA,#FF,#C0,#AF,#AA
-    defb 6,6,#FF,#0C,#EA,#85,#DF,#AA
-    defb 5,8,#55,#D5,#0C,#5D,#85,#DF,#F5,#AA
-    defb 5,8,#55,#D5,#0C,#0C,#AF,#CF,#4D,#F5
-    defb 5,8,#EA,#D5,#0C,#0C,#5D,#8E,#58,#F5
-    defb 5,8,#EA,#0C,#AE,#0C,#0C,#0C,#0C,#F5
-    defb 5,8,#EA,#0C,#5D,#0C,#0C,#0C,#48,#AA
-    defb 5,8,#EA,#0C,#0C,#AE,#0C,#0C,#C0,#AA
-    defb 5,7,#EA,#84,#48,#EA,#0C,#48,#FF
-    defb 5,6,#EA,#C0,#C0,#D5,#C0,#D5
-    defb 5,6,#EA,#C0,#C0,#C0,#FF,#AA
-    defb 5,6,#EA,#C0,#C0,#C0,#C0,#D5
-    defb 5,6,#EA,#C0,#C0,#C0,#C0,#D5
-    defb 5,6,#EA,#C0,#C0,#C0,#C0,#D5
-    defb 5,6,#55,#C0,#C0,#C0,#C0,#AA
-    defb 5,6,#55,#C0,#C0,#C0,#90,#AA
-    defb 5,6,#55,#C0,#C0,#C0,#90,#AA
-    defb 5,6,#55,#84,#C0,#C0,#90,#AA
-    defb 6,5,#AE,#C0,#C0,#BA,#AA
-    defb 6,5,#AE,#C0,#D5,#BA,#AA
-    defb 6,5,#EA,#C0,#D5,#BA,#AA
-    defb 6,5,#EA,#C0,#D5,#BA,#AA
-    defb 6,4,#EA,#C0,#AA,#55
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#AE,#48,#AA
-    defb 6,3,#AE,#48,#AA
-    defb 5,4,#55,#C0,#48,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,4,#55,#C3,#C1,#AA
-    defb 6,3,#FF,#EB,#FF
-    defb 6,3,#55,#FF,#FF
-    defb 7,2,#55,#AA
-    defb 0,0
-    defb 0,0
-trump_punch_2_sn
-    defb 1,62
-    defb 7,3,6,5,6,5,6,6,5,7,5,7,5,7,5,7
-    defb 5,7,5,7,5,8,5,8,5,7,5,7,5,7,5,7
-    defb 5,7,5,7,6,6,6,6,6,6,6,6,6,6,7,4
-    defb 6,5,6,5,6,6,5,8,5,8,5,8,5,8,5,8
-    defb 5,8,5,7,5,6,5,6,5,6,5,6,5,6,5,6
-    defb 5,6,5,6,5,6,6,5,6,5,6,5,6,5,6,4
-    defb 6,3,6,3,6,3,6,3,6,3,5,4,5,4,5,4
-    defb 5,4,5,4,5,4,6,3,6,3,7,2
-
-trump_kick_0_spans  ; 16 bytes wide
-    defb 0,64
-    defb 5,3,#55,#FF,#AA
-    defb 5,4,#BB,#33,#57,#AA
-    defb 4,5,#55,#33,#33,#33,#57
-    defb 4,5,#BB,#33,#B9,#23,#57
-    defb 3,6,#55,#33,#76,#33,#23,#57
-    defb 3,6,#BB,#76,#33,#33,#03,#57
-    defb 3,7,#BB,#FC,#33,#03,#03,#03,#AA
-    defb 3,7,#BB,#33,#23,#03,#03,#33,#AA
-    defb 2,7,#55,#33,#33,#33,#33,#72,#77
-    defb 2,7,#55,#33,#33,#33,#5F,#FA,#5F
-    defb 3,6,#AB,#52,#33,#0F,#FA,#5F
-    defb 2,8,#55,#76,#F0,#33,#A5,#F0,#E4,#AA
-    defb 2,8,#55,#76,#F0,#F0,#F0,#F0,#E4,#AA
-    defb 2,8,#55,#76,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 2,8,#55,#33,#F0,#F0,#F0,#E4,#CC,#AA
-    defb 2,8,#55,#33,#F0,#F0,#F0,#E4,#CC,#AA
-    defb 3,7,#BB,#F0,#B1,#72,#E4,#CC,#AA
-    defb 3,7,#AB,#F0,#B1,#F0,#F0,#E4,#AA
-    defb 3,7,#AB,#F0,#F0,#F0,#F0,#E4,#AA
-    defb 3,7,#55,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 3,7,#55,#F0,#F0,#F0,#E4,#CC,#AA
-    defb 4,7,#FA,#F0,#F0,#CC,#DD,#00,#AA
-    defb 4,7,#EE,#D8,#CC,#CC,#F5,#55,#F5
-    defb 4,8,#55,#CC,#CC,#CC,#F5,#55,#F0,#AA
-    defb 5,7,#EE,#D8,#8D,#F5,#AF,#E4,#AA
-    defb 5,7,#FF,#C0,#AE,#4F,#AE,#4F,#AA
-    defb 4,8,#55,#0C,#EA,#AE,#4C,#AE,#C0,#AA
-    defb 4,8,#55,#0C,#EA,#AE,#D5,#AE,#C0,#AA
-    defb 4,7,#55,#0C,#5D,#0C,#D5,#D5,#D5
-    defb 4,7,#55,#0C,#0C,#0C,#D5,#D5,#D5
-    defb 4,7,#EA,#AE,#0C,#0C,#EA,#D5,#D5
-    defb 4,7,#EA,#AE,#0C,#0C,#EA,#D5,#D5
-    defb 4,7,#EA,#D5,#0C,#48,#EA,#D5,#D5
-    defb 4,7,#EA,#84,#AE,#48,#EA,#D5,#D5
-    defb 4,7,#EA,#C0,#EA,#48,#EA,#D5,#D5
-    defb 4,7,#EA,#C0,#D5,#C0,#EA,#D5,#AA
-    defb 4,6,#EA,#C0,#C0,#FF,#C0,#D5
-    defb 4,6,#EA,#C0,#C0,#C0,#C0,#DD
-    defb 4,6,#55,#C0,#C0,#C0,#C0,#DD
-    defb 4,6,#55,#C0,#C0,#C0,#C0,#DD
-    defb 4,6,#55,#C0,#C0,#C0,#C0,#75
-    defb 5,6,#EA,#C0,#0C,#48,#64,#AA
-    defb 5,6,#EA,#C0,#0C,#48,#64,#AA
-    defb 5,6,#55,#C0,#C0,#C0,#64,#AA
-    defb 6,4,#EA,#C0,#48,#FF
-    defb 6,4,#55,#0C,#C0,#AA
-    defb 6,4,#55,#84,#C0,#AA
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#55,#C3,#AA
-    defb 6,3,#55,#EB,#FF
-    defb 6,3,#EA,#FF,#FF
-    defb 6,3,#AE,#48,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,2,#EA,#D5
-    defb 6,3,#55,#D7,#AA
-    defb 6,3,#55,#D7,#AA
-    defb 6,3,#55,#FF,#AA
-    defb 0,0
-    defb 0,0
-trump_kick_0_sn
-    defb 0,62
-    defb 5,3,5,4,4,5,4,5,3,6,3,6,3,7,3,7
-    defb 2,7,2,7,3,6,2,8,2,8,2,8,2,8,2,8
-    defb 3,7,3,7,3,7,3,7,3,7,4,7,4,7,4,8
-    defb 5,7,5,7,4,8,4,8,4,7,4,7,4,7,4,7
-    defb 4,7,4,7,4,7,4,7,4,6,4,6,4,6,4,6
-    defb 4,6,5,6,5,6,5,6,6,4,6,4,6,4,6,3
-    defb 6,3,6,3,6,3,6,3,6,3,6,3,6,3,6,3
-    defb 6,3,6,3,6,2,6,3,6,3,6,3
-
-trump_kick_1_spans  ; 16 bytes wide
-    defb 2,64
-    defb 4,2,#FF,#AA
-    defb 3,3,#55,#33,#57
-    defb 3,3,#BB,#33,#57
-    defb 2,5,#55,#33,#33,#03,#AA
-    defb 2,5,#BB,#B9,#23,#03,#AA
-    defb 1,6,#55,#33,#B9,#03,#03,#77
-    defb 1,6,#55,#76,#33,#03,#13,#AA
-    defb 1,6,#BB,#B9,#23,#33,#F5,#AA
-    defb 1,6,#BB,#B9,#13,#FF,#A5,#AA
-    defb 0,7,#55,#33,#A9,#27,#5F,#F0,#DD
-    defb 0,7,#55,#33,#33,#27,#5F,#F0,#DD
-    defb 0,7,#55,#33,#33,#33,#F0,#E4,#DD
-    defb 0,8,#55,#33,#72,#33,#F0,#E4,#CC,#AA
-    defb 0,8,#55,#33,#52,#F0,#F0,#E4,#CC,#AA
-    defb 0,8,#55,#03,#F0,#F0,#F0,#E4,#D8,#AA
-    defb 0,11,#55,#03,#F0,#F0,#F0,#F0,#E4,#DD,#00,#55,#AA
-    defb 0,11,#55,#76,#F0,#F0,#72,#F0,#E4,#DD,#00,#FA,#F5
-    defb 0,11,#55,#76,#F0,#F0,#F0,#F0,#E4,#DD,#00,#FA,#F5
-    defb 0,11,#55,#33,#F0,#F0,#F0,#F0,#CC,#AA,#55,#5A,#AA
-    defb 0,11,#55,#33,#F0,#F0,#F0,#F0,#CC,#AA,#55,#48,#DF
-    defb 1,10,#BB,#72,#F0,#F0,#E4,#CC,#AA,#55,#48,#D5
-    defb 1,10,#AB,#72,#F0,#F0,#CC,#8D,#AA,#55,#48,#AA
-    defb 1,10,#AB,#52,#F0,#F0,#CC,#8D,#DF,#EA,#48,#AA
-    defb 1,10,#55,#46,#F0,#CC,#CC,#0F,#5F,#EA,#C0,#AA
-    defb 2,9,#FF,#CC,#CC,#C8,#C0,#C0,#EA,#C0,#AA
-    defb 3,8,#EE,#CC,#C0,#C0,#C0,#EA,#C0,#AA
-    defb 3,7,#55,#0C,#EA,#48,#D0,#D5,#D5
-    defb 3,7,#55,#0C,#EA,#5D,#5A,#D5,#D5
-    defb 3,7,#55,#0C,#5D,#AE,#5A,#C0,#AA
-    defb 3,7,#55,#0C,#5D,#AE,#4D,#C0,#AA
-    defb 4,6,#AE,#0C,#AE,#48,#EA,#AA
-    defb 4,6,#AE,#0C,#0C,#D5,#C0,#AA
-    defb 3,7,#55,#D5,#0C,#0C,#D5,#C4,#AA
-    defb 3,7,#55,#D5,#0C,#48,#EA,#C4,#AA
-    defb 3,9,#55,#C0,#AE,#48,#EA,#90,#DD,#55,#AA
-    defb 3,9,#55,#C0,#AE,#48,#EA,#90,#DD,#EB,#AA
-    defb 3,9,#55,#C0,#D5,#D5,#C0,#C0,#C8,#C1,#AA
-    defb 3,9,#55,#C0,#C0,#EA,#C0,#0C,#0C,#5D,#AA
-    defb 4,8,#EA,#C0,#C0,#0C,#0C,#48,#FF,#AA
-    defb 4,7,#EA,#C0,#84,#0C,#C0,#C0,#FF
-    defb 4,7,#55,#C0,#C0,#C0,#C0,#C0,#AA
-    defb 4,6,#55,#C0,#C0,#C0,#D5,#FF
-    defb 5,4,#EA,#C0,#C0,#D5
-    defb 5,4,#55,#FF,#48,#D5
-    defb 6,3,#55,#48,#D5
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#55,#C0,#AA
-    defb 6,3,#55,#C0,#AA
-    defb 6,3,#55,#C0,#AA
-    defb 6,3,#55,#C0,#AA
-    defb 6,3,#55,#48,#AA
-    defb 6,3,#55,#48,#AA
-    defb 6,3,#EA,#48,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#C0,#AA
-    defb 6,3,#EA,#D5,#AA
-    defb 6,3,#55,#C3,#AA
-    defb 6,3,#55,#FF,#AA
-    defb 7,1,#FF
-    defb 0,0
-    defb 0,0
-    defb 0,0
-trump_kick_1_sn
-    defb 2,61
-    defb 4,2,3,3,3,3,2,5,2,5,1,6,1,6,1,6
-    defb 1,6,0,7,0,7,0,7,0,8,0,8,0,8,0,11
-    defb 0,11,0,11,0,11,0,11,1,10,1,10,1,10,1,10
-    defb 2,9,3,8,3,7,3,7,3,7,3,7,4,6,4,6
-    defb 3,7,3,7,3,9,3,9,3,9,3,9,4,8,4,7
-    defb 4,7,4,6,5,4,5,4,6,3,6,3,6,3,6,3
-    defb 6,3,6,3,6,3,6,3,6,3,6,3,6,3,6,3
-    defb 6,3,6,3,6,3,6,3,7,1
+    defb 0,16,0 : defw trump_victory_0_spans : defs 7
+    defb 0,16,0 : defw trump_victory_1_spans : defs 7
+    defb 0,16,0 : defw trump_victory_2_spans : defs 7
 
 trump_kick_2_spans  ; 16 bytes wide
-    defb 0,64
-    defb 6,2,#FF,#AA
+    defb 0,64,62
+    defb 6,2,#FF,#00,#AA
     defb 5,3,#FF,#23,#57
-    defb 4,5,#FF,#33,#33,#23,#AA
-    defb 3,6,#55,#33,#33,#33,#23,#57
-    defb 3,6,#55,#33,#FC,#33,#03,#57
+    defb 4,5,#FF,#33,#33,#23,#00,#AA
+    defb 3,6,#00,#55,#33,#33,#33,#23,#57
+    defb 3,6,#00,#55,#33,#FC,#33,#03,#57
     defb 3,6,#BB,#FC,#B9,#23,#03,#57
-    defb 2,7,#55,#33,#B9,#33,#03,#03,#57
-    defb 2,8,#55,#33,#B9,#03,#03,#03,#33,#AA
-    defb 2,7,#55,#33,#33,#33,#33,#B1,#FF
-    defb 2,7,#55,#33,#33,#33,#5F,#A5,#AA
-    defb 2,7,#55,#13,#33,#33,#5F,#F0,#AA
-    defb 2,7,#55,#23,#F0,#72,#5A,#F0,#DD
-    defb 2,7,#55,#FC,#F0,#F0,#F0,#F0,#DD
-    defb 2,7,#55,#76,#F0,#F0,#F0,#E4,#DD
-    defb 2,7,#55,#72,#F0,#F0,#F0,#CC,#DD
-    defb 2,8,#55,#33,#F0,#F0,#F0,#CC,#CC,#AA
-    defb 2,8,#55,#33,#F0,#B1,#F0,#E4,#CC,#AA
-    defb 2,8,#55,#13,#F0,#B1,#F0,#F0,#E4,#AA
-    defb 3,7,#AB,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 3,7,#AB,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 3,6,#55,#F0,#F0,#F0,#E4,#DD
-    defb 3,8,#55,#D8,#F0,#F0,#CC,#DD,#00,#AA
-    defb 4,7,#EE,#F0,#CC,#CC,#AA,#55,#F5
+    defb 2,7,#00,#55,#33,#B9,#33,#03,#03,#57
+    defb 2,8,#00,#55,#33,#B9,#03,#03,#03,#33,#00,#AA
+    defb 2,7,#00,#55,#33,#33,#33,#33,#B1,#FF
+    defb 2,7,#00,#55,#33,#33,#33,#5F,#A5,#00,#AA
+    defb 2,7,#00,#55,#13,#33,#33,#5F,#F0,#00,#AA
+    defb 2,7,#00,#55,#23,#F0,#72,#5A,#F0,#DD
+    defb 2,7,#00,#55,#FC,#F0,#F0,#F0,#F0,#DD
+    defb 2,7,#00,#55,#76,#F0,#F0,#F0,#E4,#DD
+    defb 2,7,#00,#55,#72,#F0,#F0,#F0,#CC,#DD
+    defb 2,8,#00,#55,#33,#F0,#F0,#F0,#CC,#CC,#00,#AA
+    defb 2,8,#00,#55,#33,#F0,#B1,#F0,#E4,#CC,#00,#AA
+    defb 2,8,#00,#55,#13,#F0,#B1,#F0,#F0,#E4,#00,#AA
+    defb 3,7,#AB,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 3,7,#AB,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 3,6,#00,#55,#F0,#F0,#F0,#E4,#DD
+    defb 3,8,#00,#55,#D8,#F0,#F0,#CC,#DD,#00,#00,#00,#AA
+    defb 4,7,#EE,#F0,#CC,#CC,#00,#AA,#00,#55,#F5
     defb 4,7,#EE,#CC,#CC,#8D,#5F,#FA,#F5
-    defb 4,7,#55,#CC,#D8,#8D,#DF,#AF,#F5
+    defb 4,7,#00,#55,#CC,#D8,#8D,#DF,#AF,#F5
     defb 5,6,#FF,#C0,#D0,#F5,#AE,#D5
     defb 5,6,#FF,#C0,#FA,#CE,#AE,#D5
-    defb 4,7,#55,#0C,#FF,#0D,#C0,#AE,#D5
-    defb 4,7,#55,#0C,#FF,#0C,#EA,#AE,#D5
-    defb 4,7,#55,#0C,#5D,#0C,#EA,#D5,#D5
-    defb 4,7,#55,#0C,#5D,#0C,#EA,#D5,#D5
+    defb 4,7,#00,#55,#0C,#FF,#0D,#C0,#AE,#D5
+    defb 4,7,#00,#55,#0C,#FF,#0C,#EA,#AE,#D5
+    defb 4,7,#00,#55,#0C,#5D,#0C,#EA,#D5,#D5
+    defb 4,7,#00,#55,#0C,#5D,#0C,#EA,#D5,#D5
     defb 4,7,#EA,#AE,#0C,#48,#EA,#D5,#D5
     defb 4,7,#EA,#AE,#0C,#48,#EA,#D5,#D5
     defb 4,7,#EA,#D5,#0C,#48,#EA,#D5,#D5
-    defb 4,7,#EA,#D5,#0C,#5D,#C0,#D5,#AA
+    defb 4,7,#EA,#D5,#0C,#5D,#C0,#D5,#00,#AA
     defb 4,6,#EA,#D5,#0C,#D5,#C0,#D5
     defb 4,6,#EA,#C0,#AE,#D5,#C0,#D5
     defb 4,6,#EA,#C0,#EA,#D5,#C0,#DD
     defb 4,6,#EA,#C0,#D5,#EA,#C0,#DD
-    defb 4,6,#55,#C0,#C0,#C0,#C0,#DD
-    defb 4,6,#55,#C0,#C0,#C0,#C0,#75
-    defb 5,6,#EA,#C0,#C0,#C0,#64,#AA
-    defb 5,6,#EA,#84,#48,#D5,#64,#AA
-    defb 5,5,#55,#C0,#48,#D5,#75
-    defb 6,4,#EA,#0C,#D5,#AA
-    defb 6,4,#EA,#C0,#C0,#AA
-    defb 6,4,#55,#C0,#C0,#AA
-    defb 6,4,#55,#C0,#C0,#AA
-    defb 6,4,#55,#C0,#C0,#AA
-    defb 6,4,#EA,#C0,#C0,#AA
-    defb 6,4,#EA,#C0,#C0,#AA
-    defb 6,4,#EA,#C0,#C0,#AA
+    defb 4,6,#00,#55,#C0,#C0,#C0,#C0,#DD
+    defb 4,6,#00,#55,#C0,#C0,#C0,#C0,#75
+    defb 5,6,#EA,#C0,#C0,#C0,#64,#00,#AA
+    defb 5,6,#EA,#84,#48,#D5,#64,#00,#AA
+    defb 5,5,#00,#55,#C0,#48,#D5,#75
+    defb 6,4,#EA,#0C,#D5,#00,#AA
+    defb 6,4,#EA,#C0,#C0,#00,#AA
+    defb 6,4,#00,#55,#C0,#C0,#00,#AA
+    defb 6,4,#00,#55,#C0,#C0,#00,#AA
+    defb 6,4,#00,#55,#C0,#C0,#00,#AA
+    defb 6,4,#EA,#C0,#C0,#00,#AA
+    defb 6,4,#EA,#C0,#C0,#00,#AA
+    defb 6,4,#EA,#C0,#C0,#00,#AA
     defb 6,3,#AE,#48,#D5
     defb 6,3,#AE,#C0,#D5
     defb 6,3,#AE,#C0,#D5
-    defb 6,4,#EA,#C1,#D7,#AA
-    defb 6,4,#EA,#D5,#FF,#AA
+    defb 6,4,#EA,#C1,#D7,#00,#AA
+    defb 6,4,#EA,#D5,#FF,#00,#AA
     defb 6,3,#EA,#D5,#FF
     defb 6,2,#EA,#D5
     defb 6,2,#EB,#D7
-    defb 6,3,#55,#D7,#AA
-    defb 6,2,#55,#FF
+    defb 6,3,#00,#55,#D7,#00,#AA
+    defb 6,2,#00,#55,#FF
     defb 0,0
     defb 0,0
-trump_kick_2_sn
-    defb 0,62
-    defb 6,2,5,3,4,5,3,6,3,6,3,6,2,7,2,8
-    defb 2,7,2,7,2,7,2,7,2,7,2,7,2,7,2,8
-    defb 2,8,2,8,3,7,3,7,3,6,3,8,4,7,4,7
-    defb 4,7,5,6,5,6,4,7,4,7,4,7,4,7,4,7
-    defb 4,7,4,7,4,7,4,6,4,6,4,6,4,6,4,6
-    defb 4,6,5,6,5,6,5,5,6,4,6,4,6,4,6,4
-    defb 6,4,6,4,6,4,6,4,6,3,6,3,6,3,6,4
-    defb 6,4,6,3,6,2,6,2,6,3,6,2
 
 trump_sweep_0_spans  ; 16 bytes wide
-    defb 5,64
-    defb 8,2,#FF,#AA
-    defb 7,4,#55,#33,#57,#AA
+    defb 5,64,57
+    defb 8,2,#FF,#00,#AA
+    defb 7,4,#00,#55,#33,#57,#00,#AA
     defb 7,4,#BB,#33,#23,#57
-    defb 6,6,#55,#33,#33,#33,#03,#AA
-    defb 6,6,#55,#76,#B9,#33,#23,#57
+    defb 6,6,#00,#55,#33,#33,#33,#03,#00,#AA
+    defb 6,6,#00,#55,#76,#B9,#33,#23,#57
     defb 6,6,#BB,#76,#FC,#33,#23,#57
-    defb 6,7,#BB,#76,#FC,#33,#33,#03,#AA
-    defb 6,7,#BB,#33,#FC,#B9,#33,#03,#AA
-    defb 5,8,#55,#76,#33,#33,#33,#33,#03,#AA
-    defb 5,8,#55,#76,#B1,#23,#03,#03,#03,#AA
-    defb 5,8,#55,#76,#F0,#33,#03,#03,#03,#AA
-    defb 5,8,#55,#33,#F0,#72,#23,#03,#03,#AA
-    defb 5,8,#55,#33,#F0,#F0,#0F,#03,#03,#AA
-    defb 5,8,#55,#72,#F0,#F0,#0F,#FA,#03,#AA
-    defb 5,7,#55,#52,#F0,#F0,#F5,#FA,#5F
+    defb 6,7,#BB,#76,#FC,#33,#33,#03,#00,#AA
+    defb 6,7,#BB,#33,#FC,#B9,#33,#03,#00,#AA
+    defb 5,8,#00,#55,#76,#33,#33,#33,#33,#03,#00,#AA
+    defb 5,8,#00,#55,#76,#B1,#23,#03,#03,#03,#00,#AA
+    defb 5,8,#00,#55,#76,#F0,#33,#03,#03,#03,#00,#AA
+    defb 5,8,#00,#55,#33,#F0,#72,#23,#03,#03,#00,#AA
+    defb 5,8,#00,#55,#33,#F0,#F0,#0F,#03,#03,#00,#AA
+    defb 5,8,#00,#55,#72,#F0,#F0,#0F,#FA,#03,#00,#AA
+    defb 5,7,#00,#55,#52,#F0,#F0,#F5,#FA,#5F
     defb 6,6,#FA,#F0,#F0,#F0,#F0,#FF
     defb 6,6,#FA,#F0,#F0,#F0,#F0,#DD
     defb 6,6,#FA,#B1,#F0,#F0,#F0,#DD
     defb 6,6,#FA,#F0,#72,#F0,#E4,#DD
     defb 6,6,#FA,#F0,#F0,#F0,#CC,#DD
-    defb 6,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 6,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 6,6,#55,#D8,#F0,#F0,#E4,#DD
-    defb 7,5,#EE,#D8,#E4,#CC,#AA
-    defb 6,6,#55,#C0,#CC,#CC,#CC,#AA
-    defb 6,5,#55,#C0,#C4,#CC,#DD
-    defb 6,6,#AE,#EA,#C0,#85,#AA,#55
-    defb 6,7,#AE,#5D,#C0,#0F,#AA,#FA,#AA
-    defb 5,8,#55,#AE,#5D,#C0,#0F,#DF,#FA,#F5
+    defb 6,6,#00,#55,#F0,#F0,#F0,#CC,#DD
+    defb 6,6,#00,#55,#F0,#F0,#F0,#CC,#DD
+    defb 6,6,#00,#55,#D8,#F0,#F0,#E4,#DD
+    defb 7,5,#EE,#D8,#E4,#CC,#00,#AA
+    defb 6,6,#00,#55,#C0,#CC,#CC,#CC,#00,#AA
+    defb 6,5,#00,#55,#C0,#C4,#CC,#DD
+    defb 6,6,#AE,#EA,#C0,#85,#00,#AA,#00,#55
+    defb 6,7,#AE,#5D,#C0,#0F,#00,#AA,#FA,#00,#AA
+    defb 5,8,#00,#55,#AE,#5D,#C0,#0F,#DF,#FA,#F5
     defb 5,8,#EA,#AE,#5D,#C0,#4F,#DD,#5A,#F5
-    defb 5,8,#EA,#AE,#5D,#D5,#E5,#DD,#0D,#AA
-    defb 5,8,#EA,#AE,#5D,#AE,#E0,#D5,#48,#AA
-    defb 5,8,#EA,#AE,#48,#0C,#E0,#D5,#C0,#AA
-    defb 5,8,#EA,#AE,#0C,#0C,#CA,#D5,#C0,#AA
+    defb 5,8,#EA,#AE,#5D,#D5,#E5,#DD,#0D,#00,#AA
+    defb 5,8,#EA,#AE,#5D,#AE,#E0,#D5,#48,#00,#AA
+    defb 5,8,#EA,#AE,#48,#0C,#E0,#D5,#C0,#00,#AA
+    defb 5,8,#EA,#AE,#0C,#0C,#CA,#D5,#C0,#00,#AA
     defb 5,7,#EA,#AE,#0C,#0C,#D5,#D5,#D5
     defb 5,7,#EA,#D5,#0C,#48,#EA,#D5,#D5
-    defb 5,7,#EA,#D5,#0C,#D5,#C0,#D5,#AA
+    defb 5,7,#EA,#D5,#0C,#D5,#C0,#D5,#00,#AA
     defb 5,6,#EA,#D5,#0C,#D5,#C0,#D5
-    defb 5,7,#EA,#D5,#48,#EA,#C0,#EA,#AA
+    defb 5,7,#EA,#D5,#48,#EA,#C0,#EA,#00,#AA
     defb 5,6,#EA,#D5,#C0,#EA,#C0,#FF
-    defb 5,6,#EA,#C0,#FF,#C0,#C0,#AA
-    defb 5,6,#EA,#C0,#C0,#C0,#CC,#AA
-    defb 5,5,#55,#84,#48,#C0,#75
-    defb 5,5,#55,#C0,#0C,#C0,#DD
+    defb 5,6,#EA,#C0,#FF,#C0,#C0,#00,#AA
+    defb 5,6,#EA,#C0,#C0,#C0,#CC,#00,#AA
+    defb 5,5,#00,#55,#84,#48,#C0,#75
+    defb 5,5,#00,#55,#C0,#0C,#C0,#DD
     defb 6,4,#EA,#C0,#C0,#DD
-    defb 6,4,#55,#C0,#C0,#DD
+    defb 6,4,#00,#55,#C0,#C0,#DD
     defb 7,3,#AE,#C0,#DD
-    defb 6,4,#55,#84,#C0,#DD
-    defb 6,4,#55,#48,#C0,#AA
-    defb 6,4,#55,#C0,#C0,#AA
-    defb 6,4,#EA,#C0,#C0,#AA
-    defb 5,5,#55,#C0,#C0,#C0,#AA
-    defb 5,4,#55,#C2,#C0,#FF
-    defb 6,3,#FF,#D7,#AA
-    defb 6,3,#FF,#FF,#AA
-    defb 6,3,#55,#FF,#AA
-    defb 7,1,#AA
+    defb 6,4,#00,#55,#84,#C0,#DD
+    defb 6,4,#00,#55,#48,#C0,#00,#AA
+    defb 6,4,#00,#55,#C0,#C0,#00,#AA
+    defb 6,4,#EA,#C0,#C0,#00,#AA
+    defb 5,5,#00,#55,#C0,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C2,#C0,#FF
+    defb 6,3,#FF,#D7,#00,#AA
+    defb 6,3,#FF,#FF,#00,#AA
+    defb 6,3,#00,#55,#FF,#00,#AA
+    defb 7,1,#00,#AA
     defb 0,0
     defb 0,0
     defb 0,0
@@ -1668,46 +214,36 @@ trump_sweep_0_spans  ; 16 bytes wide
     defb 0,0
     defb 0,0
     defb 0,0
-trump_sweep_0_sn
-    defb 5,57
-    defb 8,2,7,4,7,4,6,6,6,6,6,6,6,7,6,7
-    defb 5,8,5,8,5,8,5,8,5,8,5,8,5,7,6,6
-    defb 6,6,6,6,6,6,6,6,6,6,6,6,6,6,7,5
-    defb 6,6,6,5,6,6,6,7,5,8,5,8,5,8,5,8
-    defb 5,8,5,8,5,7,5,7,5,7,5,6,5,7,5,6
-    defb 5,6,5,6,5,5,5,5,6,4,6,4,7,3,6,4
-    defb 6,4,6,4,6,4,5,5,5,4,6,3,6,3,6,3
-    defb 7,1
 
 trump_sweep_1_spans  ; 16 bytes wide
-    defb 11,56
-    defb 9,1,#AA
-    defb 8,3,#55,#77,#FF
-    defb 8,4,#BB,#33,#03,#AA
-    defb 7,5,#55,#33,#33,#23,#57
-    defb 7,6,#55,#33,#33,#33,#03,#AA
-    defb 7,6,#55,#76,#B9,#33,#23,#AA
+    defb 11,56,51
+    defb 9,1,#00,#AA
+    defb 8,3,#00,#55,#77,#FF
+    defb 8,4,#BB,#33,#03,#00,#AA
+    defb 7,5,#00,#55,#33,#33,#23,#57
+    defb 7,6,#00,#55,#33,#33,#33,#03,#00,#AA
+    defb 7,6,#00,#55,#76,#B9,#33,#23,#00,#AA
     defb 7,6,#BB,#76,#FC,#33,#23,#57
     defb 7,6,#FE,#76,#FC,#33,#23,#57
-    defb 6,8,#55,#76,#33,#FC,#33,#23,#03,#AA
-    defb 6,8,#55,#76,#B1,#33,#B9,#33,#03,#AA
-    defb 6,8,#55,#76,#B1,#33,#33,#33,#03,#AA
-    defb 6,8,#55,#33,#B1,#33,#33,#33,#03,#AA
-    defb 6,8,#55,#72,#B1,#72,#03,#03,#03,#AA
-    defb 6,8,#55,#52,#F0,#F0,#A9,#03,#03,#AA
-    defb 7,7,#FA,#F0,#F0,#A1,#03,#03,#AA
-    defb 7,7,#FA,#F0,#F0,#0F,#52,#03,#AA
-    defb 7,7,#FA,#F0,#F0,#5F,#5A,#03,#AA
-    defb 7,7,#FA,#F0,#F0,#F5,#A5,#AF,#AA
+    defb 6,8,#00,#55,#76,#33,#FC,#33,#23,#03,#00,#AA
+    defb 6,8,#00,#55,#76,#B1,#33,#B9,#33,#03,#00,#AA
+    defb 6,8,#00,#55,#76,#B1,#33,#33,#33,#03,#00,#AA
+    defb 6,8,#00,#55,#33,#B1,#33,#33,#33,#03,#00,#AA
+    defb 6,8,#00,#55,#72,#B1,#72,#03,#03,#03,#00,#AA
+    defb 6,8,#00,#55,#52,#F0,#F0,#A9,#03,#03,#00,#AA
+    defb 7,7,#FA,#F0,#F0,#A1,#03,#03,#00,#AA
+    defb 7,7,#FA,#F0,#F0,#0F,#52,#03,#00,#AA
+    defb 7,7,#FA,#F0,#F0,#5F,#5A,#03,#00,#AA
+    defb 7,7,#FA,#F0,#F0,#F5,#A5,#AF,#00,#AA
     defb 7,6,#FA,#33,#F0,#F0,#A5,#FF
     defb 7,6,#FA,#F0,#F0,#F0,#E4,#DD
-    defb 7,6,#FA,#F0,#F0,#F0,#E4,#AA
-    defb 7,6,#FA,#F0,#F0,#E4,#CC,#AA
-    defb 7,6,#FF,#F0,#F0,#E4,#CC,#AA
-    defb 6,7,#55,#C0,#D8,#F0,#E4,#CC,#AA
-    defb 6,7,#EA,#C0,#C4,#F0,#E4,#CC,#AA
-    defb 5,7,#55,#D5,#EA,#D0,#CC,#CC,#DD
-    defb 5,7,#55,#AE,#5D,#C0,#C4,#CC,#AA
+    defb 7,6,#FA,#F0,#F0,#F0,#E4,#00,#AA
+    defb 7,6,#FA,#F0,#F0,#E4,#CC,#00,#AA
+    defb 7,6,#FF,#F0,#F0,#E4,#CC,#00,#AA
+    defb 6,7,#00,#55,#C0,#D8,#F0,#E4,#CC,#00,#AA
+    defb 6,7,#EA,#C0,#C4,#F0,#E4,#CC,#00,#AA
+    defb 5,7,#00,#55,#D5,#EA,#D0,#CC,#CC,#DD
+    defb 5,7,#00,#55,#AE,#5D,#C0,#C4,#CC,#00,#AA
     defb 5,6,#EA,#AE,#5D,#C0,#85,#FF
     defb 5,6,#EA,#AE,#0C,#EA,#85,#DF
     defb 5,6,#EA,#AE,#0C,#EA,#85,#DF
@@ -1716,334 +252,1680 @@ trump_sweep_1_spans  ; 16 bytes wide
     defb 5,6,#EA,#5D,#0C,#D5,#C0,#D5
     defb 5,6,#EA,#D5,#0C,#5D,#FF,#D5
     defb 5,6,#EA,#C0,#AE,#0C,#0C,#DF
-    defb 5,7,#EA,#C0,#AE,#0C,#0C,#F0,#AA
-    defb 5,7,#EA,#C0,#AE,#0C,#0C,#F0,#AA
-    defb 5,7,#EA,#C0,#D5,#0C,#0C,#CE,#AA
+    defb 5,7,#EA,#C0,#AE,#0C,#0C,#F0,#00,#AA
+    defb 5,7,#EA,#C0,#AE,#0C,#0C,#F0,#00,#AA
+    defb 5,7,#EA,#C0,#D5,#0C,#0C,#CE,#00,#AA
     defb 5,6,#EA,#C0,#D5,#C0,#C0,#FF
-    defb 5,7,#EA,#C0,#C0,#FF,#FF,#FF,#AA
-    defb 5,7,#EA,#C0,#C0,#0C,#48,#C3,#AA
-    defb 5,7,#55,#C0,#C0,#C0,#48,#D7,#AA
+    defb 5,7,#EA,#C0,#C0,#FF,#FF,#FF,#00,#AA
+    defb 5,7,#EA,#C0,#C0,#0C,#48,#C3,#00,#AA
+    defb 5,7,#00,#55,#C0,#C0,#C0,#48,#D7,#00,#AA
     defb 6,5,#EA,#C0,#C0,#C0,#FF
     defb 6,5,#EA,#84,#90,#C0,#FF
-    defb 6,5,#AE,#48,#C4,#FF,#AA
-    defb 5,5,#55,#86,#0C,#64,#AA
-    defb 5,5,#55,#C2,#C0,#64,#AA
-    defb 6,4,#EB,#C0,#64,#AA
-    defb 6,4,#55,#EA,#C0,#AA
-    defb 6,3,#55,#FF,#FF
-    defb 7,1,#AA
+    defb 6,5,#AE,#48,#C4,#FF,#00,#AA
+    defb 5,5,#00,#55,#86,#0C,#64,#00,#AA
+    defb 5,5,#00,#55,#C2,#C0,#64,#00,#AA
+    defb 6,4,#EB,#C0,#64,#00,#AA
+    defb 6,4,#00,#55,#EA,#C0,#00,#AA
+    defb 6,3,#00,#55,#FF,#FF
+    defb 7,1,#00,#AA
     defb 0,0
     defb 0,0
     defb 0,0
     defb 0,0
     defb 0,0
-trump_sweep_1_sn
-    defb 11,51
-    defb 9,1,8,3,8,4,7,5,7,6,7,6,7,6,7,6
-    defb 6,8,6,8,6,8,6,8,6,8,6,8,7,7,7,7
-    defb 7,7,7,7,7,6,7,6,7,6,7,6,7,6,6,7
-    defb 6,7,5,7,5,7,5,6,5,6,5,6,5,6,5,6
-    defb 5,6,5,6,5,6,5,7,5,7,5,7,5,6,5,7
-    defb 5,7,5,7,6,5,6,5,6,5,5,5,5,5,6,4
-    defb 6,4,6,3,7,1
 
 trump_sweep_2_spans  ; 16 bytes wide
-    defb 8,56
-    defb 8,3,#FF,#FF,#AA
-    defb 7,4,#55,#33,#33,#57
-    defb 7,5,#55,#33,#33,#23,#AA
+    defb 8,56,55
+    defb 8,3,#FF,#FF,#00,#AA
+    defb 7,4,#00,#55,#33,#33,#57
+    defb 7,5,#00,#55,#33,#33,#23,#00,#AA
     defb 7,5,#BB,#33,#33,#33,#57
-    defb 7,6,#BB,#FC,#33,#33,#03,#AA
-    defb 7,6,#BB,#FC,#B9,#33,#23,#AA
-    defb 6,7,#55,#33,#76,#B9,#33,#23,#57
-    defb 6,7,#55,#FC,#33,#FC,#B9,#23,#57
-    defb 6,8,#55,#FC,#33,#33,#33,#33,#03,#AA
-    defb 6,8,#BB,#F8,#B1,#33,#33,#23,#03,#AA
-    defb 6,8,#BB,#72,#B1,#23,#03,#03,#03,#AA
-    defb 6,8,#BB,#72,#B1,#72,#03,#03,#03,#AA
-    defb 6,7,#55,#72,#F0,#F0,#03,#03,#57
-    defb 6,7,#55,#F0,#F0,#F0,#0B,#03,#57
-    defb 6,8,#55,#F0,#F0,#F0,#5F,#A1,#03,#AA
-    defb 6,7,#55,#F0,#F0,#F0,#FF,#A5,#FF
-    defb 6,7,#55,#F0,#F0,#F0,#F0,#F5,#AA
-    defb 6,7,#55,#F0,#72,#F0,#F0,#E4,#AA
-    defb 6,7,#55,#F0,#B1,#F0,#F0,#CC,#AA
-    defb 7,6,#FA,#F0,#F0,#E4,#CC,#AA
-    defb 7,6,#FA,#F0,#F0,#CC,#CC,#AA
-    defb 7,6,#FA,#F0,#F0,#E4,#CC,#AA
-    defb 7,6,#FF,#F0,#F0,#E4,#CC,#AA
-    defb 6,6,#55,#C0,#CC,#F0,#E4,#DD
+    defb 7,6,#BB,#FC,#33,#33,#03,#00,#AA
+    defb 7,6,#BB,#FC,#B9,#33,#23,#00,#AA
+    defb 6,7,#00,#55,#33,#76,#B9,#33,#23,#57
+    defb 6,7,#00,#55,#FC,#33,#FC,#B9,#23,#57
+    defb 6,8,#00,#55,#FC,#33,#33,#33,#33,#03,#00,#AA
+    defb 6,8,#BB,#F8,#B1,#33,#33,#23,#03,#00,#AA
+    defb 6,8,#BB,#72,#B1,#23,#03,#03,#03,#00,#AA
+    defb 6,8,#BB,#72,#B1,#72,#03,#03,#03,#00,#AA
+    defb 6,7,#00,#55,#72,#F0,#F0,#03,#03,#57
+    defb 6,7,#00,#55,#F0,#F0,#F0,#0B,#03,#57
+    defb 6,8,#00,#55,#F0,#F0,#F0,#5F,#A1,#03,#00,#AA
+    defb 6,7,#00,#55,#F0,#F0,#F0,#FF,#A5,#FF
+    defb 6,7,#00,#55,#F0,#F0,#F0,#F0,#F5,#00,#AA
+    defb 6,7,#00,#55,#F0,#72,#F0,#F0,#E4,#00,#AA
+    defb 6,7,#00,#55,#F0,#B1,#F0,#F0,#CC,#00,#AA
+    defb 7,6,#FA,#F0,#F0,#E4,#CC,#00,#AA
+    defb 7,6,#FA,#F0,#F0,#CC,#CC,#00,#AA
+    defb 7,6,#FA,#F0,#F0,#E4,#CC,#00,#AA
+    defb 7,6,#FF,#F0,#F0,#E4,#CC,#00,#AA
+    defb 6,6,#00,#55,#C0,#CC,#F0,#E4,#DD
     defb 6,6,#EA,#EA,#C4,#CC,#CC,#DD
-    defb 6,6,#55,#5D,#C0,#CC,#CC,#AA
+    defb 6,6,#00,#55,#5D,#C0,#CC,#CC,#00,#AA
     defb 6,5,#AE,#5D,#C0,#85,#DF
-    defb 6,7,#AE,#48,#EA,#85,#DF,#55,#AA
-    defb 5,8,#55,#AE,#0C,#EA,#85,#DF,#FA,#F5
+    defb 6,7,#AE,#48,#EA,#85,#DF,#00,#55,#00,#AA
+    defb 5,8,#00,#55,#AE,#0C,#EA,#85,#DF,#FA,#F5
     defb 5,8,#EA,#AE,#0C,#EA,#85,#DF,#FA,#F5
     defb 5,8,#EA,#5D,#0C,#FF,#D0,#DD,#0D,#F5
     defb 5,8,#EA,#5D,#0C,#AE,#F0,#D5,#48,#DF
     defb 5,8,#EA,#D5,#0C,#AE,#F0,#D5,#48,#D5
-    defb 5,8,#EA,#D5,#0C,#0C,#CA,#D5,#C0,#AA
-    defb 5,8,#EA,#D5,#0C,#0C,#D5,#D5,#C0,#AA
+    defb 5,8,#EA,#D5,#0C,#0C,#CA,#D5,#C0,#00,#AA
+    defb 5,8,#EA,#D5,#0C,#0C,#D5,#D5,#C0,#00,#AA
     defb 5,7,#EA,#D5,#0C,#48,#EA,#D5,#D5
     defb 5,7,#EA,#D5,#0C,#C0,#EA,#D5,#D5
-    defb 5,7,#55,#D5,#0C,#D5,#C0,#D5,#AA
-    defb 5,6,#55,#D5,#C0,#EA,#C0,#D5
-    defb 5,6,#EA,#C0,#FF,#C0,#C0,#AA
-    defb 5,6,#EA,#C0,#C0,#C0,#C0,#AA
-    defb 5,5,#55,#C0,#0C,#C0,#DD
+    defb 5,7,#00,#55,#D5,#0C,#D5,#C0,#D5,#00,#AA
+    defb 5,6,#00,#55,#D5,#C0,#EA,#C0,#D5
+    defb 5,6,#EA,#C0,#FF,#C0,#C0,#00,#AA
+    defb 5,6,#EA,#C0,#C0,#C0,#C0,#00,#AA
+    defb 5,5,#00,#55,#C0,#0C,#C0,#DD
     defb 6,4,#EA,#C0,#48,#DD
-    defb 6,4,#55,#C0,#C0,#DD
-    defb 6,4,#55,#EA,#48,#DD
+    defb 6,4,#00,#55,#C0,#C0,#DD
+    defb 6,4,#00,#55,#EA,#48,#DD
     defb 6,4,#EA,#C0,#48,#DD
     defb 6,4,#EA,#0C,#48,#DD
-    defb 5,5,#55,#C2,#0C,#C0,#D5
-    defb 5,5,#55,#C2,#C0,#C0,#D5
+    defb 5,5,#00,#55,#C2,#0C,#C0,#D5
+    defb 5,5,#00,#55,#C2,#C0,#C0,#D5
     defb 6,4,#EB,#C0,#C0,#D5
-    defb 6,4,#55,#FF,#C0,#AA
-    defb 6,4,#55,#FF,#C1,#D7
-    defb 7,3,#AA,#EB,#FF
-    defb 8,2,#55,#FF
-    defb 9,1,#AA
+    defb 6,4,#00,#55,#FF,#C0,#00,#AA
+    defb 6,4,#00,#55,#FF,#C1,#D7
+    defb 7,3,#00,#AA,#EB,#FF
+    defb 8,2,#00,#55,#FF
+    defb 9,1,#00,#AA
     defb 0,0
-trump_sweep_2_sn
-    defb 8,55
-    defb 8,3,7,4,7,5,7,5,7,6,7,6,6,7,6,7
-    defb 6,8,6,8,6,8,6,8,6,7,6,7,6,8,6,7
-    defb 6,7,6,7,6,7,7,6,7,6,7,6,7,6,6,6
-    defb 6,6,6,6,6,5,6,7,5,8,5,8,5,8,5,8
-    defb 5,8,5,8,5,8,5,7,5,7,5,7,5,6,5,6
-    defb 5,6,5,5,6,4,6,4,6,4,6,4,6,4,5,5
-    defb 5,5,6,4,6,4,6,4,7,3,8,2,9,1
 
 trump_uppercut_0_spans  ; 16 bytes wide
-    defb 3,64
-    defb 8,2,#55,#AA
-    defb 7,4,#55,#BB,#57,#AA
+    defb 3,64,59
+    defb 8,2,#00,#55,#00,#AA
+    defb 7,4,#00,#55,#BB,#57,#00,#AA
     defb 7,4,#BB,#33,#33,#57
-    defb 7,5,#BB,#33,#33,#23,#AA
-    defb 6,6,#55,#33,#33,#33,#23,#57
-    defb 6,7,#55,#76,#FC,#33,#33,#03,#AA
-    defb 6,7,#55,#76,#FC,#33,#33,#03,#AA
-    defb 6,7,#BB,#33,#FC,#33,#33,#03,#AA
+    defb 7,5,#BB,#33,#33,#23,#00,#AA
+    defb 6,6,#00,#55,#33,#33,#33,#23,#57
+    defb 6,7,#00,#55,#76,#FC,#33,#33,#03,#00,#AA
+    defb 6,7,#00,#55,#76,#FC,#33,#33,#03,#00,#AA
+    defb 6,7,#BB,#33,#FC,#33,#33,#03,#00,#AA
     defb 6,7,#BB,#B9,#FC,#B9,#33,#23,#57
     defb 6,7,#FE,#B9,#33,#FC,#33,#23,#57
     defb 6,7,#BB,#F8,#33,#33,#33,#23,#57
     defb 6,7,#BB,#F0,#23,#03,#03,#03,#57
     defb 6,7,#BB,#F0,#33,#03,#03,#03,#57
-    defb 6,7,#BB,#F0,#F0,#A1,#03,#03,#AA
+    defb 6,7,#BB,#F0,#F0,#A1,#03,#03,#00,#AA
     defb 6,7,#AB,#F0,#F0,#A5,#52,#33,#57
     defb 6,7,#FA,#F0,#F0,#0F,#FA,#57,#57
-    defb 6,7,#55,#F0,#F0,#F5,#FA,#5F,#AA
-    defb 6,6,#55,#F0,#F0,#F0,#F0,#DD
-    defb 6,7,#55,#F0,#F0,#F0,#F0,#CC,#AA
-    defb 6,6,#55,#F0,#72,#F0,#E4,#DD
-    defb 6,6,#55,#F0,#F0,#F0,#CC,#DD
-    defb 6,6,#55,#F0,#F0,#F0,#CC,#DD
+    defb 6,7,#00,#55,#F0,#F0,#F5,#FA,#5F,#00,#AA
+    defb 6,6,#00,#55,#F0,#F0,#F0,#F0,#DD
+    defb 6,7,#00,#55,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 6,6,#00,#55,#F0,#72,#F0,#E4,#DD
+    defb 6,6,#00,#55,#F0,#F0,#F0,#CC,#DD
+    defb 6,6,#00,#55,#F0,#F0,#F0,#CC,#DD
     defb 7,5,#FA,#F0,#F0,#CC,#DD
     defb 7,5,#EE,#F0,#F0,#CC,#DD
-    defb 6,6,#55,#C0,#D8,#F0,#CC,#DD
-    defb 6,6,#FF,#C0,#C4,#CC,#CC,#AA
-    defb 5,6,#55,#0C,#EA,#C0,#C4,#D5
-    defb 5,8,#55,#0C,#EA,#C0,#0F,#D5,#00,#AA
-    defb 5,8,#55,#0C,#EA,#C0,#0F,#AA,#55,#F5
+    defb 6,6,#00,#55,#C0,#D8,#F0,#CC,#DD
+    defb 6,6,#FF,#C0,#C4,#CC,#CC,#00,#AA
+    defb 5,6,#00,#55,#0C,#EA,#C0,#C4,#D5
+    defb 5,8,#00,#55,#0C,#EA,#C0,#0F,#D5,#00,#00,#00,#AA
+    defb 5,8,#00,#55,#0C,#EA,#C0,#0F,#00,#AA,#00,#55,#F5
     defb 5,8,#AE,#0C,#EA,#C0,#4F,#D5,#FA,#F5
     defb 5,8,#AE,#0C,#EA,#C0,#1A,#D5,#0D,#F5
     defb 5,8,#AE,#48,#AE,#C0,#C5,#D5,#0D,#DD
     defb 5,8,#AE,#5D,#0C,#C0,#C0,#D5,#48,#DF
-    defb 4,9,#55,#0C,#D5,#0C,#C0,#C0,#D5,#C0,#AA
-    defb 4,9,#55,#0C,#EA,#48,#C0,#C0,#D5,#C0,#AA
-    defb 4,9,#55,#0C,#EA,#C0,#C0,#C0,#D5,#C0,#AA
-    defb 4,8,#55,#0C,#5D,#C0,#C0,#C0,#D5,#D5
-    defb 4,8,#55,#84,#0C,#EA,#C0,#C0,#D5,#D5
-    defb 5,7,#AE,#0C,#EA,#C0,#C0,#D5,#AA
-    defb 5,6,#AE,#0C,#CA,#C0,#C0,#AA
-    defb 5,6,#55,#4D,#E0,#C0,#C0,#AA
+    defb 4,9,#00,#55,#0C,#D5,#0C,#C0,#C0,#D5,#C0,#00,#AA
+    defb 4,9,#00,#55,#0C,#EA,#48,#C0,#C0,#D5,#C0,#00,#AA
+    defb 4,9,#00,#55,#0C,#EA,#C0,#C0,#C0,#D5,#C0,#00,#AA
+    defb 4,8,#00,#55,#0C,#5D,#C0,#C0,#C0,#D5,#D5
+    defb 4,8,#00,#55,#84,#0C,#EA,#C0,#C0,#D5,#D5
+    defb 5,7,#AE,#0C,#EA,#C0,#C0,#D5,#00,#AA
+    defb 5,6,#AE,#0C,#CA,#C0,#C0,#00,#AA
+    defb 5,6,#00,#55,#4D,#E0,#C0,#C0,#00,#AA
     defb 6,4,#EF,#E0,#C0,#DD
-    defb 5,5,#55,#D0,#E0,#90,#DD
+    defb 5,5,#00,#55,#D0,#E0,#90,#DD
     defb 6,4,#EA,#48,#90,#DD
     defb 6,4,#EA,#48,#90,#DD
-    defb 6,4,#55,#C0,#C4,#DD
-    defb 6,4,#55,#C0,#C4,#DD
-    defb 6,4,#55,#C0,#C4,#DD
-    defb 6,4,#55,#0C,#C0,#AA
-    defb 6,4,#55,#48,#C0,#AA
-    defb 6,3,#55,#48,#D5
+    defb 6,4,#00,#55,#C0,#C4,#DD
+    defb 6,4,#00,#55,#C0,#C4,#DD
+    defb 6,4,#00,#55,#C0,#C4,#DD
+    defb 6,4,#00,#55,#0C,#C0,#00,#AA
+    defb 6,4,#00,#55,#48,#C0,#00,#AA
+    defb 6,3,#00,#55,#48,#D5
     defb 6,3,#EA,#C0,#D5
-    defb 6,3,#EA,#C0,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,4,#55,#C0,#C0,#AA
-    defb 5,3,#55,#C3,#D7
-    defb 6,3,#FF,#FF,#AA
-    defb 6,3,#55,#FF,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,3,#00,#55,#C3,#D7
+    defb 6,3,#FF,#FF,#00,#AA
+    defb 6,3,#00,#55,#FF,#00,#AA
     defb 7,1,#FF
     defb 0,0
     defb 0,0
     defb 0,0
     defb 0,0
     defb 0,0
-trump_uppercut_0_sn
-    defb 3,59
-    defb 8,2,7,4,7,4,7,5,6,6,6,7,6,7,6,7
-    defb 6,7,6,7,6,7,6,7,6,7,6,7,6,7,6,7
-    defb 6,7,6,6,6,7,6,6,6,6,6,6,7,5,7,5
-    defb 6,6,6,6,5,6,5,8,5,8,5,8,5,8,5,8
-    defb 5,8,4,9,4,9,4,9,4,8,4,8,5,7,5,6
-    defb 5,6,6,4,5,5,6,4,6,4,6,4,6,4,6,4
-    defb 6,4,6,4,6,3,6,3,6,3,5,4,5,4,5,3
-    defb 6,3,6,3,7,1
 
 trump_uppercut_1_spans  ; 16 bytes wide
-    defb 1,64
+    defb 1,64,61
     defb 7,3,#FF,#FF,#FF
-    defb 6,5,#55,#33,#33,#23,#AA
+    defb 6,5,#00,#55,#33,#33,#23,#00,#AA
     defb 6,5,#BB,#33,#33,#33,#57
-    defb 6,6,#BB,#FC,#33,#33,#23,#AA
-    defb 5,7,#55,#33,#FC,#FC,#B9,#33,#57
-    defb 5,7,#55,#33,#FC,#FC,#33,#33,#57
-    defb 5,8,#55,#33,#33,#33,#33,#03,#03,#AA
-    defb 5,8,#55,#33,#33,#23,#03,#03,#03,#AA
-    defb 5,7,#55,#A9,#33,#33,#03,#03,#57
+    defb 6,6,#BB,#FC,#33,#33,#23,#00,#AA
+    defb 5,7,#00,#55,#33,#FC,#FC,#B9,#33,#57
+    defb 5,7,#00,#55,#33,#FC,#FC,#33,#33,#57
+    defb 5,8,#00,#55,#33,#33,#33,#33,#03,#03,#00,#AA
+    defb 5,8,#00,#55,#33,#33,#23,#03,#03,#03,#00,#AA
+    defb 5,7,#00,#55,#A9,#33,#33,#03,#03,#57
     defb 5,7,#BB,#F8,#B1,#72,#A9,#03,#57
-    defb 5,8,#BB,#F8,#B1,#72,#5F,#52,#03,#AA
-    defb 5,8,#BB,#72,#F0,#F0,#5F,#0F,#AF,#AA
-    defb 5,8,#BB,#72,#F0,#F0,#F5,#A5,#AF,#AA
-    defb 5,7,#55,#72,#F0,#F0,#F0,#F0,#FF
-    defb 5,7,#55,#72,#F0,#F0,#F0,#F0,#DD
-    defb 5,7,#55,#52,#F0,#F0,#F0,#E4,#DD
+    defb 5,8,#BB,#F8,#B1,#72,#5F,#52,#03,#00,#AA
+    defb 5,8,#BB,#72,#F0,#F0,#5F,#0F,#AF,#00,#AA
+    defb 5,8,#BB,#72,#F0,#F0,#F5,#A5,#AF,#00,#AA
+    defb 5,7,#00,#55,#72,#F0,#F0,#F0,#F0,#FF
+    defb 5,7,#00,#55,#72,#F0,#F0,#F0,#F0,#DD
+    defb 5,7,#00,#55,#52,#F0,#F0,#F0,#E4,#DD
     defb 6,6,#FA,#B1,#72,#F0,#CC,#DD
     defb 6,6,#FA,#F0,#F0,#F0,#CC,#DD
     defb 6,6,#FA,#F0,#F0,#F0,#CC,#DD
     defb 6,6,#FA,#F0,#F0,#F0,#CC,#DD
     defb 6,6,#FA,#F0,#F0,#F0,#F0,#DD
-    defb 6,6,#55,#D8,#F0,#F0,#E4,#AA
-    defb 7,5,#EE,#CC,#CC,#0D,#AA
-    defb 7,5,#EE,#CC,#CC,#48,#AA
-    defb 6,6,#55,#C0,#F0,#8C,#48,#FF
-    defb 6,7,#EA,#D5,#EA,#AE,#48,#F0,#AA
-    defb 6,7,#EA,#AE,#5D,#AE,#48,#F0,#AA
-    defb 5,8,#55,#D5,#0C,#0C,#AE,#48,#F0,#AA
-    defb 5,8,#55,#D5,#0C,#0C,#0C,#5D,#C5,#AA
-    defb 5,8,#55,#C0,#AE,#0C,#0C,#5D,#C0,#AA
+    defb 6,6,#00,#55,#D8,#F0,#F0,#E4,#00,#AA
+    defb 7,5,#EE,#CC,#CC,#0D,#00,#AA
+    defb 7,5,#EE,#CC,#CC,#48,#00,#AA
+    defb 6,6,#00,#55,#C0,#F0,#8C,#48,#FF
+    defb 6,7,#EA,#D5,#EA,#AE,#48,#F0,#00,#AA
+    defb 6,7,#EA,#AE,#5D,#AE,#48,#F0,#00,#AA
+    defb 5,8,#00,#55,#D5,#0C,#0C,#AE,#48,#F0,#00,#AA
+    defb 5,8,#00,#55,#D5,#0C,#0C,#0C,#5D,#C5,#00,#AA
+    defb 5,8,#00,#55,#C0,#AE,#0C,#0C,#5D,#C0,#00,#AA
     defb 5,7,#EA,#0C,#D5,#0C,#0C,#5D,#D5
     defb 5,7,#EA,#0C,#0C,#EA,#0C,#5D,#D5
     defb 5,7,#EA,#84,#0C,#D5,#C0,#D5,#D5
-    defb 5,7,#EA,#84,#0C,#C0,#FF,#FF,#AA
+    defb 5,7,#EA,#84,#0C,#C0,#FF,#FF,#00,#AA
     defb 5,6,#EA,#C0,#C0,#C0,#C0,#D5
-    defb 5,7,#EA,#C0,#C0,#C0,#C0,#C0,#AA
+    defb 5,7,#EA,#C0,#C0,#C0,#C0,#C0,#00,#AA
     defb 5,6,#EA,#C0,#C0,#C0,#C0,#D5
     defb 5,6,#EA,#C0,#C0,#C0,#C0,#D5
-    defb 5,6,#55,#C0,#C0,#C0,#C0,#D5
-    defb 5,6,#55,#C0,#C0,#C0,#C0,#D5
-    defb 5,6,#55,#84,#C0,#C0,#C0,#75
-    defb 5,6,#55,#C0,#C0,#C0,#90,#75
+    defb 5,6,#00,#55,#C0,#C0,#C0,#C0,#D5
+    defb 5,6,#00,#55,#C0,#C0,#C0,#C0,#D5
+    defb 5,6,#00,#55,#84,#C0,#C0,#C0,#75
+    defb 5,6,#00,#55,#C0,#C0,#C0,#90,#75
     defb 6,5,#EA,#48,#C0,#90,#75
     defb 6,5,#EA,#48,#C0,#BA,#75
     defb 6,5,#EA,#48,#D5,#BA,#DD
-    defb 6,5,#55,#48,#D5,#BA,#DD
-    defb 6,5,#55,#C0,#D5,#55,#AA
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#55,#84,#D5
-    defb 6,3,#55,#84,#D5
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#55,#48,#D5
+    defb 6,5,#00,#55,#48,#D5,#BA,#DD
+    defb 6,5,#00,#55,#C0,#D5,#00,#55,#00,#AA
+    defb 6,3,#00,#55,#C0,#D5
+    defb 6,3,#00,#55,#C0,#D5
+    defb 6,3,#00,#55,#C0,#D5
+    defb 6,3,#00,#55,#84,#D5
+    defb 6,3,#00,#55,#84,#D5
+    defb 6,3,#00,#55,#C0,#D5
+    defb 6,3,#00,#55,#48,#D5
     defb 6,3,#EA,#C0,#D5
     defb 6,3,#EA,#C0,#D5
     defb 6,3,#EA,#C0,#D5
-    defb 6,3,#EA,#C0,#AA
+    defb 6,3,#EA,#C0,#00,#AA
     defb 6,3,#EB,#C3,#D7
-    defb 6,3,#55,#FF,#FF
-    defb 7,2,#FF,#AA
+    defb 6,3,#00,#55,#FF,#FF
+    defb 7,2,#FF,#00,#AA
     defb 0,0
     defb 0,0
     defb 0,0
-trump_uppercut_1_sn
-    defb 1,61
-    defb 7,3,6,5,6,5,6,6,5,7,5,7,5,8,5,8
-    defb 5,7,5,7,5,8,5,8,5,8,5,7,5,7,5,7
-    defb 6,6,6,6,6,6,6,6,6,6,6,6,7,5,7,5
-    defb 6,6,6,7,6,7,5,8,5,8,5,8,5,7,5,7
-    defb 5,7,5,7,5,6,5,7,5,6,5,6,5,6,5,6
-    defb 5,6,5,6,6,5,6,5,6,5,6,5,6,5,6,3
-    defb 6,3,6,3,6,3,6,3,6,3,6,3,6,3,6,3
-    defb 6,3,6,3,6,3,6,3,7,2
 
 trump_uppercut_2_spans  ; 16 bytes wide
-    defb 0,64
-    defb 6,1,#AA
+    defb 0,64,63
+    defb 6,1,#00,#AA
     defb 5,2,#FF,#77
-    defb 4,4,#55,#33,#23,#AA
-    defb 4,4,#BB,#33,#03,#AA
-    defb 3,5,#55,#76,#33,#03,#57
-    defb 3,6,#55,#76,#23,#03,#13,#AA
-    defb 3,6,#BB,#B9,#23,#03,#33,#AA
-    defb 2,6,#55,#76,#33,#13,#33,#FF
-    defb 2,8,#55,#76,#23,#33,#FA,#5F,#55,#AA
+    defb 4,4,#00,#55,#33,#23,#00,#AA
+    defb 4,4,#BB,#33,#03,#00,#AA
+    defb 3,5,#00,#55,#76,#33,#03,#57
+    defb 3,6,#00,#55,#76,#23,#03,#13,#00,#AA
+    defb 3,6,#BB,#B9,#23,#03,#33,#00,#AA
+    defb 2,6,#00,#55,#76,#33,#13,#33,#FF
+    defb 2,8,#00,#55,#76,#23,#33,#FA,#5F,#00,#55,#00,#AA
     defb 2,8,#BB,#FC,#23,#27,#FA,#5F,#FA,#F5
     defb 2,8,#BB,#B9,#33,#27,#FA,#E4,#FA,#F5
     defb 2,8,#BB,#33,#33,#72,#F0,#E4,#AF,#DF
     defb 2,8,#BB,#33,#33,#72,#F0,#CC,#8C,#D5
-    defb 1,9,#55,#33,#33,#B1,#F0,#F0,#CC,#8C,#D5
-    defb 1,9,#55,#33,#52,#F0,#F0,#F0,#CC,#0C,#D5
+    defb 1,9,#00,#55,#33,#33,#B1,#F0,#F0,#CC,#8C,#D5
+    defb 1,9,#00,#55,#33,#52,#F0,#F0,#F0,#CC,#0C,#D5
     defb 2,8,#AB,#52,#F0,#F0,#F0,#F0,#0C,#D5
     defb 2,8,#AB,#F8,#F0,#B1,#F0,#F0,#0C,#D5
     defb 2,8,#BB,#F8,#F0,#B1,#F0,#F0,#0C,#D5
     defb 2,8,#BB,#F8,#F0,#F0,#F0,#E4,#0C,#D5
-    defb 2,8,#BB,#72,#F0,#F0,#F0,#E4,#0C,#AA
-    defb 2,8,#BB,#72,#F0,#F0,#F0,#CC,#0C,#AA
-    defb 2,8,#AB,#33,#F0,#F0,#F0,#CC,#0C,#AA
-    defb 2,8,#55,#03,#F0,#F0,#E4,#8C,#48,#AA
-    defb 3,7,#AB,#F0,#F0,#CC,#8C,#48,#AA
-    defb 3,7,#AB,#CC,#CC,#CC,#A4,#4D,#AA
-    defb 3,7,#55,#EE,#CC,#D8,#0C,#0D,#AA
-    defb 4,6,#55,#CC,#D5,#0C,#D5,#DF
-    defb 5,6,#EA,#D5,#0C,#D5,#D0,#AA
-    defb 5,6,#EA,#D5,#0C,#EA,#D0,#AA
-    defb 4,7,#55,#C0,#5D,#48,#EA,#C0,#AA
-    defb 4,7,#55,#C0,#5D,#48,#EA,#C0,#AA
-    defb 4,7,#55,#C0,#C0,#FF,#C0,#C0,#AA
-    defb 4,7,#55,#84,#48,#48,#C0,#C0,#AA
-    defb 4,7,#55,#84,#0C,#48,#C0,#C0,#AA
-    defb 4,7,#55,#C0,#0C,#C0,#C0,#C0,#AA
-    defb 4,7,#55,#C0,#C0,#C0,#C0,#C0,#AA
-    defb 4,7,#55,#C0,#C0,#C0,#C0,#C0,#AA
-    defb 4,7,#55,#C0,#C0,#C0,#C0,#C0,#AA
-    defb 4,7,#55,#C0,#C0,#C0,#C0,#C0,#75
+    defb 2,8,#BB,#72,#F0,#F0,#F0,#E4,#0C,#00,#AA
+    defb 2,8,#BB,#72,#F0,#F0,#F0,#CC,#0C,#00,#AA
+    defb 2,8,#AB,#33,#F0,#F0,#F0,#CC,#0C,#00,#AA
+    defb 2,8,#00,#55,#03,#F0,#F0,#E4,#8C,#48,#00,#AA
+    defb 3,7,#AB,#F0,#F0,#CC,#8C,#48,#00,#AA
+    defb 3,7,#AB,#CC,#CC,#CC,#A4,#4D,#00,#AA
+    defb 3,7,#00,#55,#EE,#CC,#D8,#0C,#0D,#00,#AA
+    defb 4,6,#00,#55,#CC,#D5,#0C,#D5,#DF
+    defb 5,6,#EA,#D5,#0C,#D5,#D0,#00,#AA
+    defb 5,6,#EA,#D5,#0C,#EA,#D0,#00,#AA
+    defb 4,7,#00,#55,#C0,#5D,#48,#EA,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#5D,#48,#EA,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#FF,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#84,#48,#48,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#84,#0C,#48,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#0C,#C0,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#75
     defb 5,6,#EA,#C0,#C0,#C0,#C4,#75
     defb 5,6,#EA,#C0,#C0,#C0,#D5,#75
     defb 5,6,#EA,#C0,#C0,#C0,#D5,#75
-    defb 5,6,#55,#C0,#C0,#C0,#FF,#75
-    defb 6,5,#EA,#48,#C0,#AA,#AA
-    defb 6,4,#EA,#48,#C0,#AA
+    defb 5,6,#00,#55,#C0,#C0,#C0,#FF,#75
+    defb 6,5,#EA,#48,#C0,#00,#AA,#00,#AA
+    defb 6,4,#EA,#48,#C0,#00,#AA
     defb 6,3,#EA,#48,#D5
     defb 6,3,#EA,#48,#D5
     defb 6,3,#EA,#C0,#D5
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#55,#C0,#D5
-    defb 6,3,#55,#48,#D5
-    defb 6,3,#55,#48,#D5
-    defb 6,3,#55,#48,#D5
+    defb 6,3,#00,#55,#C0,#D5
+    defb 6,3,#00,#55,#C0,#D5
+    defb 6,3,#00,#55,#C0,#D5
+    defb 6,3,#00,#55,#C0,#D5
+    defb 6,3,#00,#55,#48,#D5
+    defb 6,3,#00,#55,#48,#D5
+    defb 6,3,#00,#55,#48,#D5
     defb 6,3,#EA,#C0,#D5
     defb 6,3,#EA,#C0,#D5
     defb 6,3,#EA,#C0,#D5
     defb 6,3,#EA,#C0,#D5
-    defb 6,3,#55,#C1,#D7
-    defb 6,3,#55,#EB,#D7
+    defb 6,3,#00,#55,#C1,#D7
+    defb 6,3,#00,#55,#EB,#D7
     defb 7,2,#FF,#FF
-    defb 7,2,#55,#AA
+    defb 7,2,#00,#55,#00,#AA
     defb 0,0
-trump_uppercut_2_sn
-    defb 0,63
-    defb 6,1,5,2,4,4,4,4,3,5,3,6,3,6,2,6
-    defb 2,8,2,8,2,8,2,8,2,8,1,9,1,9,2,8
-    defb 2,8,2,8,2,8,2,8,2,8,2,8,2,8,3,7
-    defb 3,7,3,7,4,6,5,6,5,6,4,7,4,7,4,7
-    defb 4,7,4,7,4,7,4,7,4,7,4,7,4,7,5,6
-    defb 5,6,5,6,5,6,6,5,6,4,6,3,6,3,6,3
-    defb 6,3,6,3,6,3,6,3,6,3,6,3,6,3,6,3
-    defb 6,3,6,3,6,3,6,3,6,3,7,2,7,2
+
+trump_uppercut_3_spans  ; 16 bytes wide
+    defb 1,64,62
+    defb 6,3,#FF,#FF,#FF
+    defb 5,5,#00,#55,#33,#33,#23,#00,#AA
+    defb 5,5,#BB,#33,#33,#33,#57
+    defb 4,7,#00,#55,#33,#B9,#33,#33,#23,#00,#AA
+    defb 4,7,#00,#55,#76,#FC,#B9,#33,#03,#00,#AA
+    defb 4,7,#BB,#76,#B9,#33,#23,#03,#00,#AA
+    defb 4,7,#BB,#33,#B9,#23,#03,#03,#00,#AA
+    defb 4,7,#BB,#33,#33,#03,#03,#03,#00,#AA
+    defb 4,7,#AB,#33,#33,#33,#03,#03,#57
+    defb 4,7,#FE,#03,#33,#A5,#AB,#F5,#00,#AA
+    defb 4,7,#FE,#F0,#33,#A5,#AF,#5F,#5F
+    defb 3,8,#00,#55,#76,#F0,#F0,#A5,#FA,#F5,#00,#AA
+    defb 3,8,#00,#55,#33,#F0,#F0,#F0,#F0,#E4,#00,#AA
+    defb 4,7,#BB,#F0,#F0,#F0,#F0,#F0,#00,#AA
+    defb 4,7,#BB,#F0,#F0,#F0,#F0,#F0,#00,#AA
+    defb 4,7,#AB,#F0,#F0,#F0,#E4,#E4,#00,#AA
+    defb 4,7,#AB,#F0,#B1,#72,#E4,#0C,#00,#AA
+    defb 4,7,#00,#55,#F0,#F0,#F0,#F0,#48,#00,#AA
+    defb 4,7,#00,#55,#F0,#F0,#F0,#A4,#48,#00,#AA
+    defb 5,6,#FA,#F0,#F0,#A4,#48,#00,#AA
+    defb 5,6,#FA,#F0,#F0,#A4,#48,#00,#AA
+    defb 5,6,#EE,#F0,#F0,#8C,#48,#00,#AA
+    defb 5,7,#00,#55,#CC,#CC,#8C,#48,#FF,#00,#AA
+    defb 6,6,#EE,#CC,#0C,#5D,#FA,#F5
+    defb 6,6,#FF,#A4,#0C,#5D,#FA,#F5
+    defb 5,7,#00,#55,#D5,#0C,#0C,#5D,#5A,#F5
+    defb 6,6,#AE,#0C,#0C,#C4,#48,#DF
+    defb 5,7,#00,#55,#0C,#0C,#C0,#CF,#48,#D5
+    defb 5,7,#EA,#AE,#48,#D5,#C0,#EA,#00,#AA
+    defb 5,7,#EA,#EA,#D5,#EA,#C0,#EA,#00,#AA
+    defb 4,8,#00,#55,#C0,#D5,#AE,#C0,#C0,#EA,#00,#AA
+    defb 4,8,#00,#55,#C0,#0C,#0C,#C0,#C0,#EA,#00,#AA
+    defb 4,7,#00,#55,#C0,#0C,#48,#C0,#C0,#FF
+    defb 4,7,#00,#55,#C0,#0C,#48,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#D5
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 5,6,#EA,#C0,#C0,#C0,#C4,#00,#AA
+    defb 5,6,#EA,#C0,#C0,#C0,#90,#00,#AA
+    defb 5,6,#00,#55,#C0,#C0,#C0,#90,#00,#AA
+    defb 5,6,#00,#55,#C0,#C0,#C0,#90,#00,#AA
+    defb 5,6,#00,#55,#84,#C0,#C0,#BA,#00,#AA
+    defb 6,5,#AE,#C0,#D5,#BA,#DD
+    defb 6,5,#EA,#48,#D5,#BA,#00,#AA
+    defb 6,4,#EA,#48,#D5,#00,#55
+    defb 6,3,#EA,#C0,#D5
+    defb 6,3,#EA,#C0,#D5
+    defb 6,3,#00,#55,#C0,#00,#AA
+    defb 6,3,#00,#55,#C0,#D5
+    defb 6,3,#EA,#C0,#D5
+    defb 6,3,#AE,#48,#00,#AA
+    defb 6,3,#AE,#48,#00,#AA
+    defb 6,3,#AE,#48,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C3,#C1,#00,#AA
+    defb 6,3,#FF,#EB,#FF
+    defb 6,3,#00,#55,#FF,#FF
+    defb 7,1,#00,#55
+    defb 0,0
+    defb 0,0
+
+trump_backkick_0_spans  ; 16 bytes wide
+    defb 1,64,61
+    defb 7,2,#FF,#FF
+    defb 6,4,#00,#55,#33,#23,#FF
+    defb 6,5,#BB,#33,#33,#03,#00,#AA
+    defb 5,6,#00,#55,#33,#33,#33,#33,#57
+    defb 5,7,#BB,#76,#FC,#FC,#33,#23,#00,#AA
+    defb 5,7,#BB,#76,#B9,#33,#33,#03,#00,#AA
+    defb 5,7,#BB,#33,#33,#33,#03,#03,#57
+    defb 5,7,#BB,#33,#33,#03,#03,#03,#57
+    defb 5,7,#FE,#33,#33,#76,#03,#03,#00,#AA
+    defb 4,8,#00,#55,#76,#F0,#33,#A5,#0B,#03,#00,#AA
+    defb 4,8,#00,#55,#76,#F0,#33,#A5,#AF,#A1,#57
+    defb 4,8,#00,#55,#76,#F0,#33,#A5,#FA,#5F,#00,#AA
+    defb 4,7,#00,#55,#33,#F0,#F0,#F0,#F0,#5F
+    defb 4,7,#00,#55,#33,#F0,#F0,#F0,#F0,#F5
+    defb 4,8,#00,#55,#33,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 5,7,#BB,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 5,7,#AB,#F0,#33,#F0,#E4,#CC,#00,#AA
+    defb 5,6,#FA,#F0,#F0,#F0,#E4,#DD
+    defb 5,7,#00,#55,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 5,7,#00,#55,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 5,7,#00,#55,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 6,5,#FA,#F0,#F0,#E4,#DD
+    defb 6,5,#EE,#D8,#CC,#CC,#DD
+    defb 6,5,#00,#55,#CC,#CC,#CC,#00,#AA
+    defb 6,4,#00,#55,#F0,#CC,#DD
+    defb 6,4,#EA,#C0,#D5,#5F
+    defb 5,5,#00,#55,#C0,#C0,#AE,#5F
+    defb 5,7,#EA,#84,#0C,#AE,#85,#00,#AA,#00,#55
+    defb 5,8,#EA,#0C,#0C,#AE,#5D,#00,#00,#FA,#00,#AA
+    defb 5,8,#EA,#0C,#48,#AE,#5D,#00,#55,#58,#00,#AA
+    defb 5,8,#EA,#0C,#48,#AE,#48,#AE,#58,#00,#AA
+    defb 4,9,#00,#55,#C0,#0C,#48,#AE,#48,#0C,#48,#00,#AA
+    defb 4,9,#00,#55,#C0,#0C,#48,#D5,#48,#0C,#48,#00,#AA
+    defb 4,8,#00,#55,#C0,#0C,#48,#D5,#0C,#0C,#D5
+    defb 4,8,#00,#55,#C0,#84,#C0,#D5,#0C,#0C,#D5
+    defb 4,8,#00,#55,#C0,#C0,#C0,#D5,#0C,#C0,#00,#AA
+    defb 4,8,#00,#55,#C0,#C0,#C0,#C0,#EA,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#AE,#D5
+    defb 5,6,#EA,#C0,#C0,#C0,#EA,#D5
+    defb 5,6,#EA,#C0,#C0,#C0,#D5,#00,#AA
+    defb 5,5,#EA,#C0,#C0,#C0,#D5
+    defb 5,5,#EA,#84,#C0,#C0,#D5
+    defb 5,5,#00,#55,#C0,#C0,#C0,#D5
+    defb 5,6,#00,#55,#C0,#C0,#C0,#C0,#00,#AA
+    defb 5,6,#00,#55,#48,#C0,#C0,#C0,#00,#AA
+    defb 5,6,#EA,#48,#FF,#C0,#C0,#00,#AA
+    defb 5,6,#EA,#48,#00,#AA,#AE,#C0,#00,#AA
+    defb 5,5,#EA,#C0,#FF,#0C,#D5
+    defb 5,5,#EA,#C0,#FF,#48,#D5
+    defb 5,5,#EA,#C0,#FF,#48,#D5
+    defb 5,5,#EA,#C0,#EA,#48,#00,#AA
+    defb 4,6,#00,#55,#84,#D5,#00,#55,#EA,#00,#AA
+    defb 4,6,#00,#55,#48,#D5,#00,#55,#FF,#00,#AA
+    defb 4,6,#00,#55,#48,#D5,#00,#55,#FF,#00,#AA
+    defb 4,6,#00,#55,#48,#D5,#00,#00,#FF,#00,#AA
+    defb 4,3,#EA,#48,#00,#AA
+    defb 4,3,#EA,#C0,#00,#AA
+    defb 4,3,#00,#55,#EA,#00,#AA
+    defb 4,3,#00,#55,#FF,#00,#AA
+    defb 4,3,#00,#55,#FF,#00,#AA
+    defb 5,2,#FF,#00,#AA
+    defb 0,0
+    defb 0,0
+    defb 0,0
+
+trump_backkick_1_spans  ; 16 bytes wide
+    defb 3,64,59
+    defb 5,2,#FF,#00,#AA
+    defb 4,3,#00,#55,#33,#57
+    defb 4,4,#BB,#33,#23,#00,#AA
+    defb 3,5,#00,#55,#76,#33,#03,#00,#AA
+    defb 3,5,#BB,#B9,#33,#03,#57
+    defb 2,6,#00,#55,#33,#33,#23,#03,#57
+    defb 2,6,#00,#55,#FC,#33,#23,#03,#57
+    defb 2,7,#BB,#FC,#33,#0F,#BB,#03,#00,#AA
+    defb 2,6,#FE,#B9,#72,#0F,#FA,#FF
+    defb 1,7,#00,#55,#33,#33,#F0,#A5,#F0,#FF
+    defb 1,7,#00,#55,#33,#72,#72,#F0,#F0,#5F
+    defb 1,7,#00,#55,#33,#72,#33,#F0,#F0,#DD
+    defb 1,8,#00,#55,#33,#F0,#33,#F0,#E4,#CC,#00,#AA
+    defb 1,8,#00,#55,#33,#F0,#33,#F0,#E4,#CC,#00,#AA
+    defb 1,8,#00,#55,#76,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 1,8,#00,#55,#76,#F0,#F0,#72,#F0,#E4,#00,#AA
+    defb 1,8,#00,#55,#76,#F0,#B1,#F0,#F0,#E4,#00,#AA
+    defb 1,8,#00,#55,#76,#F0,#F0,#F0,#F0,#E4,#00,#AA
+    defb 1,8,#00,#55,#33,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 1,8,#00,#55,#33,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 1,8,#00,#55,#13,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 2,7,#AB,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 2,6,#AB,#52,#F0,#F0,#CC,#DD
+    defb 2,6,#00,#55,#52,#F0,#CC,#CC,#DD
+    defb 3,6,#EE,#CC,#C8,#C0,#C0,#00,#AA
+    defb 3,6,#00,#55,#CC,#C0,#C0,#C0,#D5
+    defb 3,7,#00,#55,#AE,#0C,#C0,#C0,#EA,#00,#AA
+    defb 3,7,#EA,#AE,#0C,#48,#C0,#EA,#00,#AA
+    defb 3,6,#EA,#EA,#0C,#48,#C0,#D5
+    defb 3,7,#AE,#EA,#0C,#48,#C0,#C0,#00,#AA
+    defb 3,7,#EA,#AE,#0C,#48,#C0,#C0,#00,#AA
+    defb 3,7,#EA,#AE,#0C,#48,#C0,#C0,#00,#AA
+    defb 3,7,#EA,#EA,#0C,#48,#C0,#C0,#00,#AA
+    defb 3,7,#EA,#EA,#0C,#C0,#C0,#C0,#00,#AA
+    defb 3,7,#EA,#EA,#C0,#C0,#C0,#C0,#00,#AA
+    defb 2,8,#00,#55,#C0,#EA,#C0,#C0,#C0,#C0,#00,#AA
+    defb 2,8,#EA,#C0,#EA,#C0,#C0,#C0,#C0,#00,#AA
+    defb 2,7,#EA,#C0,#EA,#C0,#C0,#C0,#D5
+    defb 2,8,#EA,#C0,#EA,#C0,#0C,#C0,#EA,#00,#AA
+    defb 2,7,#00,#55,#C0,#EA,#C0,#C0,#C0,#D5
+    defb 3,7,#FF,#EA,#C0,#C0,#C0,#C0,#00,#AA
+    defb 4,6,#00,#55,#C0,#48,#C0,#C0,#D5
+    defb 5,5,#EA,#48,#C0,#48,#D7
+    defb 5,5,#BA,#48,#EA,#48,#FF
+    defb 5,5,#BA,#48,#EA,#48,#FF
+    defb 5,5,#BA,#C0,#EA,#C0,#FF
+    defb 5,5,#BA,#C0,#D5,#C0,#FF
+    defb 5,5,#BA,#C0,#D5,#C0,#00,#AA
+    defb 5,5,#00,#55,#84,#D5,#C0,#00,#AA
+    defb 5,5,#00,#55,#84,#D5,#C0,#00,#AA
+    defb 5,4,#00,#55,#84,#D5,#FF
+    defb 6,2,#AE,#D5
+    defb 6,2,#AE,#D5
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,2,#EA,#FF
+    defb 6,2,#00,#55,#FF
+    defb 6,2,#FF,#00,#AA
+    defb 6,2,#00,#55,#00,#AA
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+
+trump_backkick_2_spans  ; 16 bytes wide
+    defb 9,56,54
+    defb 2,2,#FF,#00,#AA
+    defb 1,3,#00,#55,#33,#57
+    defb 1,4,#BB,#33,#03,#00,#AA
+    defb 1,4,#FE,#33,#03,#00,#AA
+    defb 0,5,#00,#55,#76,#23,#03,#77
+    defb 0,5,#00,#55,#B9,#33,#33,#FF
+    defb 0,5,#00,#55,#B9,#27,#FA,#5F
+    defb 0,6,#BB,#33,#27,#FA,#A5,#00,#AA
+    defb 0,6,#BB,#33,#A5,#5A,#E4,#DD
+    defb 0,6,#FE,#B9,#F0,#F0,#CC,#DD
+    defb 0,6,#76,#72,#72,#F0,#E4,#DD
+    defb 0,7,#76,#72,#33,#F0,#F0,#E4,#00,#AA
+    defb 0,7,#33,#72,#33,#F0,#F0,#E4,#00,#AA
+    defb 0,7,#33,#F0,#33,#F0,#F0,#E4,#00,#AA
+    defb 0,7,#33,#F0,#72,#72,#F0,#E4,#00,#AA
+    defb 0,7,#33,#F0,#F0,#F0,#F0,#E4,#00,#AA
+    defb 0,7,#33,#F0,#F0,#F0,#F0,#E4,#00,#AA
+    defb 0,7,#33,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 0,7,#76,#F0,#F0,#F0,#F0,#CC,#FF
+    defb 0,8,#76,#F0,#F0,#F0,#E4,#C8,#C0,#00,#AA
+    defb 0,8,#76,#F8,#F0,#F0,#E4,#C0,#C0,#D5
+    defb 0,9,#33,#72,#F0,#F0,#C8,#C0,#C0,#C0,#00,#AA
+    defb 0,9,#13,#72,#F0,#F0,#AE,#0C,#C0,#C0,#00,#AA
+    defb 0,9,#AB,#33,#F0,#E0,#D5,#0C,#48,#C0,#D5
+    defb 0,9,#AB,#03,#F0,#C8,#0C,#FF,#48,#C0,#D5
+    defb 0,10,#00,#55,#03,#CC,#C8,#84,#0C,#EA,#C0,#AE,#00,#AA
+    defb 1,9,#AB,#46,#DD,#C0,#C0,#EA,#C0,#AE,#00,#AA
+    defb 1,9,#00,#55,#FF,#EA,#FF,#84,#EA,#C0,#AE,#D5
+    defb 3,9,#EA,#84,#AE,#EA,#C0,#AE,#D5,#00,#00,#00,#AA
+    defb 3,9,#EA,#C0,#5D,#EA,#C0,#AE,#D5,#FF,#D5
+    defb 3,9,#EA,#C0,#D5,#EA,#C0,#AE,#5D,#84,#D5
+    defb 3,9,#EA,#C0,#D5,#D5,#C0,#D5,#EA,#0C,#D7
+    defb 3,9,#00,#55,#C0,#D5,#D5,#48,#C0,#48,#C0,#FF
+    defb 3,9,#00,#55,#C0,#D5,#D5,#C0,#C0,#C0,#D5,#FF
+    defb 3,9,#00,#55,#C0,#C0,#EF,#C0,#C0,#C0,#D5,#FF
+    defb 3,9,#00,#55,#C0,#C0,#DA,#C0,#D5,#C0,#FF,#00,#AA
+    defb 4,7,#EA,#C0,#F0,#C0,#AE,#DF,#00,#55
+    defb 4,6,#EA,#C0,#E0,#D5,#EF,#F5
+    defb 4,6,#00,#55,#C0,#C0,#D5,#FA,#F5
+    defb 5,5,#BA,#C0,#D5,#FA,#F5
+    defb 5,5,#BA,#C0,#D5,#00,#55,#00,#AA
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#48,#D5
+    defb 5,3,#00,#55,#48,#D5
+    defb 5,3,#00,#55,#48,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#00,#AA
+    defb 5,2,#00,#55,#D7
+    defb 5,2,#00,#55,#FF
+    defb 6,1,#00,#AA
+    defb 0,0
+    defb 0,0
+
+trump_backkick_3_spans  ; 16 bytes wide
+    defb 1,64,61
+    defb 7,2,#FF,#FF
+    defb 6,4,#00,#55,#33,#23,#FF
+    defb 6,5,#BB,#33,#33,#03,#00,#AA
+    defb 5,6,#00,#55,#33,#33,#33,#33,#57
+    defb 5,7,#BB,#76,#FC,#FC,#33,#23,#00,#AA
+    defb 5,7,#BB,#76,#B9,#33,#33,#03,#00,#AA
+    defb 5,7,#BB,#33,#33,#33,#03,#03,#57
+    defb 5,7,#BB,#33,#33,#03,#03,#03,#57
+    defb 5,7,#FE,#33,#33,#76,#03,#03,#00,#AA
+    defb 4,8,#00,#55,#76,#F0,#33,#A5,#0B,#03,#00,#AA
+    defb 4,8,#00,#55,#76,#F0,#33,#A5,#AF,#A1,#57
+    defb 4,8,#00,#55,#76,#F0,#33,#A5,#FA,#5F,#00,#AA
+    defb 4,7,#00,#55,#33,#F0,#F0,#F0,#F0,#5F
+    defb 4,7,#00,#55,#33,#F0,#F0,#F0,#F0,#F5
+    defb 4,8,#00,#55,#33,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 5,7,#BB,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 5,7,#AB,#F0,#33,#F0,#E4,#CC,#00,#AA
+    defb 5,6,#FA,#F0,#F0,#F0,#E4,#DD
+    defb 5,7,#00,#55,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 5,7,#00,#55,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 5,7,#00,#55,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 6,5,#FA,#F0,#F0,#E4,#DD
+    defb 6,5,#EE,#D8,#CC,#CC,#DD
+    defb 6,5,#00,#55,#CC,#CC,#CC,#00,#AA
+    defb 6,4,#00,#55,#F0,#CC,#DD
+    defb 6,4,#EA,#C0,#D5,#5F
+    defb 5,5,#00,#55,#C0,#C0,#AE,#5F
+    defb 5,7,#EA,#84,#0C,#AE,#85,#00,#AA,#00,#55
+    defb 5,8,#EA,#0C,#0C,#AE,#5D,#00,#00,#FA,#00,#AA
+    defb 5,8,#EA,#0C,#48,#AE,#5D,#00,#55,#58,#00,#AA
+    defb 5,8,#EA,#0C,#48,#AE,#48,#AE,#58,#00,#AA
+    defb 4,9,#00,#55,#C0,#0C,#48,#AE,#48,#0C,#48,#00,#AA
+    defb 4,9,#00,#55,#C0,#0C,#48,#D5,#48,#0C,#48,#00,#AA
+    defb 4,8,#00,#55,#C0,#0C,#48,#D5,#0C,#0C,#D5
+    defb 4,8,#00,#55,#C0,#84,#C0,#D5,#0C,#0C,#D5
+    defb 4,8,#00,#55,#C0,#C0,#C0,#D5,#0C,#C0,#00,#AA
+    defb 4,8,#00,#55,#C0,#C0,#C0,#C0,#EA,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#AE,#D5
+    defb 5,6,#EA,#C0,#C0,#C0,#EA,#D5
+    defb 5,6,#EA,#C0,#C0,#C0,#D5,#00,#AA
+    defb 5,5,#EA,#C0,#C0,#C0,#D5
+    defb 5,5,#EA,#84,#C0,#C0,#D5
+    defb 5,5,#00,#55,#C0,#C0,#C0,#75
+    defb 5,5,#00,#55,#C0,#84,#D5,#75
+    defb 5,5,#00,#55,#48,#C0,#D5,#75
+    defb 5,5,#EA,#48,#EA,#C0,#75
+    defb 5,5,#EA,#48,#EA,#C0,#75
+    defb 5,5,#EA,#C0,#EA,#C0,#00,#AA
+    defb 5,5,#EA,#C0,#EA,#C0,#00,#AA
+    defb 5,5,#EA,#C0,#FF,#C0,#D5
+    defb 5,5,#EA,#C0,#EA,#48,#00,#AA
+    defb 4,6,#00,#55,#84,#D5,#AE,#C0,#00,#AA
+    defb 4,6,#00,#55,#48,#D5,#AE,#C0,#00,#AA
+    defb 4,6,#00,#55,#48,#D5,#AE,#C0,#00,#AA
+    defb 4,5,#00,#55,#48,#D5,#84,#D5
+    defb 4,5,#EA,#48,#FF,#C0,#D5
+    defb 4,5,#EA,#C0,#FF,#C0,#D5
+    defb 4,5,#00,#55,#EA,#FF,#D7,#FF
+    defb 4,5,#00,#55,#FF,#00,#AA,#FF,#FF
+    defb 4,5,#00,#55,#FF,#00,#AA,#00,#55,#FF
+    defb 5,2,#FF,#00,#AA
+    defb 0,0
+    defb 0,0
+    defb 0,0
+
+trump_block_0_spans  ; 16 bytes wide
+    defb 1,64,62
+    defb 6,3,#00,#55,#FF,#FF
+    defb 6,4,#BB,#33,#23,#FF
+    defb 5,6,#00,#55,#33,#33,#33,#03,#00,#AA
+    defb 5,6,#BB,#33,#33,#33,#23,#00,#AA
+    defb 5,6,#BB,#FC,#B9,#33,#23,#57
+    defb 5,7,#BB,#FC,#B9,#33,#33,#03,#00,#AA
+    defb 5,7,#BB,#76,#FC,#B9,#33,#03,#00,#AA
+    defb 4,8,#00,#55,#33,#33,#33,#33,#23,#03,#00,#AA
+    defb 4,8,#00,#55,#76,#33,#33,#23,#03,#03,#00,#AA
+    defb 4,8,#00,#55,#76,#A1,#23,#03,#03,#03,#00,#AA
+    defb 4,8,#00,#55,#76,#B1,#23,#23,#03,#13,#00,#AA
+    defb 4,8,#00,#55,#33,#F0,#72,#0B,#52,#03,#00,#AA
+    defb 4,8,#00,#55,#72,#F0,#F0,#5F,#5A,#AF,#00,#AA
+    defb 4,7,#00,#55,#72,#F0,#F0,#5F,#5A,#FF
+    defb 4,7,#00,#55,#52,#F0,#F0,#F0,#F0,#00,#AA
+    defb 5,6,#FA,#F0,#F0,#F0,#F0,#DD
+    defb 5,6,#FA,#F0,#F0,#F0,#E4,#DD
+    defb 5,6,#FA,#B1,#72,#F0,#CC,#DD
+    defb 5,6,#FA,#F0,#F0,#F0,#CC,#DD
+    defb 5,6,#00,#55,#F0,#F0,#F0,#CC,#DD
+    defb 5,6,#00,#55,#F0,#F0,#F0,#CC,#DD
+    defb 5,6,#00,#55,#D8,#F0,#F0,#E4,#DD
+    defb 6,6,#EE,#F0,#F0,#CC,#E4,#00,#AA
+    defb 6,6,#00,#55,#D8,#E4,#CC,#E4,#00,#AA
+    defb 6,6,#00,#55,#A5,#E4,#8C,#48,#00,#AA
+    defb 6,6,#EA,#AE,#0D,#CA,#48,#00,#AA
+    defb 5,7,#00,#55,#5D,#AE,#0D,#CA,#48,#00,#AA
+    defb 5,7,#AE,#0C,#AE,#0D,#4A,#48,#00,#AA
+    defb 5,7,#FF,#0C,#0C,#5D,#DF,#48,#00,#AA
+    defb 4,8,#00,#55,#D5,#0C,#0C,#5D,#C0,#EA,#00,#AA
+    defb 4,8,#00,#55,#D5,#0C,#0C,#5D,#C0,#EA,#00,#AA
+    defb 4,8,#00,#55,#84,#AE,#0C,#5D,#C0,#EA,#00,#AA
+    defb 4,8,#00,#55,#84,#5D,#0C,#D5,#C0,#EA,#00,#AA
+    defb 4,8,#00,#55,#C0,#5D,#0C,#5D,#C0,#EA,#00,#AA
+    defb 4,8,#00,#55,#C0,#C0,#AE,#D5,#C0,#EA,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#EA,#D5,#C0,#FF
+    defb 4,7,#00,#55,#C0,#C0,#D5,#EA,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 5,6,#EA,#C0,#C0,#C0,#C0,#00,#AA
+    defb 5,5,#EA,#C0,#C0,#C0,#DD
+    defb 5,5,#EA,#C0,#C0,#C0,#DD
+    defb 5,5,#EA,#C0,#C0,#C0,#75
+    defb 5,5,#00,#55,#84,#C0,#C0,#75
+    defb 5,5,#00,#55,#84,#C0,#D5,#75
+    defb 5,5,#00,#55,#84,#C0,#FF,#75
+    defb 5,5,#00,#55,#84,#C0,#FF,#75
+    defb 6,4,#EA,#C0,#00,#AA,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 5,4,#00,#55,#0C,#48,#00,#AA
+    defb 5,4,#00,#55,#0C,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C2,#D7,#00,#AA
+    defb 5,4,#00,#55,#FF,#C3,#00,#AA
+    defb 6,3,#FF,#FF,#00,#AA
+    defb 7,1,#FF
+    defb 0,0
+    defb 0,0
+
+trump_block_1_spans  ; 16 bytes wide
+    defb 1,64,62
+    defb 7,3,#00,#55,#FF,#00,#AA
+    defb 7,3,#BB,#33,#57
+    defb 6,5,#00,#55,#33,#33,#23,#00,#AA
+    defb 6,5,#BB,#33,#33,#33,#57
+    defb 6,6,#BB,#33,#33,#33,#03,#00,#AA
+    defb 6,6,#BB,#FC,#B9,#33,#23,#57
+    defb 6,6,#BB,#FC,#B9,#33,#23,#57
+    defb 5,7,#00,#55,#33,#76,#B9,#33,#23,#57
+    defb 5,8,#00,#55,#FC,#76,#FC,#33,#33,#03,#00,#AA
+    defb 5,8,#00,#55,#FC,#33,#76,#B9,#33,#03,#00,#AA
+    defb 5,8,#00,#55,#72,#B1,#33,#33,#33,#03,#00,#AA
+    defb 5,8,#00,#55,#72,#B1,#03,#03,#03,#03,#00,#AA
+    defb 5,8,#00,#55,#72,#F0,#A1,#03,#03,#03,#00,#AA
+    defb 5,7,#00,#55,#72,#F0,#F0,#23,#03,#57
+    defb 5,8,#00,#55,#F0,#F0,#F0,#0B,#13,#23,#00,#AA
+    defb 5,8,#00,#55,#F0,#F0,#F0,#5F,#A1,#03,#00,#AA
+    defb 5,7,#00,#55,#F0,#F0,#F0,#5F,#A5,#FF
+    defb 6,6,#FA,#F0,#F0,#F0,#E4,#00,#AA
+    defb 6,6,#FA,#F0,#F0,#F0,#E4,#00,#AA
+    defb 6,6,#FA,#B1,#F0,#F0,#E4,#00,#AA
+    defb 6,6,#FA,#F0,#F0,#E4,#CC,#00,#AA
+    defb 6,6,#FA,#F0,#F0,#E4,#CC,#00,#AA
+    defb 6,6,#FA,#F0,#F0,#E4,#CC,#00,#AA
+    defb 6,6,#FA,#F0,#F0,#E4,#CC,#00,#AA
+    defb 6,5,#FA,#0C,#D8,#CC,#DD
+    defb 6,5,#00,#55,#0C,#CC,#CC,#DD
+    defb 6,6,#AE,#0C,#5D,#0E,#C0,#00,#AA
+    defb 5,7,#00,#55,#0C,#0C,#5D,#4F,#48,#00,#AA
+    defb 5,7,#00,#55,#0C,#0C,#5D,#4F,#48,#00,#AA
+    defb 5,7,#00,#55,#0C,#0C,#48,#4F,#C0,#D5
+    defb 5,7,#EA,#AE,#0C,#0C,#EA,#AE,#D5
+    defb 4,8,#00,#55,#C0,#5D,#0C,#0C,#EA,#EA,#D5
+    defb 4,8,#00,#55,#C0,#0C,#EA,#0C,#EA,#EA,#D5
+    defb 4,8,#00,#55,#C0,#0C,#5D,#C0,#EA,#D5,#00,#AA
+    defb 4,7,#00,#55,#C0,#84,#C0,#FF,#C0,#D5
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#D5
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#D5
+    defb 5,6,#EA,#C0,#C0,#C0,#C0,#00,#AA
+    defb 5,6,#EA,#C0,#C0,#C0,#C0,#00,#AA
+    defb 5,6,#EA,#C0,#C0,#C0,#C0,#00,#AA
+    defb 5,6,#EA,#C0,#C0,#C0,#CC,#00,#AA
+    defb 5,5,#EA,#C0,#C0,#C0,#75
+    defb 5,5,#00,#55,#84,#C0,#C0,#75
+    defb 5,5,#00,#55,#84,#C0,#D5,#75
+    defb 5,5,#00,#55,#84,#C0,#FF,#75
+    defb 5,5,#00,#55,#84,#C0,#FF,#DD
+    defb 6,4,#EA,#C0,#FF,#DD
+    defb 6,4,#EA,#C0,#00,#AA,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 5,4,#00,#55,#0C,#48,#00,#AA
+    defb 5,4,#00,#55,#0C,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C2,#D7,#00,#AA
+    defb 5,4,#00,#55,#FF,#C3,#00,#AA
+    defb 6,3,#FF,#FF,#00,#AA
+    defb 7,1,#FF
+    defb 0,0
+    defb 0,0
+
+trump_block_2_spans  ; 16 bytes wide
+    defb 1,64,62
+    defb 8,1,#FF
+    defb 7,3,#FF,#23,#FF
+    defb 6,5,#00,#55,#33,#33,#03,#00,#AA
+    defb 6,5,#00,#55,#33,#33,#23,#57
+    defb 6,6,#BB,#33,#33,#33,#03,#00,#AA
+    defb 6,6,#BB,#FC,#33,#33,#23,#00,#AA
+    defb 6,6,#BB,#FC,#B9,#33,#23,#57
+    defb 5,7,#00,#55,#33,#FC,#FC,#33,#23,#57
+    defb 5,8,#00,#55,#76,#76,#B9,#33,#23,#03,#00,#AA
+    defb 5,8,#00,#55,#76,#33,#FC,#33,#33,#03,#00,#AA
+    defb 5,8,#00,#55,#76,#13,#76,#B9,#33,#03,#00,#AA
+    defb 5,8,#00,#55,#72,#A1,#33,#33,#33,#03,#00,#AA
+    defb 5,8,#00,#55,#72,#B1,#03,#13,#23,#03,#00,#AA
+    defb 5,8,#00,#55,#72,#F0,#A1,#03,#03,#03,#00,#AA
+    defb 5,7,#00,#55,#F0,#F0,#F0,#03,#03,#57
+    defb 5,8,#00,#55,#F0,#F0,#F0,#0B,#13,#33,#00,#AA
+    defb 5,8,#00,#55,#F0,#F0,#A5,#5F,#A1,#03,#00,#AA
+    defb 5,7,#00,#55,#F0,#F0,#F0,#FF,#A5,#FF
+    defb 6,6,#FA,#F0,#F0,#F0,#F5,#00,#AA
+    defb 6,6,#FA,#B1,#F0,#F0,#E4,#00,#AA
+    defb 6,6,#FA,#F0,#F0,#F0,#E4,#00,#AA
+    defb 6,6,#FA,#F0,#F0,#E4,#CC,#00,#AA
+    defb 6,6,#FA,#F0,#F0,#E4,#CC,#00,#AA
+    defb 6,6,#FA,#F0,#F0,#CC,#CC,#00,#AA
+    defb 6,6,#FA,#58,#F0,#E4,#CC,#00,#AA
+    defb 6,5,#AE,#4C,#CC,#CC,#DD
+    defb 5,6,#00,#55,#0C,#0C,#EE,#CC,#D5
+    defb 5,6,#00,#55,#0C,#0C,#AF,#0E,#D5
+    defb 5,7,#FF,#0C,#0C,#0D,#4F,#48,#00,#AA
+    defb 4,8,#00,#55,#D5,#0C,#0C,#5D,#4E,#C0,#D5
+    defb 4,8,#00,#55,#D5,#84,#0C,#0C,#EA,#AE,#D5
+    defb 4,8,#00,#55,#84,#EA,#0C,#0C,#EA,#EA,#D5
+    defb 4,8,#00,#55,#84,#5D,#84,#48,#EA,#EA,#D5
+    defb 4,8,#00,#55,#C0,#0C,#FF,#C0,#EA,#EA,#00,#AA
+    defb 4,7,#00,#55,#C0,#0C,#C0,#FF,#C0,#FF
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 5,6,#EA,#C0,#C0,#C0,#C0,#00,#AA
+    defb 5,5,#EA,#C0,#C0,#C0,#DD
+    defb 5,5,#EA,#C0,#C0,#90,#DD
+    defb 5,5,#EA,#48,#C0,#90,#DD
+    defb 5,5,#00,#55,#48,#C0,#90,#DD
+    defb 5,5,#00,#55,#48,#C0,#BA,#DD
+    defb 5,5,#00,#55,#C0,#C0,#BA,#DD
+    defb 5,5,#00,#55,#C0,#D5,#BA,#DD
+    defb 5,5,#00,#55,#C0,#D5,#00,#55,#00,#AA
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#0C,#D5
+    defb 5,3,#EA,#0C,#D5
+    defb 5,3,#EA,#84,#D5
+    defb 5,3,#EA,#C0,#D5
+    defb 5,3,#EA,#C0,#D5
+    defb 4,4,#00,#55,#C0,#C0,#D5
+    defb 5,3,#EA,#C0,#D5
+    defb 5,3,#EB,#C2,#FF
+    defb 5,4,#00,#55,#EB,#D7,#00,#AA
+    defb 6,2,#FF,#FF
+    defb 7,1,#FF
+    defb 0,0
+    defb 0,0
+
+trump_hit_0_spans  ; 16 bytes wide
+    defb 0,64,63
+    defb 5,1,#00,#55
+    defb 4,3,#00,#55,#BB,#00,#AA
+    defb 4,3,#BB,#33,#57
+    defb 3,5,#00,#55,#33,#33,#03,#00,#AA
+    defb 3,5,#BB,#B9,#23,#03,#00,#AA
+    defb 3,5,#FE,#33,#23,#03,#00,#AA
+    defb 2,6,#00,#55,#33,#33,#03,#13,#77
+    defb 2,6,#BB,#B9,#33,#33,#33,#00,#AA
+    defb 2,6,#BB,#B9,#13,#FF,#A5,#00,#AA
+    defb 1,7,#00,#55,#33,#B9,#27,#5F,#A5,#00,#AA
+    defb 1,7,#00,#55,#33,#33,#27,#0F,#F0,#DD
+    defb 1,7,#00,#55,#33,#72,#33,#F0,#F0,#DD
+    defb 1,7,#00,#55,#33,#72,#33,#F0,#E4,#DD
+    defb 1,8,#00,#55,#33,#F0,#33,#F0,#CC,#CC,#00,#AA
+    defb 1,8,#00,#55,#03,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 1,8,#00,#55,#52,#F0,#F0,#F0,#F0,#E4,#00,#AA
+    defb 1,8,#00,#55,#76,#F0,#F0,#72,#F0,#E4,#00,#AA
+    defb 1,8,#00,#55,#76,#F0,#B1,#F0,#F0,#E4,#00,#AA
+    defb 1,8,#00,#55,#76,#F0,#F0,#F0,#F0,#E4,#00,#AA
+    defb 1,8,#00,#55,#33,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 1,8,#00,#55,#13,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 2,7,#AB,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 2,6,#AB,#52,#F0,#F0,#CC,#DD
+    defb 2,6,#00,#55,#52,#F0,#E4,#CC,#DD
+    defb 3,6,#EE,#CC,#CC,#E4,#0F,#00,#AA
+    defb 3,6,#00,#55,#CC,#D8,#C0,#0F,#00,#AA
+    defb 4,5,#EE,#C8,#C0,#0F,#DD
+    defb 4,5,#AE,#5D,#C0,#C0,#D5
+    defb 4,5,#AE,#5D,#C0,#C0,#D5
+    defb 4,6,#AE,#0C,#AE,#C0,#C0,#00,#AA
+    defb 4,8,#AE,#0C,#AE,#C0,#C0,#00,#AA,#FF,#00,#AA
+    defb 4,8,#AE,#0C,#AE,#C0,#C0,#FF,#D0,#F5
+    defb 3,9,#00,#55,#D5,#0C,#AE,#EF,#E0,#D5,#58,#F5
+    defb 3,9,#00,#55,#D5,#0C,#FF,#0C,#E0,#D5,#58,#DD
+    defb 3,9,#00,#55,#D5,#0C,#0C,#0C,#E0,#D5,#C5,#00,#AA
+    defb 3,9,#00,#55,#C0,#AE,#0C,#0C,#CA,#D5,#C0,#00,#AA
+    defb 3,8,#00,#55,#C0,#AE,#0C,#48,#EA,#EA,#D5
+    defb 3,8,#00,#55,#C0,#AE,#0C,#D5,#C4,#D5,#00,#AA
+    defb 4,6,#EA,#AE,#48,#EA,#90,#DD
+    defb 4,6,#EA,#D5,#D5,#C0,#90,#DD
+    defb 4,6,#EA,#C0,#EA,#C0,#90,#DD
+    defb 4,6,#00,#55,#C0,#C0,#C0,#90,#DD
+    defb 4,6,#00,#55,#C0,#C0,#C0,#90,#DD
+    defb 5,5,#EA,#48,#C0,#D5,#DD
+    defb 5,5,#00,#55,#48,#C0,#00,#AA,#00,#AA
+    defb 5,4,#00,#55,#48,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#0C,#D5
+    defb 5,3,#EA,#0C,#D5
+    defb 5,3,#EA,#84,#D5
+    defb 5,3,#EA,#C0,#D5
+    defb 5,3,#EA,#C0,#D5
+    defb 4,4,#00,#55,#C0,#C0,#D5
+    defb 5,3,#EA,#C0,#D5
+    defb 5,3,#EB,#C2,#FF
+    defb 5,4,#00,#55,#EB,#D7,#00,#AA
+    defb 6,2,#FF,#FF
+    defb 7,1,#FF
+    defb 0,0
+
+trump_hit_1_spans  ; 16 bytes wide
+    defb 5,64,57
+    defb 2,2,#FF,#00,#AA
+    defb 1,3,#00,#55,#33,#57
+    defb 1,4,#BB,#33,#03,#00,#AA
+    defb 0,5,#00,#55,#B9,#33,#03,#77
+    defb 0,5,#00,#55,#B9,#23,#13,#00,#AA
+    defb 0,5,#BB,#B9,#33,#27,#00,#AA
+    defb 0,5,#FE,#33,#5F,#F0,#5F
+    defb 0,6,#BB,#33,#5F,#F0,#CC,#00,#AA
+    defb 0,6,#BB,#33,#0F,#E4,#CC,#00,#AA
+    defb 0,6,#33,#72,#F0,#E4,#CC,#F5
+    defb 0,6,#76,#72,#33,#F0,#D8,#F5
+    defb 0,7,#76,#72,#33,#F0,#F0,#E4,#00,#AA
+    defb 0,7,#33,#F0,#33,#F0,#F0,#E4,#00,#AA
+    defb 0,7,#33,#F0,#72,#72,#F0,#E4,#00,#AA
+    defb 0,7,#33,#F0,#F0,#F0,#F0,#E4,#00,#AA
+    defb 0,7,#33,#F0,#F0,#F0,#F0,#E4,#00,#AA
+    defb 0,7,#33,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 0,7,#72,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 0,7,#52,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 0,7,#56,#F0,#F0,#F0,#E4,#8D,#5F
+    defb 0,8,#56,#F0,#F0,#F0,#F0,#A5,#1A,#00,#AA
+    defb 0,8,#BB,#72,#F0,#F0,#D8,#C0,#4A,#00,#AA
+    defb 0,8,#BB,#72,#F0,#E4,#C8,#C0,#C0,#D5
+    defb 0,8,#AB,#33,#F0,#CC,#EA,#C0,#C0,#D5
+    defb 0,9,#AB,#03,#CC,#8C,#5D,#0C,#C0,#C0,#00,#AA
+    defb 0,9,#00,#55,#03,#46,#8C,#5D,#0C,#C0,#C0,#00,#AA
+    defb 1,8,#AB,#03,#8C,#5D,#0C,#C0,#C0,#D5
+    defb 1,8,#00,#55,#FF,#AE,#5D,#0C,#C0,#C0,#D5
+    defb 3,6,#AE,#5D,#0C,#C0,#C0,#D5
+    defb 3,6,#AE,#5D,#48,#C0,#C0,#D5
+    defb 3,6,#AE,#5D,#48,#C0,#C0,#DD
+    defb 3,6,#AE,#5D,#C0,#C0,#90,#DD
+    defb 3,6,#00,#55,#0C,#EA,#C0,#C0,#75
+    defb 3,7,#00,#55,#0C,#EA,#C0,#C0,#64,#00,#AA
+    defb 3,7,#00,#55,#0C,#5D,#C0,#C0,#64,#00,#AA
+    defb 3,7,#00,#55,#0C,#5D,#C0,#C0,#EE,#00,#AA
+    defb 3,7,#00,#55,#0C,#0C,#EA,#C0,#EA,#00,#AA
+    defb 4,6,#AE,#0C,#5D,#C0,#EF,#DF
+    defb 4,6,#00,#55,#0C,#CA,#D5,#C5,#F5
+    defb 4,6,#00,#55,#84,#DA,#D5,#D0,#F5
+    defb 5,5,#EA,#F0,#D5,#FA,#F5
+    defb 5,5,#00,#55,#F0,#D5,#00,#55,#00,#AA
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#48,#00,#AA
+    defb 5,4,#00,#55,#48,#48,#00,#AA
+    defb 5,4,#AE,#48,#48,#00,#AA
+    defb 5,4,#AE,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 4,5,#00,#55,#C0,#D5,#C0,#FF
+    defb 4,5,#00,#55,#C0,#D5,#C1,#D7
+    defb 5,4,#EB,#D7,#FF,#FF
+    defb 5,4,#FF,#D7,#FF,#00,#AA
+    defb 5,2,#00,#55,#FF
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+
+trump_hit_2_spans  ; 16 bytes wide
+    defb 1,64,62
+    defb 5,3,#FF,#FF,#00,#AA
+    defb 4,4,#FF,#33,#33,#57
+    defb 3,6,#00,#55,#33,#33,#33,#03,#00,#AA
+    defb 3,6,#00,#55,#33,#B9,#23,#03,#00,#AA
+    defb 3,6,#BB,#FC,#33,#03,#03,#00,#AA
+    defb 2,7,#00,#55,#76,#B9,#23,#03,#03,#00,#AA
+    defb 2,7,#00,#55,#76,#B9,#13,#03,#13,#77
+    defb 2,7,#BB,#33,#23,#13,#33,#77,#00,#AA
+    defb 2,7,#BB,#33,#33,#27,#AF,#5F,#00,#AA
+    defb 2,7,#BB,#33,#33,#27,#FF,#A5,#5F
+    defb 2,7,#AB,#23,#B1,#72,#5A,#F0,#DD
+    defb 2,7,#BB,#52,#B1,#72,#F0,#E4,#DD
+    defb 2,7,#BB,#F8,#F0,#F0,#F0,#CC,#DD
+    defb 2,7,#BB,#F8,#F0,#F0,#F0,#CC,#DD
+    defb 2,7,#BB,#F8,#F0,#F0,#F0,#CC,#DD
+    defb 2,7,#BB,#72,#F0,#B1,#F0,#CC,#DD
+    defb 2,7,#BB,#72,#F0,#72,#F0,#F0,#DD
+    defb 2,7,#00,#55,#72,#F0,#F0,#F0,#F0,#DD
+    defb 2,7,#00,#55,#52,#F0,#F0,#F0,#E4,#DD
+    defb 3,6,#FA,#F0,#F0,#F0,#CC,#DD
+    defb 3,6,#AB,#F0,#F0,#F0,#CC,#DD
+    defb 3,6,#00,#55,#F0,#F0,#CC,#CC,#00,#AA
+    defb 4,5,#EE,#CC,#CC,#CC,#00,#AA
+    defb 4,5,#EE,#CC,#CC,#8D,#00,#AA
+    defb 4,5,#00,#55,#CC,#C0,#0F,#DF
+    defb 5,4,#EA,#C0,#85,#DD
+    defb 4,5,#00,#55,#5D,#C0,#85,#DF
+    defb 4,6,#AE,#0C,#EA,#C0,#C0,#00,#AA
+    defb 4,7,#AE,#0C,#AE,#C0,#C0,#00,#AA,#00,#55
+    defb 4,8,#00,#55,#0C,#AE,#C0,#C0,#00,#AA,#FA,#00,#AA
+    defb 4,8,#FF,#0C,#AE,#C0,#C0,#D5,#DA,#F5
+    defb 3,9,#00,#55,#D5,#0C,#AE,#D5,#C0,#D5,#58,#DD
+    defb 3,9,#00,#55,#D5,#0C,#5D,#AE,#E0,#D5,#C5,#00,#AA
+    defb 3,9,#00,#55,#D5,#0C,#0C,#0C,#F0,#D5,#C0,#00,#AA
+    defb 3,8,#00,#55,#C0,#AE,#0C,#0C,#E0,#D5,#D5
+    defb 3,8,#00,#55,#C0,#AE,#0C,#0C,#CA,#D5,#00,#AA
+    defb 4,6,#EA,#AE,#0C,#C0,#EA,#00,#AA
+    defb 4,6,#EA,#AE,#48,#D5,#C4,#DD
+    defb 4,6,#EA,#D5,#D5,#EA,#90,#DD
+    defb 4,6,#EA,#C0,#EA,#C0,#90,#DD
+    defb 4,6,#00,#55,#C0,#C0,#C0,#90,#DD
+    defb 4,6,#00,#55,#C0,#C0,#C0,#90,#DD
+    defb 5,5,#EA,#48,#C0,#BA,#DD
+    defb 5,5,#EA,#48,#C0,#FF,#DD
+    defb 5,5,#00,#55,#48,#C0,#00,#AA,#00,#AA
+    defb 5,3,#00,#55,#48,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#C0,#D5
+    defb 5,3,#00,#55,#0C,#D5
+    defb 5,3,#EA,#0C,#D5
+    defb 5,3,#EA,#84,#D5
+    defb 5,3,#EA,#C0,#D5
+    defb 5,3,#EA,#C0,#D5
+    defb 4,4,#00,#55,#C0,#C0,#D5
+    defb 5,3,#EA,#C0,#D5
+    defb 5,3,#EB,#C2,#FF
+    defb 5,3,#00,#55,#EB,#D7
+    defb 6,2,#FF,#FF
+    defb 7,1,#00,#AA
+    defb 0,0
+    defb 0,0
+
+trump_ko_0_spans  ; 16 bytes wide
+    defb 3,64,59
+    defb 3,2,#FF,#FF
+    defb 2,4,#00,#55,#33,#23,#00,#AA
+    defb 2,4,#BB,#33,#23,#00,#AA
+    defb 2,4,#FE,#33,#03,#57
+    defb 1,6,#00,#55,#FC,#33,#03,#33,#00,#AA
+    defb 1,5,#00,#55,#B9,#33,#33,#FF
+    defb 1,5,#00,#55,#33,#77,#FA,#5F
+    defb 1,6,#BB,#33,#07,#FA,#0F,#00,#AA
+    defb 1,6,#BB,#33,#0F,#FA,#E4,#00,#AA
+    defb 1,6,#FE,#B9,#A5,#F0,#CC,#DD
+    defb 0,7,#00,#55,#76,#72,#33,#F0,#CC,#DD
+    defb 0,7,#00,#55,#33,#72,#33,#F0,#CC,#F5
+    defb 0,8,#00,#55,#33,#F0,#33,#F0,#F0,#E4,#00,#AA
+    defb 0,8,#00,#55,#33,#F0,#33,#72,#F0,#E4,#00,#AA
+    defb 0,8,#00,#55,#33,#F0,#F0,#72,#F0,#E4,#00,#AA
+    defb 0,8,#00,#55,#33,#F0,#B1,#F0,#F0,#E4,#00,#AA
+    defb 0,8,#00,#55,#72,#F0,#F0,#F0,#F0,#E4,#00,#AA
+    defb 0,8,#00,#55,#52,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 0,8,#00,#55,#56,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 0,8,#00,#55,#76,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 0,8,#00,#55,#33,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 1,7,#BB,#72,#F0,#F0,#D8,#8D,#5F
+    defb 1,7,#BB,#72,#F0,#F0,#D8,#85,#5F
+    defb 1,8,#AB,#72,#F0,#CC,#E0,#85,#4E,#00,#AA
+    defb 1,8,#00,#55,#03,#CC,#CC,#C0,#C0,#C0,#00,#AA
+    defb 2,7,#AB,#CC,#0C,#EA,#C0,#C0,#D5
+    defb 2,7,#00,#55,#EE,#0C,#EA,#48,#C0,#D5
+    defb 3,6,#00,#55,#0C,#AE,#48,#C0,#D5
+    defb 3,7,#00,#55,#0C,#AE,#48,#C0,#C0,#00,#AA
+    defb 3,7,#00,#55,#0C,#AE,#48,#C0,#C0,#00,#AA
+    defb 3,7,#00,#55,#0C,#AE,#48,#C0,#C0,#00,#AA
+    defb 3,7,#00,#55,#0C,#AE,#C0,#C0,#C0,#00,#AA
+    defb 3,7,#00,#55,#0C,#EA,#C0,#C0,#C0,#00,#AA
+    defb 3,7,#00,#55,#0C,#EA,#C0,#C0,#C4,#00,#AA
+    defb 3,7,#00,#55,#0C,#EA,#C0,#C0,#64,#00,#AA
+    defb 3,7,#00,#55,#0C,#EA,#C0,#C0,#C4,#00,#AA
+    defb 3,7,#00,#55,#0C,#EA,#C0,#C0,#90,#DD
+    defb 3,7,#00,#55,#0C,#5D,#C0,#C0,#90,#DD
+    defb 3,7,#00,#55,#0C,#5D,#C0,#C0,#90,#DD
+    defb 4,6,#AE,#5D,#C0,#C0,#D5,#DD
+    defb 4,6,#AE,#5D,#48,#C0,#EA,#00,#AA
+    defb 4,6,#AE,#48,#EA,#C0,#EA,#00,#AA
+    defb 4,6,#AE,#0C,#AE,#C0,#EF,#00,#AA
+    defb 4,6,#00,#55,#0C,#AE,#C0,#DA,#00,#AA
+    defb 4,6,#00,#55,#58,#C0,#D5,#DA,#F5
+    defb 4,6,#00,#55,#DA,#C0,#C0,#FA,#00,#AA
+    defb 5,4,#FA,#C0,#C0,#FF
+    defb 5,4,#EE,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#48,#00,#AA
+    defb 5,4,#00,#55,#48,#48,#00,#AA
+    defb 5,4,#EA,#48,#48,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#D5
+    defb 5,4,#EA,#C0,#C0,#D5
+    defb 5,4,#EA,#D5,#C0,#D5
+    defb 4,5,#00,#55,#C0,#D5,#C0,#D5
+    defb 5,5,#EA,#FF,#C0,#C3,#00,#AA
+    defb 5,5,#EB,#D7,#FF,#FF,#00,#AA
+    defb 5,4,#00,#55,#FF,#00,#55,#FF
+    defb 5,2,#00,#55,#FF
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+
+trump_ko_1_spans  ; 32 bytes wide
+    defb 15,48,47
+    defb 7,2,#00,#55,#00,#AA
+    defb 7,2,#BB,#77
+    defb 6,4,#00,#55,#33,#23,#00,#AA
+    defb 6,4,#00,#55,#33,#23,#FF
+    defb 6,10,#FE,#33,#33,#5F,#00,#AA,#00,#00,#00,#00,#00,#00,#00,#00,#00,#55
+    defb 6,11,#FE,#33,#FA,#E4,#DD,#00,#00,#00,#00,#00,#00,#00,#00,#FA,#00,#AA
+    defb 6,11,#FE,#33,#AF,#E4,#D8,#00,#AA,#00,#00,#00,#00,#00,#55,#F0,#00,#AA
+    defb 5,12,#00,#55,#FC,#27,#5A,#E4,#D8,#F5,#00,#00,#00,#00,#00,#55,#5A,#00,#AA
+    defb 5,12,#00,#55,#33,#27,#5A,#F0,#F0,#F5,#00,#00,#00,#00,#00,#55,#4D,#00,#AA
+    defb 5,12,#00,#55,#33,#72,#F0,#F0,#F0,#E4,#00,#AA,#00,#00,#AE,#48,#00,#AA
+    defb 5,12,#00,#55,#33,#72,#33,#F0,#F0,#E4,#00,#AA,#00,#55,#A4,#C0,#00,#AA
+    defb 5,12,#00,#55,#33,#72,#72,#72,#F0,#E4,#00,#AA,#AE,#F0,#C0,#00,#AA
+    defb 5,11,#00,#55,#76,#F0,#72,#72,#F0,#E4,#FF,#AE,#E0,#D5
+    defb 5,11,#00,#55,#33,#F0,#F0,#F0,#F0,#E4,#1A,#0C,#CA,#D5
+    defb 5,11,#00,#55,#33,#F0,#F0,#F0,#F0,#E4,#0F,#0C,#D5,#D5
+    defb 5,11,#00,#55,#33,#F0,#F0,#F0,#F0,#E4,#0E,#0C,#D5,#D5
+    defb 5,11,#00,#55,#33,#F0,#F0,#F0,#F0,#F5,#AE,#48,#FF,#00,#AA
+    defb 5,10,#00,#55,#33,#F0,#F0,#F0,#F0,#A4,#0C,#D5,#D5
+    defb 5,11,#00,#55,#33,#F0,#F0,#F0,#F0,#0C,#0C,#D5,#C0,#00,#AA
+    defb 5,11,#00,#55,#33,#F0,#F0,#F0,#A4,#0C,#48,#EA,#C0,#00,#AA
+    defb 5,11,#00,#55,#13,#F0,#F0,#F0,#0C,#0C,#48,#EA,#C0,#DD
+    defb 5,11,#00,#55,#03,#F8,#F0,#F0,#0C,#48,#D5,#C0,#90,#DD
+    defb 6,11,#AB,#76,#F0,#E4,#0C,#D5,#AE,#C0,#C0,#64,#00,#AA
+    defb 6,11,#AB,#33,#72,#E4,#C8,#AE,#48,#C0,#C0,#30,#DD
+    defb 6,11,#00,#55,#33,#66,#CC,#DD,#84,#48,#C0,#C0,#90,#DD
+    defb 6,11,#00,#55,#03,#03,#CC,#C0,#C0,#C0,#C0,#C0,#D5,#00,#AA
+    defb 7,9,#AB,#03,#03,#C0,#C0,#C0,#C0,#C0,#D5
+    defb 7,9,#00,#55,#AB,#FF,#EA,#C0,#C0,#C0,#C0,#D5
+    defb 8,8,#00,#55,#00,#00,#EA,#C0,#C0,#C0,#C0,#D5
+    defb 10,7,#EA,#C0,#C0,#84,#0C,#C0,#00,#AA
+    defb 10,7,#00,#55,#C0,#C0,#C0,#0C,#48,#00,#AA
+    defb 10,7,#00,#55,#C0,#C0,#C0,#C0,#84,#D5
+    defb 10,8,#00,#55,#C0,#C0,#C0,#C0,#84,#48,#FF
+    defb 11,8,#EA,#C0,#C0,#C0,#C0,#48,#C1,#00,#AA
+    defb 11,8,#00,#55,#EA,#D5,#EA,#C0,#C0,#D7,#00,#AA
+    defb 12,6,#00,#55,#00,#AA,#00,#55,#C0,#C0,#D7
+    defb 14,4,#00,#55,#C0,#C0,#FF
+    defb 14,4,#00,#55,#84,#C0,#FF
+    defb 15,3,#EA,#48,#00,#AA
+    defb 15,3,#EA,#48,#00,#AA
+    defb 15,3,#EA,#48,#00,#AA
+    defb 15,3,#00,#55,#C0,#D5
+    defb 15,4,#00,#55,#C0,#D7,#00,#AA
+    defb 15,3,#00,#55,#C0,#D7
+    defb 15,3,#00,#55,#D5,#FF
+    defb 16,2,#FF,#00,#AA
+    defb 16,1,#00,#55
+    defb 0,0
+
+trump_ko_2_spans  ; 32 bytes wide
+    defb 27,40,34
+    defb 7,1,#00,#55
+    defb 7,3,#FA,#00,#AA,#00,#55
+    defb 7,4,#FA,#F5,#FA,#00,#AA
+    defb 7,4,#FA,#5D,#FA,#F5
+    defb 7,4,#AE,#5D,#AF,#D5
+    defb 7,5,#AE,#0C,#AE,#C0,#00,#AA
+    defb 6,6,#00,#55,#AE,#0C,#EA,#48,#00,#AA
+    defb 5,7,#FF,#BB,#AE,#0C,#EA,#48,#00,#AA
+    defb 4,8,#00,#55,#23,#77,#EE,#0C,#EA,#48,#00,#AA
+    defb 4,8,#BB,#33,#72,#CC,#0C,#D5,#C0,#D5
+    defb 4,13,#BB,#33,#72,#CC,#0C,#5D,#C0,#D5,#00,#AA,#00,#00,#00,#00,#00,#00,#00,#AA
+    defb 3,14,#00,#55,#B9,#77,#FA,#D8,#A4,#5D,#D5,#EA,#D5,#00,#00,#00,#00,#00,#00,#FF
+    defb 3,14,#00,#55,#B9,#27,#5A,#F0,#A4,#4C,#4A,#C0,#C0,#FF,#00,#AA,#00,#55,#FF
+    defb 3,14,#00,#55,#B9,#27,#5A,#F0,#A4,#0D,#4A,#C0,#C0,#30,#75,#EB,#FF
+    defb 3,14,#00,#55,#B9,#27,#33,#72,#A4,#0D,#84,#48,#C0,#30,#60,#D5,#FF
+    defb 3,15,#00,#55,#B9,#72,#33,#72,#A4,#48,#AE,#48,#C0,#C0,#84,#0C,#FF,#00,#55
+    defb 3,16,#00,#55,#33,#72,#33,#F0,#A4,#5D,#0C,#0C,#C0,#84,#0C,#C0,#00,#AA,#EB,#00,#AA
+    defb 3,16,#00,#55,#33,#72,#72,#F0,#A4,#48,#AE,#0C,#C0,#84,#C0,#C0,#00,#AA,#EB,#00,#AA
+    defb 3,16,#00,#55,#76,#72,#F0,#F0,#A4,#5D,#0C,#0C,#C0,#84,#C0,#C0,#D5,#FF,#00,#AA
+    defb 3,16,#00,#55,#76,#72,#F0,#F0,#A4,#5D,#0C,#48,#C0,#48,#D5,#C0,#0C,#FF,#00,#AA
+    defb 3,16,#00,#55,#33,#72,#F0,#F0,#A4,#48,#AE,#48,#C0,#48,#84,#0C,#0C,#5D,#00,#AA
+    defb 3,16,#00,#55,#33,#72,#F0,#F0,#F0,#5D,#84,#C0,#C0,#C0,#84,#C0,#C0,#D5,#00,#AA
+    defb 3,15,#00,#55,#33,#72,#F0,#F0,#F0,#5D,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#D5
+    defb 3,15,#00,#55,#33,#72,#F0,#F0,#F0,#D5,#C0,#C0,#C0,#C0,#C0,#C0,#FF,#00,#AA
+    defb 3,13,#00,#55,#33,#72,#F0,#F0,#E4,#EA,#C0,#C0,#C0,#C0,#C0,#FF
+    defb 4,11,#BB,#72,#F0,#F0,#E4,#C8,#C0,#C0,#C0,#C0,#D5
+    defb 4,11,#BB,#72,#F0,#F0,#CC,#C8,#C0,#C0,#C0,#C0,#00,#AA
+    defb 4,11,#AB,#13,#F8,#F0,#CC,#C8,#C0,#C0,#C0,#C0,#00,#AA
+    defb 4,10,#AB,#13,#33,#66,#CC,#FF,#C0,#C0,#C0,#D5
+    defb 4,10,#00,#55,#13,#33,#23,#03,#FF,#C0,#C0,#C0,#D5
+    defb 4,10,#00,#55,#03,#03,#03,#57,#00,#00,#EA,#C0,#C0,#00,#AA
+    defb 5,8,#AB,#03,#03,#00,#AA,#00,#00,#00,#55,#C0,#D5
+    defb 5,8,#00,#55,#AB,#57,#00,#00,#00,#00,#00,#00,#FF,#00,#AA
+    defb 6,2,#00,#55,#00,#AA
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+
+trump_ko_3_spans  ; 32 bytes wide
+    defb 34,32,27
+    defb 4,4,#00,#55,#FF,#00,#55,#00,#AA
+    defb 4,5,#BB,#13,#EE,#DD,#00,#AA
+    defb 3,11,#00,#55,#33,#13,#E4,#CC,#F5,#00,#00,#00,#55,#FF,#FF,#FF
+    defb 3,12,#00,#55,#33,#13,#E4,#D8,#E4,#00,#AA,#EA,#C0,#30,#64,#00,#AA
+    defb 3,11,#FE,#72,#0C,#E4,#F0,#F0,#FF,#C0,#C0,#30,#75
+    defb 3,14,#FE,#72,#0C,#58,#F0,#F0,#4A,#84,#C0,#C0,#00,#AA,#00,#00,#00,#00,#FF
+    defb 3,14,#FE,#33,#0C,#0C,#F0,#F0,#4A,#0C,#48,#C0,#D5,#00,#00,#00,#55,#D7
+    defb 3,15,#FE,#33,#0C,#0C,#58,#F0,#0E,#0C,#48,#C0,#D5,#00,#00,#00,#55,#D7,#FF
+    defb 3,15,#FE,#33,#A4,#0C,#0C,#F0,#84,#0C,#48,#C0,#D5,#FF,#EA,#FF,#D7
+    defb 3,15,#BB,#33,#B1,#84,#0C,#58,#84,#0C,#48,#C0,#C0,#C0,#84,#FF,#D7
+    defb 3,15,#BB,#33,#B1,#62,#0C,#0C,#AE,#0C,#48,#C0,#84,#0C,#0C,#FF,#FF
+    defb 3,15,#BB,#33,#F0,#F0,#0C,#0C,#AE,#0C,#C0,#C0,#0C,#C0,#C0,#FF,#FF
+    defb 3,15,#BB,#B9,#F0,#F0,#A4,#0C,#5D,#0C,#C0,#C0,#48,#C0,#C0,#84,#FF
+    defb 3,15,#BB,#33,#F0,#F0,#F0,#0C,#5D,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#FF
+    defb 3,15,#BB,#33,#F0,#F0,#F0,#84,#5D,#C0,#C0,#C0,#C0,#C0,#C0,#C0,#FF
+    defb 3,14,#BB,#33,#F0,#F0,#F0,#E0,#EA,#C0,#C0,#C0,#C0,#C0,#D5,#FF
+    defb 3,13,#BB,#33,#F0,#F0,#F0,#E4,#C0,#C0,#C0,#C0,#C0,#FF,#00,#AA
+    defb 3,12,#BB,#33,#F0,#F0,#F0,#CC,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 3,11,#00,#55,#33,#F0,#F0,#F0,#CC,#C0,#C0,#C0,#C0,#D5
+    defb 3,11,#00,#55,#33,#52,#F0,#E4,#CC,#C0,#C0,#C0,#C0,#D5
+    defb 3,11,#00,#55,#13,#76,#F0,#E4,#CC,#EA,#C0,#C0,#C0,#00,#AA
+    defb 3,10,#00,#55,#03,#33,#33,#CC,#DD,#00,#55,#C0,#C0,#D5
+    defb 4,9,#AB,#33,#33,#03,#57,#00,#00,#EA,#C0,#00,#AA
+    defb 4,8,#AB,#13,#03,#03,#00,#AA,#00,#00,#00,#55,#FF
+    defb 4,4,#00,#55,#03,#03,#57
+    defb 5,3,#FF,#03,#00,#AA
+    defb 6,1,#FF
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+
+trump_special_0_spans  ; 16 bytes wide
+    defb 1,64,62
+    defb 5,3,#FF,#FF,#FF
+    defb 4,5,#00,#55,#33,#33,#23,#00,#AA
+    defb 4,5,#BB,#33,#33,#23,#00,#AA
+    defb 3,6,#00,#55,#33,#76,#33,#23,#57
+    defb 3,6,#BB,#76,#B9,#33,#03,#57
+    defb 3,6,#BB,#FC,#33,#03,#03,#57
+    defb 2,8,#00,#55,#33,#B9,#23,#03,#03,#33,#00,#AA
+    defb 2,8,#00,#55,#33,#33,#03,#33,#13,#33,#00,#AA
+    defb 2,7,#00,#55,#33,#33,#33,#5F,#A5,#FF
+    defb 2,7,#00,#55,#33,#33,#33,#5F,#A5,#00,#AA
+    defb 2,7,#00,#55,#03,#F0,#72,#5F,#F0,#5F
+    defb 2,7,#00,#55,#72,#F0,#72,#F0,#F0,#DD
+    defb 2,7,#00,#55,#76,#F0,#F0,#F0,#F0,#DD
+    defb 2,7,#00,#55,#76,#F0,#F0,#F0,#E4,#DD
+    defb 2,7,#00,#55,#72,#F0,#F0,#F0,#CC,#DD
+    defb 2,8,#00,#55,#33,#F0,#F0,#F0,#CC,#CC,#00,#AA
+    defb 2,8,#00,#55,#33,#F0,#B1,#F0,#E4,#E4,#00,#AA
+    defb 2,8,#00,#55,#13,#F0,#F0,#F0,#F0,#E4,#00,#AA
+    defb 3,7,#AB,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 3,7,#AB,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 3,6,#00,#55,#F0,#F0,#F0,#CC,#DD
+    defb 4,5,#FA,#F0,#E4,#CC,#DD
+    defb 4,5,#EE,#CC,#CC,#CC,#00,#AA
+    defb 4,5,#00,#55,#CC,#CC,#8D,#5F
+    defb 5,7,#EE,#E0,#85,#5F,#00,#00,#00,#55,#00,#AA
+    defb 5,7,#FF,#C0,#85,#5F,#00,#00,#FA,#F5
+    defb 4,8,#00,#55,#0C,#EA,#C0,#C5,#FF,#5A,#F5
+    defb 4,8,#00,#55,#0C,#EA,#C0,#C0,#FF,#58,#00,#AA
+    defb 4,8,#AE,#0C,#EA,#C0,#C0,#D5,#4D,#00,#AA
+    defb 4,8,#AE,#48,#AE,#48,#C0,#D5,#C0,#00,#AA
+    defb 4,8,#AE,#48,#AE,#48,#C0,#D5,#C0,#00,#AA
+    defb 4,7,#AE,#5D,#0C,#C0,#C0,#D5,#D5
+    defb 3,8,#00,#55,#0C,#5D,#0C,#C0,#C0,#D5,#D5
+    defb 3,8,#00,#55,#0C,#D5,#EA,#C0,#C0,#D5,#D5
+    defb 3,8,#00,#55,#0C,#0C,#5D,#C0,#C0,#D5,#00,#AA
+    defb 3,7,#00,#55,#0C,#0C,#8F,#4A,#C0,#D5
+    defb 3,8,#00,#55,#0C,#0C,#DA,#C0,#C0,#C8,#00,#AA
+    defb 3,7,#00,#55,#0C,#0C,#DA,#C0,#C0,#DD
+    defb 3,7,#00,#55,#C0,#C0,#D5,#C0,#C0,#DD
+    defb 4,6,#FF,#FF,#EA,#C0,#C0,#DD
+    defb 4,6,#00,#55,#C0,#C0,#C0,#C0,#75
+    defb 5,6,#EA,#C0,#C0,#D5,#64,#00,#AA
+    defb 5,6,#00,#55,#84,#C0,#D5,#64,#00,#AA
+    defb 5,5,#00,#55,#84,#C0,#D5,#FF
+    defb 5,4,#00,#55,#84,#C0,#00,#AA
+    defb 5,4,#00,#55,#84,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 5,4,#00,#55,#0C,#48,#00,#AA
+    defb 5,4,#00,#55,#0C,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C2,#D7,#00,#AA
+    defb 5,4,#00,#55,#FF,#C3,#00,#AA
+    defb 6,3,#FF,#FF,#00,#AA
+    defb 7,1,#FF
+    defb 0,0
+    defb 0,0
+
+trump_special_1_spans  ; 16 bytes wide
+    defb 1,64,62
+    defb 5,2,#FF,#00,#AA
+    defb 4,3,#00,#55,#33,#57
+    defb 3,5,#00,#55,#BB,#33,#03,#00,#AA
+    defb 3,5,#BB,#76,#33,#03,#00,#AA
+    defb 2,6,#00,#55,#33,#B9,#23,#03,#00,#AA
+    defb 2,6,#00,#55,#76,#33,#03,#03,#77
+    defb 2,6,#BB,#B9,#23,#03,#13,#77
+    defb 2,6,#BB,#B9,#13,#33,#A5,#00,#AA
+    defb 1,7,#00,#55,#76,#A9,#13,#5F,#A5,#00,#AA
+    defb 1,7,#00,#55,#33,#33,#27,#5F,#A5,#5F
+    defb 1,7,#00,#55,#33,#33,#33,#0F,#F0,#DD
+    defb 1,7,#00,#55,#33,#72,#33,#F0,#F0,#DD
+    defb 1,7,#00,#55,#23,#F0,#72,#F0,#E4,#DD
+    defb 1,8,#00,#55,#03,#F0,#F0,#F0,#CC,#CC,#00,#AA
+    defb 1,8,#00,#55,#72,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 1,8,#00,#55,#76,#F0,#F0,#F0,#E4,#E4,#00,#AA
+    defb 1,8,#00,#55,#76,#F0,#B1,#72,#F0,#E4,#00,#AA
+    defb 1,8,#00,#55,#33,#F0,#F0,#F0,#F0,#E4,#00,#AA
+    defb 1,8,#00,#55,#33,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 1,8,#00,#55,#13,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 2,10,#AB,#F0,#F0,#F0,#E4,#CC,#00,#AA,#00,#00,#00,#55,#00,#AA
+    defb 2,10,#AB,#52,#F0,#F0,#CC,#DD,#00,#00,#00,#00,#FA,#F5
+    defb 2,10,#00,#55,#52,#F0,#E4,#CC,#DD,#00,#00,#00,#00,#FA,#F5
+    defb 3,9,#EE,#CC,#CC,#CC,#0F,#00,#AA,#00,#55,#5A,#F5
+    defb 3,9,#00,#55,#CC,#CC,#E0,#0F,#00,#AA,#00,#55,#0D,#DF
+    defb 4,8,#EE,#C8,#C0,#85,#DF,#AE,#48,#DF
+    defb 4,8,#00,#55,#5D,#C0,#C0,#D5,#AE,#C0,#00,#AA
+    defb 4,8,#AE,#5D,#C0,#C0,#C0,#EA,#C0,#00,#AA
+    defb 4,7,#AE,#5D,#84,#C0,#C0,#EA,#D5
+    defb 3,8,#00,#55,#0C,#5D,#0C,#C0,#C0,#EA,#D5
+    defb 3,8,#00,#55,#0C,#85,#86,#C0,#C0,#D5,#D5
+    defb 3,8,#AE,#0C,#0D,#0C,#C0,#C0,#D5,#00,#AA
+    defb 3,7,#AE,#0C,#58,#0C,#C0,#C0,#D5
+    defb 3,7,#AE,#0C,#58,#48,#C0,#C0,#D5
+    defb 2,8,#00,#55,#0C,#0C,#4D,#C0,#C0,#C0,#D5
+    defb 2,8,#00,#55,#0C,#0C,#D5,#C0,#C0,#C4,#DD
+    defb 2,8,#00,#55,#0C,#C0,#EA,#C0,#C0,#90,#DD
+    defb 2,8,#00,#55,#C0,#D5,#C0,#C0,#C0,#90,#DD
+    defb 3,7,#FF,#EA,#C0,#C0,#C0,#C0,#DD
+    defb 4,6,#EA,#C0,#C0,#C0,#C0,#75
+    defb 4,7,#00,#55,#C0,#C0,#C0,#D5,#64,#00,#AA
+    defb 4,6,#00,#55,#C0,#C0,#C0,#D5,#75
+    defb 5,5,#EA,#84,#C0,#D5,#00,#AA
+    defb 5,4,#00,#55,#84,#C0,#D5
+    defb 5,4,#00,#55,#84,#C0,#00,#AA
+    defb 5,4,#00,#55,#84,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 5,4,#00,#55,#0C,#48,#00,#AA
+    defb 5,4,#00,#55,#0C,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C2,#D7,#00,#AA
+    defb 5,4,#00,#55,#FF,#C3,#00,#AA
+    defb 6,3,#FF,#FF,#00,#AA
+    defb 7,1,#FF
+    defb 0,0
+    defb 0,0
+
+trump_special_2_spans  ; 16 bytes wide
+    defb 2,64,61
+    defb 9,2,#FF,#FF
+    defb 8,4,#00,#55,#33,#23,#00,#AA
+    defb 8,4,#BB,#33,#33,#57
+    defb 7,6,#00,#55,#33,#FC,#33,#23,#00,#AA
+    defb 7,6,#00,#55,#76,#FC,#B9,#33,#57
+    defb 7,7,#00,#55,#33,#FC,#FC,#B9,#23,#00,#AA
+    defb 7,7,#BB,#33,#33,#33,#33,#23,#57
+    defb 7,7,#FE,#B9,#33,#33,#33,#03,#57
+    defb 7,7,#FE,#F8,#33,#23,#03,#03,#57
+    defb 6,8,#00,#55,#76,#F8,#33,#F0,#A9,#03,#57
+    defb 6,8,#00,#55,#76,#B1,#33,#F0,#0B,#03,#57
+    defb 6,8,#00,#55,#33,#F0,#33,#A5,#5F,#03,#57
+    defb 6,8,#00,#55,#33,#F0,#72,#F0,#5F,#A1,#57
+    defb 7,7,#BB,#F0,#F0,#F0,#F0,#A5,#57
+    defb 7,7,#FA,#F0,#F0,#F0,#F0,#F5,#00,#AA
+    defb 7,6,#FA,#F0,#F0,#F0,#F0,#F5
+    defb 7,7,#FA,#F0,#72,#F0,#F0,#CC,#00,#AA
+    defb 7,7,#FA,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 7,6,#00,#55,#F0,#F0,#F0,#E4,#DD
+    defb 7,6,#00,#55,#F0,#F0,#F0,#E4,#DD
+    defb 7,6,#00,#55,#F0,#F0,#F0,#E4,#DD
+    defb 8,5,#FA,#F0,#F0,#E4,#DD
+    defb 8,5,#EE,#D8,#F0,#CC,#DD
+    defb 7,6,#00,#55,#FF,#CC,#CC,#CC,#00,#AA
+    defb 7,6,#EA,#C0,#C4,#CC,#CC,#00,#AA
+    defb 6,6,#00,#55,#C0,#C0,#FF,#CC,#FF
+    defb 6,8,#00,#55,#84,#5D,#0C,#0C,#FF,#FF,#FF
+    defb 6,9,#EA,#0C,#5D,#0C,#0C,#48,#0C,#48,#FF
+    defb 6,10,#EA,#0C,#D5,#0C,#0C,#0C,#0C,#0C,#C3,#00,#AA
+    defb 6,10,#EA,#0C,#5D,#84,#0C,#0C,#0C,#0C,#F0,#00,#AA
+    defb 6,10,#EA,#0C,#0C,#EA,#C0,#C0,#0C,#C0,#E4,#00,#AA
+    defb 5,10,#00,#55,#C0,#0C,#48,#D5,#FF,#C0,#C0,#C0,#FF
+    defb 5,9,#00,#55,#C0,#0C,#48,#C0,#C0,#FF,#FF,#FF
+    defb 5,7,#00,#55,#C0,#84,#C0,#C0,#C0,#D5
+    defb 5,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#D5
+    defb 5,7,#00,#55,#C0,#C0,#C0,#C0,#C0,#D5
+    defb 6,6,#EA,#C0,#C0,#C0,#C0,#D5
+    defb 6,6,#EA,#C0,#C0,#C0,#C0,#00,#AA
+    defb 6,6,#EA,#C0,#C0,#C0,#C0,#00,#AA
+    defb 6,6,#EA,#48,#C0,#C0,#C0,#00,#AA
+    defb 6,5,#EA,#C0,#C0,#C0,#D5
+    defb 6,5,#EA,#48,#C0,#C0,#75
+    defb 6,5,#EA,#48,#C0,#C0,#75
+    defb 6,5,#00,#55,#48,#C0,#FF,#75
+    defb 6,5,#00,#55,#C0,#C0,#FF,#75
+    defb 6,5,#00,#55,#C0,#D5,#00,#55,#75
+    defb 6,5,#00,#55,#C0,#D5,#BA,#75
+    defb 6,5,#00,#55,#C0,#D5,#00,#55,#00,#AA
+    defb 6,3,#00,#55,#C0,#D5
+    defb 6,3,#00,#55,#C0,#D5
+    defb 6,3,#00,#55,#0C,#D5
+    defb 6,3,#EA,#0C,#D5
+    defb 6,3,#EA,#84,#D5
+    defb 6,3,#EA,#C0,#D5
+    defb 6,3,#EA,#C0,#D5
+    defb 5,4,#00,#55,#C0,#C0,#D5
+    defb 6,3,#EA,#C0,#D5
+    defb 6,3,#EB,#C2,#FF
+    defb 6,4,#00,#55,#EB,#D7,#00,#AA
+    defb 7,2,#FF,#FF
+    defb 8,1,#00,#AA
+    defb 0,0
+    defb 0,0
+    defb 0,0
+
+trump_special_3_spans  ; 16 bytes wide
+    defb 1,64,62
+    defb 7,3,#00,#55,#FF,#00,#AA
+    defb 7,4,#BB,#33,#57,#00,#AA
+    defb 6,5,#00,#55,#33,#33,#33,#57
+    defb 6,6,#BB,#33,#33,#33,#03,#00,#AA
+    defb 6,6,#BB,#FC,#B9,#33,#23,#57
+    defb 6,6,#BB,#FC,#FC,#B9,#33,#57
+    defb 6,7,#BB,#76,#B9,#33,#33,#03,#00,#AA
+    defb 5,8,#00,#55,#33,#33,#33,#33,#03,#03,#00,#AA
+    defb 5,8,#00,#55,#FC,#33,#23,#03,#03,#03,#00,#AA
+    defb 5,8,#00,#55,#FC,#B1,#33,#A9,#03,#03,#00,#AA
+    defb 5,8,#00,#55,#FC,#B1,#72,#A1,#03,#03,#00,#AA
+    defb 5,8,#00,#55,#72,#B1,#72,#0F,#FA,#03,#00,#AA
+    defb 5,7,#00,#55,#72,#F0,#F0,#5F,#FA,#5F
+    defb 5,7,#00,#55,#72,#F0,#F0,#F0,#F0,#FF
+    defb 5,7,#00,#55,#72,#F0,#F0,#F0,#F0,#00,#AA
+    defb 5,7,#00,#55,#52,#F0,#F0,#F0,#F0,#DD
+    defb 6,6,#FA,#B1,#F0,#F0,#E4,#DD
+    defb 6,6,#FA,#F0,#72,#F0,#CC,#DD
+    defb 6,6,#FA,#F0,#F0,#F0,#CC,#DD
+    defb 6,6,#FA,#F0,#F0,#F0,#CC,#DD
+    defb 6,6,#00,#55,#F0,#F0,#F0,#E4,#DD
+    defb 6,6,#00,#55,#F0,#F0,#F0,#E4,#DD
+    defb 6,6,#00,#55,#CC,#F0,#E4,#CC,#00,#AA
+    defb 7,5,#EE,#CC,#CC,#CC,#00,#AA
+    defb 6,5,#00,#55,#EA,#E4,#CC,#DD
+    defb 6,5,#EA,#D5,#C0,#D5,#00,#AA
+    defb 6,5,#EA,#AE,#EA,#85,#DF
+    defb 5,6,#00,#55,#D5,#0C,#5D,#85,#DF
+    defb 5,6,#00,#55,#D5,#0C,#0C,#AF,#DF
+    defb 5,8,#00,#55,#D5,#0C,#0C,#EA,#DF,#FF,#FF
+    defb 5,9,#EA,#0C,#AE,#0C,#5D,#AE,#0C,#C3,#00,#AA
+    defb 5,9,#EA,#0C,#5D,#0C,#0C,#0C,#0C,#F0,#00,#AA
+    defb 5,9,#EA,#0C,#0C,#AE,#0C,#0C,#0C,#F0,#00,#AA
+    defb 5,8,#EA,#84,#0C,#EA,#0C,#0C,#48,#DD
+    defb 5,8,#EA,#C0,#48,#D5,#84,#48,#C0,#00,#AA
+    defb 5,7,#EA,#C0,#C0,#C0,#EA,#FF,#FF
+    defb 5,6,#EA,#C0,#C0,#C0,#D5,#D5
+    defb 5,6,#EA,#C0,#C0,#C0,#C0,#D5
+    defb 5,6,#00,#55,#C0,#C0,#C0,#C0,#D5
+    defb 5,6,#00,#55,#C0,#C0,#C0,#C0,#D5
+    defb 5,6,#00,#55,#C0,#C0,#C0,#C0,#00,#AA
+    defb 5,6,#00,#55,#C0,#C0,#C0,#90,#00,#AA
+    defb 5,6,#00,#55,#84,#C0,#C0,#90,#00,#AA
+    defb 6,5,#AE,#C0,#C0,#BA,#00,#AA
+    defb 6,5,#AE,#C0,#D5,#BA,#00,#AA
+    defb 6,5,#EA,#C0,#D5,#BA,#00,#AA
+    defb 6,5,#EA,#C0,#D5,#BA,#00,#AA
+    defb 6,4,#EA,#C0,#00,#AA,#00,#55
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#AE,#48,#00,#AA
+    defb 6,3,#AE,#48,#00,#AA
+    defb 5,4,#00,#55,#C0,#48,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C3,#C1,#00,#AA
+    defb 6,3,#FF,#EB,#FF
+    defb 6,3,#00,#55,#FF,#FF
+    defb 7,2,#00,#55,#00,#AA
+    defb 0,0
+    defb 0,0
+
+trump_victory_0_spans  ; 16 bytes wide
+    defb 1,64,62
+    defb 5,4,#00,#55,#FF,#FF,#FF
+    defb 5,5,#BB,#33,#33,#23,#00,#AA
+    defb 4,6,#00,#55,#33,#33,#33,#23,#57
+    defb 4,6,#BB,#76,#76,#33,#23,#57
+    defb 4,6,#BB,#FC,#B9,#33,#03,#57
+    defb 3,7,#00,#55,#33,#FC,#33,#03,#03,#57
+    defb 3,7,#00,#55,#33,#B9,#03,#03,#03,#57
+    defb 3,8,#00,#55,#33,#33,#33,#33,#13,#33,#00,#AA
+    defb 3,7,#00,#55,#33,#33,#72,#5F,#B1,#FF
+    defb 3,7,#00,#55,#03,#B1,#72,#5F,#A5,#00,#AA
+    defb 3,7,#00,#55,#F8,#F0,#72,#5F,#F0,#00,#AA
+    defb 3,7,#00,#55,#F8,#F0,#F0,#F0,#F0,#DD
+    defb 3,7,#00,#55,#F8,#F0,#F0,#F0,#F0,#DD
+    defb 3,7,#00,#55,#72,#F0,#F0,#F0,#E4,#DD
+    defb 3,7,#00,#55,#72,#F0,#F0,#F0,#CC,#DD
+    defb 3,7,#00,#55,#72,#F0,#B1,#F0,#CC,#DD
+    defb 3,8,#00,#55,#52,#F0,#33,#F0,#CC,#CC,#00,#AA
+    defb 4,7,#FA,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 4,7,#FA,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 4,6,#00,#55,#F0,#F0,#F0,#E4,#DD
+    defb 4,6,#00,#55,#F0,#F0,#F0,#CC,#DD
+    defb 5,5,#FA,#F0,#CC,#CC,#DD
+    defb 5,6,#EE,#CC,#CC,#CC,#00,#AA,#00,#55
+    defb 5,7,#00,#55,#CC,#CC,#DD,#00,#00,#FA,#00,#AA
+    defb 6,6,#FA,#F0,#0F,#FF,#F0,#00,#AA
+    defb 5,7,#00,#55,#EA,#FA,#0F,#FF,#F0,#00,#AA
+    defb 5,7,#AE,#5D,#4D,#0F,#DD,#0F,#00,#AA
+    defb 5,7,#AE,#5D,#0C,#AF,#DF,#48,#00,#AA
+    defb 5,7,#AE,#0C,#48,#EA,#D5,#48,#00,#AA
+    defb 5,7,#AE,#0C,#48,#EA,#D5,#C0,#00,#AA
+    defb 5,7,#AE,#0C,#5D,#C0,#D5,#C0,#00,#AA
+    defb 5,7,#AE,#0C,#5D,#C0,#C0,#EA,#00,#AA
+    defb 4,8,#00,#55,#D5,#0C,#D5,#C0,#C0,#EA,#00,#AA
+    defb 4,8,#00,#55,#D5,#0C,#D5,#C0,#C0,#EA,#00,#AA
+    defb 4,8,#00,#55,#D5,#0C,#EA,#C0,#C0,#EA,#00,#AA
+    defb 4,7,#00,#55,#D5,#48,#EA,#C0,#C0,#FF
+    defb 4,7,#00,#55,#C0,#EA,#EA,#C0,#C0,#00,#AA
+    defb 4,7,#00,#55,#C0,#D5,#C0,#C0,#C0,#00,#AA
+    defb 4,6,#00,#55,#C0,#C0,#C0,#C0,#DD
+    defb 5,5,#EA,#C0,#C0,#C0,#DD
+    defb 5,5,#EA,#C0,#C0,#C0,#75
+    defb 5,5,#EA,#C0,#C0,#C0,#75
+    defb 5,6,#00,#55,#84,#C0,#D5,#64,#00,#AA
+    defb 5,6,#00,#55,#84,#C0,#D5,#64,#00,#AA
+    defb 5,6,#00,#55,#84,#C0,#FF,#64,#00,#AA
+    defb 5,5,#00,#55,#84,#C0,#00,#AA,#FF
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 5,4,#00,#55,#0C,#48,#00,#AA
+    defb 5,4,#00,#55,#0C,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#00,#55,#C2,#D7,#00,#AA
+    defb 5,4,#00,#55,#FF,#C3,#00,#AA
+    defb 6,3,#FF,#FF,#00,#AA
+    defb 7,1,#FF
+    defb 0,0
+    defb 0,0
+
+trump_victory_1_spans  ; 16 bytes wide
+    defb 0,64,63
+    defb 6,2,#FF,#00,#AA
+    defb 5,3,#00,#55,#33,#77
+    defb 5,4,#BB,#33,#23,#00,#AA
+    defb 4,5,#00,#55,#76,#33,#03,#00,#AA
+    defb 4,5,#BB,#B9,#33,#03,#57
+    defb 3,6,#00,#55,#33,#33,#23,#03,#57
+    defb 3,6,#BB,#B9,#33,#03,#03,#77
+    defb 3,6,#BB,#B9,#03,#33,#13,#77
+    defb 2,7,#00,#55,#33,#B9,#33,#5F,#A5,#00,#AA
+    defb 2,7,#00,#55,#33,#33,#72,#5F,#A5,#00,#AA
+    defb 2,7,#00,#55,#33,#33,#33,#5F,#F0,#5F
+    defb 2,7,#00,#55,#33,#72,#33,#F0,#F0,#DD
+    defb 2,7,#00,#55,#03,#F0,#33,#F0,#E4,#DD
+    defb 2,7,#00,#55,#72,#F0,#F0,#F0,#CC,#DD
+    defb 2,8,#00,#55,#76,#F0,#F0,#F0,#CC,#CC,#00,#AA
+    defb 2,8,#00,#55,#76,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 2,8,#00,#55,#76,#F0,#B1,#72,#F0,#E4,#00,#AA
+    defb 2,8,#00,#55,#33,#F0,#B1,#F0,#F0,#E4,#00,#AA
+    defb 2,8,#00,#55,#33,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 2,8,#00,#55,#13,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 3,7,#AB,#F0,#F0,#F0,#E4,#CC,#00,#AA
+    defb 3,6,#AB,#F0,#F0,#F0,#CC,#DD
+    defb 3,6,#00,#55,#52,#F0,#E4,#CC,#DD
+    defb 4,6,#EE,#F0,#CC,#CC,#F0,#00,#AA
+    defb 4,6,#00,#55,#8C,#4C,#E4,#0F,#D5
+    defb 5,5,#AE,#5D,#85,#4F,#D5
+    defb 5,6,#AE,#5D,#C0,#4F,#C0,#00,#AA
+    defb 4,7,#00,#55,#0C,#5D,#C0,#4F,#C0,#D5
+    defb 4,7,#00,#55,#0C,#5D,#C0,#C0,#EA,#D5
+    defb 4,8,#00,#55,#0C,#48,#EA,#C0,#D5,#C0,#00,#AA
+    defb 4,8,#00,#55,#84,#48,#EA,#C0,#D5,#C0,#00,#AA
+    defb 4,8,#EA,#AE,#48,#EA,#C0,#D5,#C0,#00,#AA
+    defb 4,8,#EA,#D5,#D5,#48,#C0,#D5,#C0,#00,#AA
+    defb 4,7,#EA,#84,#AE,#C0,#C0,#C0,#FF
+    defb 4,7,#EA,#84,#0C,#C0,#C0,#C0,#00,#AA
+    defb 4,7,#EA,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 4,7,#EA,#C0,#C0,#C0,#C0,#C0,#00,#AA
+    defb 4,6,#EA,#C0,#C0,#C0,#C0,#D5
+    defb 4,6,#00,#55,#C0,#C0,#C0,#C0,#DD
+    defb 4,6,#00,#55,#C0,#C0,#C0,#C0,#DD
+    defb 4,6,#00,#55,#C0,#C0,#C0,#C0,#DD
+    defb 5,5,#EA,#C0,#C0,#C0,#75
+    defb 5,6,#EA,#C0,#C0,#C0,#64,#00,#AA
+    defb 5,6,#00,#55,#84,#C0,#D5,#64,#00,#AA
+    defb 5,6,#00,#55,#84,#C0,#D5,#64,#00,#AA
+    defb 5,5,#00,#55,#84,#C0,#00,#AA,#FF
+    defb 5,4,#00,#55,#84,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 5,4,#00,#55,#0C,#48,#00,#AA
+    defb 5,4,#00,#55,#0C,#48,#00,#AA
+    defb 5,4,#00,#55,#48,#48,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#D5,#C0,#00,#AA
+    defb 5,4,#00,#55,#C3,#C1,#FF
+    defb 5,4,#00,#55,#FF,#EB,#FF
+    defb 6,3,#FF,#FF,#FF
+    defb 7,1,#00,#55
+    defb 0,0
+
+trump_victory_2_spans  ; 16 bytes wide
+    defb 0,64,63
+    defb 6,1,#FF
+    defb 5,3,#00,#55,#33,#00,#AA
+    defb 4,4,#00,#55,#BB,#33,#57
+    defb 4,5,#BB,#B9,#33,#03,#00,#AA
+    defb 3,6,#00,#55,#33,#B9,#23,#03,#00,#AA
+    defb 3,6,#BB,#76,#33,#03,#03,#00,#AA
+    defb 3,6,#BB,#33,#23,#03,#03,#77
+    defb 2,7,#00,#55,#76,#33,#13,#23,#33,#77
+    defb 2,7,#00,#55,#76,#23,#33,#FA,#5F,#5F
+    defb 2,7,#BB,#33,#33,#27,#AF,#5F,#5F
+    defb 2,7,#BB,#33,#33,#27,#FA,#A5,#00,#AA
+    defb 2,7,#BB,#33,#B1,#72,#F0,#E4,#DD
+    defb 2,7,#AB,#72,#B1,#72,#F0,#E4,#DD
+    defb 2,7,#AB,#52,#F0,#F0,#F0,#CC,#DD
+    defb 2,7,#BB,#F8,#F0,#F0,#F0,#CC,#DD
+    defb 2,7,#BB,#F8,#F0,#F0,#F0,#CC,#DD
+    defb 2,7,#BB,#F8,#F0,#B1,#F0,#F0,#DD
+    defb 2,8,#BB,#72,#F0,#72,#F0,#F0,#CC,#00,#AA
+    defb 2,8,#BB,#72,#F0,#F0,#F0,#F0,#CC,#00,#AA
+    defb 2,9,#00,#55,#72,#F0,#F0,#F0,#E4,#DD,#00,#00,#FF
+    defb 2,10,#00,#55,#52,#F0,#F0,#F0,#E4,#DD,#00,#55,#F0,#00,#AA
+    defb 3,9,#AB,#F0,#F0,#F0,#CC,#DD,#00,#55,#F0,#00,#AA
+    defb 3,9,#AB,#F0,#F0,#E4,#CC,#00,#AA,#AF,#E4,#00,#AA
+    defb 3,9,#00,#55,#D8,#A4,#4C,#CC,#00,#AA,#AE,#0F,#00,#AA
+    defb 4,8,#EE,#8C,#48,#8D,#5F,#AE,#C0,#00,#AA
+    defb 4,8,#00,#55,#8C,#5D,#85,#5F,#AE,#C0,#00,#AA
+    defb 4,7,#00,#55,#0C,#D5,#85,#5F,#EA,#D5
+    defb 4,7,#00,#55,#0C,#D5,#C0,#C5,#EA,#D5
+    defb 4,7,#00,#55,#0C,#D5,#C0,#C0,#EA,#D5
+    defb 4,7,#00,#55,#0C,#EA,#C0,#C0,#EA,#D5
+    defb 4,7,#00,#55,#48,#AE,#48,#C0,#D5,#D5
+    defb 4,7,#AE,#48,#AE,#48,#C0,#D5,#D5
+    defb 4,7,#00,#55,#48,#AE,#C0,#C0,#D5,#D5
+    defb 4,7,#00,#55,#D5,#0C,#C0,#C0,#D5,#00,#AA
+    defb 4,6,#EA,#AE,#48,#C0,#C0,#D5
+    defb 4,6,#EA,#C0,#C0,#C0,#C0,#D5
+    defb 4,6,#EA,#C0,#C0,#C0,#C0,#D5
+    defb 4,6,#EA,#C0,#C0,#C0,#C0,#DD
+    defb 4,6,#EA,#C0,#C0,#C0,#C0,#DD
+    defb 4,6,#00,#55,#C0,#C0,#C0,#C0,#DD
+    defb 4,6,#00,#55,#C0,#C0,#C0,#C0,#DD
+    defb 4,6,#00,#55,#C0,#C0,#C0,#C0,#75
+    defb 5,6,#EA,#C0,#C0,#D5,#64,#00,#AA
+    defb 5,6,#00,#55,#84,#C0,#D5,#64,#00,#AA
+    defb 5,5,#00,#55,#84,#C0,#D5,#FF
+    defb 5,4,#00,#55,#84,#C0,#00,#AA
+    defb 5,4,#00,#55,#84,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 6,3,#EA,#C0,#00,#AA
+    defb 5,4,#00,#55,#0C,#48,#00,#AA
+    defb 5,4,#00,#55,#0C,#48,#00,#AA
+    defb 5,4,#00,#55,#48,#48,#00,#AA
+    defb 5,4,#00,#55,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#C0,#C0,#00,#AA
+    defb 5,4,#EA,#D5,#C0,#00,#AA
+    defb 5,4,#00,#55,#C3,#C1,#FF
+    defb 5,4,#00,#55,#FF,#EB,#FF
+    defb 6,3,#FF,#FF,#FF
+    defb 7,1,#00,#55
+    defb 0,0
 
     ASSERT $<=#8000

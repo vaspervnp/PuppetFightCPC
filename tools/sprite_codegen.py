@@ -176,17 +176,50 @@ def compiled_size(rows):
     return size
 
 
+def runtime_size(rows):
+    """Bytes src/jit.asm writes for these rows (either facing): per line
+    pop hl : add hl,de : ld bc,col : add hl,bc, then one store per byte and
+    an inc hl (dec hl facing left) between, over the padded lines, with a
+    yield every CHUNK lines."""
+    _top, lines = spans(rows)
+    lines = lines + [(0, [])] * (-len(lines) % CHUNK)
+    size = 5                                            # ld hl,0 : jp (iy)
+    for k, (s, d) in enumerate(lines):
+        if k and k % CHUNK == 0:
+            size += 9
+        size += 6
+        for b in d:
+            size += 0 if b == 0 else 2 if mask_of(b) == 0 else 6
+        size += max(len(d) - 1, 0)
+    return size
+
+
+def escaped(d):
+    """A line's bytes as the runtime compiler reads them: an opaque byte as
+    itself, any other byte (a hole, or one with a pen 0 pixel) as 0 then the
+    byte, so the common case is told apart by a single test for zero."""
+    out = []
+    for b in d:
+        out += [b] if b and not mask_of(b) else [0, b]
+    return out
+
+
 def padded_spans(label, width, rows):
-    """emit_spans, with empty lines added to a multiple of CHUNK lines so a
-    drawer working in chunks never runs past the end of the stream."""
+    """The span stream src/jit.asm compiles: top, lines (padded), lines
+    (drawn), then per line s, n (bytes on the line) and the escaped bytes,
+    with empty lines added to a multiple of CHUNK lines so the code always
+    ends on a whole chunk."""
     top, lines = spans(rows)
     pad = -len(lines) % CHUNK
     out = ["%s_spans  ; %d bytes wide" % (label, width),
-           "    defb %d,%d" % (top, len(lines) + pad)]
+           "    defb %d,%d,%d" % (top, len(lines) + pad, len(lines))]
+    size = 3
     for s, d in lines:
-        out.append("    defb %d,%d%s" % (s, len(d), ("," + hexs(d)) if d else ""))
+        e = escaped(d)
+        out.append("    defb %d,%d%s" % (s, len(d), ("," + hexs(e)) if e else ""))
+        size += 2 + len(e)
     out += ["    defb 0,0"] * pad
-    return out, 2 + sum(2 + len(d) for _, d in lines) + 2 * pad
+    return out, size + 2 * pad
 
 
 BANK_SIZE = 16384
@@ -195,87 +228,91 @@ REC_SIZE = 12
 
 def cmd_character(args):
     """Both bank images of a character: a directory at #4000 of the first
-    bank, then every frame's span stream and (s, n) table, then compiled
-    draws where asked for. The engine finds everything through the
-    directory, so nothing outside the banks needs this file's labels.
+    bank, every frame's span stream, and compiled-frame cache slots for the
+    runtime compiler (src/jit.asm) at the top of the second bank. The engine
+    finds everything through the directory, so nothing outside the banks
+    needs this file's labels.
 
-        #4000  defb "P","F",1,moves
+        #4000  defb "P","F",2,moves
+               defb bank 1 slots : defw their first address (--slot apart)
                per move: defb frames : defw frame records
         frame record (REC_SIZE bytes):
                defb bank (0/1), width in bytes, x offset in bytes (signed)
-               defw spans, (s, n) table
-               defb compiled bank : defw draw facing right, draw facing left
-                                     (0 = draw it with the generic drawer)
+               defw spans, then REC_SIZE - 5 unused bytes
+
+    A bank slot can only take a frame whose spans are in bank 1 (the
+    compiler reads and writes with that one bank paged in), so the moves
+    listed first in the character's table, the ones a fight shows most, go
+    to bank 1, and as many slots as still fit go above them.
     """
     with open(os.path.join(REPO, "art", "sprites", args.char + ".json")) as fh:
         tbl = json.load(fh)
     c = args.char
-    right = set(args.compiled_right or [])
-    left = set(args.compiled_left or [])
-
-    blocks = []                 # (label, size, lines) to place
+    blocks = []                 # (label, size, lines) in table order
     recs = {}                   # frame file -> fields
+    biggest = 0                 # largest compiled frame, either facing
     for m in tbl["moves"]:
         for fr in m["frames"]:
             f = fr["file"]
             width, rows = load_frame(c, f)
             label = "%s_%s" % (c, f)
             sp, sp_size = padded_spans(label, width, rows)
-            sn = emit_sn(label, rows)
-            sn_size = 2 + 2 * len(spans(rows)[1])
-            blocks.append((label, sp_size + sn_size, sp + sn))
-            recs[f] = dict(label=label, w=width, off=fr["offset_x"] // 2, rows=rows)
-    code = []
-    for f in tbl_frames(tbl):
-        r = recs[f]
-        if f in right:
-            code.append((r["label"] + "_draw", compiled_size(r["rows"]),
-                         emit_compiled(r["label"], r["rows"]), f, "r"))
-        if f in left:
-            mr = mirror(r["rows"])
-            code.append((r["label"] + "_drawl", compiled_size(mr),
-                         emit_compiled(r["label"], mr, "drawl"), f, "l"))
+            blocks.append((label, sp_size, sp))
+            recs[f] = dict(label=label, w=width, off=fr["offset_x"] // 2)
+            need = runtime_size(rows)
+            if need > args.slot:
+                sys.exit("%s: %s compiles to %d bytes, more than a %d-byte slot"
+                         % (c, f, need, args.slot))
+            biggest = max(biggest, need)
 
     nframes = sum(len(m["frames"]) for m in tbl["moves"])
-    used = [4 + 3 * len(tbl["moves"]) + REC_SIZE * nframes, 0]
-    body = [[], []]
-    where = {}
-    for label, size, lines in blocks + [(l, s, ls) for l, s, ls, _f, _d in code]:
-        bank = 0 if used[0] + size <= BANK_SIZE else 1
-        if used[bank] + size > BANK_SIZE:
-            sys.exit("%s: %s does not fit in two banks" % (c, label))
-        used[bank] += size
-        body[bank] += [""] + lines
-        where[label] = bank
+    dir_size = 7 + 3 * len(tbl["moves"]) + REC_SIZE * nframes
+    for nslots in range(BANK_SIZE // args.slot, -1, -1):
+        room = [BANK_SIZE - dir_size, BANK_SIZE - nslots * args.slot]
+        used = [dir_size, 0]
+        body = [[], []]
+        where = {}
+        ok = True
+        for label, size, lines in blocks:      # hot moves first, to bank 1
+            bank = 1 if used[1] + size <= room[1] + 0 else 0
+            if bank == 0 and used[0] + size > BANK_SIZE:
+                ok = False
+                break
+            used[bank] += size
+            body[bank] += [""] + lines
+            where[label] = bank
+        if ok:
+            break
+    else:
+        sys.exit("%s: the frames do not fit in two banks" % c)
+    slot_base = 0x8000 - nslots * args.slot
 
     out0 = [";; generated by tools/sprite_codegen.py character - do not edit",
             ";; %s, bank 0 of 2: directory, frames" % c,
             "    ORG #4000",
             "%s_dir" % c,
-            '    defb "P","F",1,%d' % len(tbl["moves"])]
+            '    defb "P","F",2,%d' % len(tbl["moves"]),
+            "    defb %d : defw #%04X        ; cache slots in bank 1" % (nslots, slot_base)]
     for m in tbl["moves"]:
         out0.append("    defb %d : defw %s_m_%s" % (len(m["frames"]), c, m["name"]))
     for m in tbl["moves"]:
         out0.append("%s_m_%s" % (c, m["name"]))
         for fr in m["frames"]:
             r = recs[fr["file"]]
-            lab = r["label"]
-            cr = lab + "_draw" if fr["file"] in right else "0"
-            cl = lab + "_drawl" if fr["file"] in left else "0"
-            cb = where.get(lab + "_draw", where.get(lab + "_drawl", 0))
-            if fr["file"] in right and fr["file"] in left and \
-                    where[lab + "_draw"] != where[lab + "_drawl"]:
-                sys.exit("%s: both facings of %s must share a bank" % (c, lab))
-            out0.append("    defb %d,%d,%d : defw %s_spans,%s_sn : defb %d : defw %s,%s"
-                        % (where[lab], r["w"], r["off"], lab, lab, cb, cr, cl))
+            out0.append("    defb %d,%d,%d : defw %s_spans : defs %d"
+                        % (where[r["label"]], r["w"], r["off"], r["label"], REC_SIZE - 5))
     out0 += body[0] + ["", "    ASSERT $<=#8000"]
     out1 = [";; generated by tools/sprite_codegen.py character - do not edit",
-            ";; %s, bank 1 of 2" % c, "    ORG #4000"] + body[1] + ["", "    ASSERT $<=#8000"]
+            ";; %s, bank 1 of 2: frames, then %d cache slots" % (c, nslots),
+            "    ORG #4000"] + body[1] + ["", "    ASSERT $<=#%04X" % slot_base]
     base = os.path.join(REPO, "src", "gen", c)
     write(base + "_bank0.asm", out0)
     write(base + "_bank1.asm", out1)
-    print("%s: bank 0 %d bytes, bank 1 %d bytes, %d free" % (
-        c, used[0], used[1], 2 * BANK_SIZE - used[0] - used[1]))
+    hot = sorted({fr["file"].rsplit("_", 1)[0] for m in tbl["moves"] for fr in m["frames"]
+                  if where["%s_%s" % (c, fr["file"])] == 1},
+                 key=lambda n: [m["name"] for m in tbl["moves"]].index(n))
+    print("%s: bank 0 %d bytes, bank 1 %d bytes + %d cache slots; bank 1 moves: %s; "
+          "largest compiled frame %d bytes" % (c, used[0], used[1], nslots, " ".join(hot), biggest))
 
 
 def tbl_frames(tbl):
@@ -332,8 +369,8 @@ def main():
     sub.add_parser("tables")
     ch = sub.add_parser("character")
     ch.add_argument("char")
-    ch.add_argument("--compiled-right", nargs="+")
-    ch.add_argument("--compiled-left", nargs="+")
+    ch.add_argument("--slot", type=int, required=True,
+                    help="cache slot size: every frame must compile into it")
     fr = sub.add_parser("frames")
     fr.add_argument("out")
     fr.add_argument("label")
