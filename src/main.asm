@@ -40,10 +40,17 @@ start
     call build_line_tab
     call draw_stage
     call copy_mirror
+    call clear_lists
     call setup_crtc
     ld hl,palette_game
     call set_palette
     call irq_init
+    ld ix,fighter_a             ; both start standing
+    ld a,MV_IDLE
+    call start_move
+    ld ix,fighter_b
+    ld a,MV_IDLE
+    call start_move
     call logic                  ; positions and frames for the first picture
     call prepare
 
@@ -61,19 +68,71 @@ ml_slack_in
     call rebuild                ; jobs set up by prepare, last picture
     ld a,(together)
     or a
-    jr nz,ml_logic
+    jr nz,ml_together
     call rebuild_clear          ; apart: Putin gets the next window
     call setup_b
+    ld ix,fighter_a             ; A's next restore list, while the beam
+    call ml_prebuild            ; goes round to the tick
     call wait_tick
     call rebuild
+    ld ix,fighter_b
+    call ml_prebuild
+    call ml_logic
+    call ml_prepare
+    jr main_loop
+ml_together
+    ld ix,fighter_a
+    call ml_prebuild
+    ld ix,fighter_b
+    call ml_prebuild
+    call ml_logic
+    call ml_prepare
+    jr main_loop
+
 ml_logic
     ld a,PH_LOGIC
     ld (bench_phase),a
     call logic
+    xor a
+    ld (bench_phase),a
+    ret
+
+ml_prepare
+    ld a,PH_PREPARE
+    ld (bench_phase),a
     call prepare
     xor a
     ld (bench_phase),a
-    jr main_loop
+    ret
+
+ml_prebuild
+    ld a,PH_PREBUILD
+    ld (bench_phase),a
+    call prebuild
+    xor a
+    ld (bench_phase),a
+    ret
+
+;; clear_lists - zero the four restore lists: build_restore never writes
+;; the high bytes of their counts. Destroys AF, BC, DE, HL.
+clear_lists
+    ld a,RESTORE_LIST_A>>8
+    call cl_one
+    ld a,(RESTORE_LIST_A>>8) XOR RESTORE_FLIP
+    call cl_one
+    ld a,RESTORE_LIST_B>>8
+    call cl_one
+    ld a,(RESTORE_LIST_B>>8) XOR RESTORE_FLIP
+cl_one
+    ld h,a
+    ld l,RESTORE_LIST_A AND #FF ; both lists start at #xxE0
+    ld d,h
+    ld e,l
+    inc e
+    ld (hl),0
+    ld bc,255
+    ldir
+    ret
 
 ;; wait_render - 25 pictures a second: return on a rebuild tick at least two
 ;; ticks after the last picture started. Destroys AF, HL.
@@ -115,20 +174,57 @@ F_OFACE         EQU 20
 F_OBANK         EQU 21
 F_OSPANS        EQU 23
 F_OSN           EQU 25
-F_SIZE          EQU 27
+F_TIMER         EQU 27          ; state machine (fighter.asm): pictures into
+F_PCTL          EQU 28          ; the frame (or the jump), last picture's
+F_JX            EQU 29          ; controls, step across in a jump, this
+F_CTL           EQU 30          ; picture's controls, frames in the move
+F_NFR           EQU 31
+F_RLIST         EQU 32          ; restore list for what is on the screen,
+F_RFIRST        EQU 34          ; built by prebuild: buffer, first scanline,
+F_RLINES        EQU 35          ; lines
+F_SIZE          EQU 36
 
 MOVE_IDLE       EQU 0
 DIR_MOVES       EQU #4004       ; move table in a character's bank 0
 REC_SIZE        EQU 12
 
 ;; ---------------------------------------------------------------------------
-;; logic - next picture's frames and positions. Idle advances every second
-;; picture; both fighters sway a few bytes to and fro so the restore has
-;; somewhere to put the ground back.
+;; logic - next picture's frames and positions.
+;;
+;; The game: read both players' controls, let each fighter think
+;; (fighter.asm), keep them apart, and fetch the frames they now show.
+;; With -DDEMO=1 the fighters follow a script instead (logic_demo), which
+;; is what the bench scenarios measure.
 ;; ---------------------------------------------------------------------------
 logic
     ld hl,render_count
     inc (hl)
+    IF DEMO
+    jp logic_demo
+    ELSE
+    call read_controls
+    ld a,(p1_ctl)
+    ld (fighter_a+F_CTL),a
+    ld a,(p2_ctl)
+    ld (fighter_b+F_CTL),a
+    ld ix,fighter_a
+    ld iy,fighter_b
+    call think
+    ld ix,fighter_b
+    ld iy,fighter_a
+    call think
+    call separate
+    ld ix,fighter_a
+    call load_frame
+    ld ix,fighter_b
+    jp load_frame
+    ENDIF
+
+;; logic_demo - idle advances every second picture; both fighters sway a
+;; few bytes to and fro so the restore has somewhere to put the ground back;
+;; with JUMP=1 they jump in turns, then together.
+logic_demo
+    ld hl,render_count
     ld a,(hl)
     rra
     and 3
@@ -327,6 +423,8 @@ gs_left
     include "video.asm"
     include "sprite.asm"
     include "rebuild.asm"
+    include "input.asm"
+    include "fighter.asm"
 
 ;; ---------------------------------------------------------------------------
 ;; Tables and sprite data
@@ -348,10 +446,14 @@ dr_entries                      ; draw_r chain entry for n drawn bytes
 ;; facing left. Everything else in a record is filled in at run time.
 fighter_a
     defb #C4,TRUMP_X0,FIGHTER_Y,0
-    defs F_SIZE-4
+    defs F_RLIST-4
+    defw RESTORE_LIST_A
+    defs F_SIZE-F_RLIST-2
 fighter_b
     defb #C6,PUTIN_X0,FIGHTER_Y,1
-    defs F_SIZE-4
+    defs F_RLIST-4
+    defw RESTORE_LIST_B
+    defs F_SIZE-F_RLIST-2
 
 ;; ---------------------------------------------------------------------------
 ;; Workspace (carried in the file for the spike; costs ~600 bytes)
@@ -366,17 +468,20 @@ rebuild_sp      defw 0
 band_end        defb 0
 rr_count        defb 0
 br_list         defw 0
-br_x            defb 0          ; build_restore: x, then facing
-br_dir          defb 0
 br_first        defb 0
+br_left         defb 0
+br_sp           defw 0
+br_tsp          defw 0
 br_lines        defb 0
 fr_h            defb 0
 fr_x            defb 0
 fr_w            defb 0
 fr_b            defb 0
 together        defb 0
+key_rows        defs 10
+p1_ctl          defb 0
+p2_ctl          defb 0
 sf_draw         defw 0
-sf_list         defw 0
 sf_x            defb 0
 br_w            defb 0
 gen_count       defb 0

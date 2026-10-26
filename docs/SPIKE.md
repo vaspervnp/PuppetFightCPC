@@ -214,13 +214,57 @@ Bench (every scanline pass judged, sprites read back from the banks):
 0 lines caught, 0 late, 0 wrong bytes in all three scenarios, and
 `SLACK=15` still clean in the both-jumping case.
 
+## Milestone 2 step 2: two players and the fighter state machine
+
+`DEMO=0`, the default now, is the game. `DEMO=1` keeps the scripted sway
+and jumps that `bench-all` measures.
+
+- **Input** (`src/input.asm`). Scans the keyboard matrix through the PSG
+  each picture (~0.1 ms) and maps it to a control byte per player:
+  joystick 0, or the cursor keys with Space and Copy, for player 1;
+  joystick 1, or W A S D with Z and X, for player 2.
+- **State machine** (`src/fighter.asm`). The move is the state. Idle, walk
+  and crouch are free: the controls choose the next move. Attacks play once
+  and go back to idle (a sweep stays crouched while ↓ is held). A jump is a
+  16-picture arc that can carry the fighter across, even over the opponent.
+  Free fighters turn to face each other. Walls stop them, a walk stops
+  10 bytes from a standing opponent, and `separate` pushes apart two that
+  a landing left inside each other. Frames advance every 2 pictures.
+- **Scripted play bench.** `make bench-play` presses keys on a script
+  (`--keys RIGHT@2-26,x@40,...`, by picture number) and saves screenshots
+  (`--shots`). The run walks Trump and Putin together, then has them punch,
+  kick, crouch, sweep and uppercut, jump over each other and turn round.
+- **Frames per picture.** The bench now also reports the frames between
+  pictures. That exposed a frame drop the line check couldn't see: with
+  the fighters apart, the set-up after a window took longer than the time
+  left before the next tick (~3.5 ms per fighter against ~5.5 ms). Two
+  changes fixed it. `build_restore` was rewritten (SP walks `line_tab` 16
+  lines per interrupt-off stretch, one loop per facing, x patched into the
+  code): ~2.8 ms. And `prebuild` runs it in the time between windows, into
+  a second list per fighter: A's after the first window, B's after the
+  second, before the logic. The set-up after the logic costs 0.6-1.1 ms.
+  The keys are tested with straight-line code instead of a table loop
+  (logic 2.1 → 1.3 ms).
+
+| Scenario | Frames between pictures | Lines caught | Bytes wrong |
+|---|---|---|---|
+| Apart, generic Putin | 2 every time | 0 | 0 |
+| Toe to toe, compiled | 2 every time | 0 | 0 |
+| Toe to toe + jumps, compiled | 2 every time | 0 | 0 |
+| Play script (close combat, generic draws) | 2, except one picture: 3 | 57 lines in 1,559 line passes | 0 |
+
+Margin in the both-jumping case: clean at `SLACK=14`, one line caught in
+one picture at `SLACK=15`. The committed engine dropped two frames at
+`SLACK=15`, which hid it.
+
+Close combat in the game still flickers. Only the idle frames have
+compiled draws, and two generic draws (~8.5 + 7.5 ms) don't fit a shared
+window. That's the runtime compiler's job.
+
 ## Next (milestone 2 work this feeds)
 
 - A runtime compiler: turn the current move's span frames into compiled
   code for the current facing, in a per-fighter cache. Overlaps need both
-  fighters compiled: the generic drawer alone is 8.7 ms.
-- Input for two players and the fighter state machine (walk, crouch, jump,
-  facing, walls). Close combat then needs the runtime compiler: only the
-  idle frames have compiled draws today, and generic draws don't fit a
-  shared window.
+  fighters compiled: the generic drawer alone is 8.7 ms. `make bench-play`
+  must then report 0 lines caught as well.
 - Confirm on real hardware (CRTC types 0-2), as OverscanCPC did.

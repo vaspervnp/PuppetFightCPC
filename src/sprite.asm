@@ -54,87 +54,121 @@ rs_line
 ;; restore loop never has to test for a zero count. Destroys everything
 ;; except the result.
 ;; ---------------------------------------------------------------------------
+;; BR_LOOP - build_restore's loop for one facing. SP walks line_tab with
+;; interrupts off, 16 lines at a time; IXL counts them, HL = (s, n),
+;; DE = list. The column comes from x (patched into the code), s and n.
+    MACRO BR_LOOP left
+@chunk
+    ld a,(br_left)              ; up to 16 lines with interrupts off
+    ld b,16
+    sub b
+    jr nc,@part
+    add a,b
+    ld b,a
+    xor a
+@part
+    ld (br_left),a
+    ld ixl,b
+    di
+    ld sp,(br_tsp)
+@line
+    pop bc                      ; BC = scanline
+    IF {left}
+br_x_l
+    ld a,0                      ; facing left: x + w (patched) - s - n
+    sub (hl)
+    inc hl
+    sub (hl)
+    ELSE
+    ld a,(hl)                   ; facing right: x (patched) + s
+    inc hl
+br_x_r
+    add a,0
+    ENDIF
+    add a,c                     ; screen = scanline + column
+    ld (de),a
+    inc de
+    ld a,b
+    adc a,0
+    ld (de),a
+    inc de
+    ld a,(hl)                   ; n
+    or a
+    jr z,@empty
+    ldi                         ; count (its high byte is always 0)
+    inc de
+    dec ixl
+    jr nz,@line
+@chunk_end
+    ld (br_tsp),sp
+    ld sp,(br_sp)
+    ei
+    ld a,(br_left)
+    or a
+    jr nz,@chunk
+    jr @done
+@empty
+    dec de                      ; an empty line: a one-byte copy into
+    dec de                      ; RESTORE_DUMMY
+    ld a,RESTORE_DUMMY AND #FF
+    ld (de),a
+    inc de
+    ld a,RESTORE_DUMMY>>8
+    ld (de),a
+    inc de
+    ld a,1
+    ld (de),a
+    inc de
+    inc de
+    inc hl
+    dec ixl
+    jr nz,@line
+    jr @chunk_end
+@done
+    MEND
+
 build_restore
+    push ix
     ld (br_list),de
-    ld (br_x),bc                ; br_x = x, br_dir = facing
     add a,(hl)                  ; first scanline
     inc hl
     ld (br_first),a
-    ld b,(hl)                   ; lines
-    inc hl
-    ld a,b
-    ld (br_lines),a
-    or a
-    jr z,br_end
-    push hl                     ; (s, n) pointer
-    ld a,(br_first)
-    ld l,a
-    ld h,0
-    add hl,hl
-    ld de,line_tab
+    ld e,a
+    ld d,0
+    push hl
+    ld hl,line_tab
     add hl,de
-    ex de,hl                    ; DE = line_tab entry
+    add hl,de
+    ld (br_tsp),hl              ; where SP starts in line_tab
     pop hl
-br_line
-    push bc                     ; B = lines left
-    ld c,(hl)                   ; s
+    ld a,(hl)                   ; lines
     inc hl
-    ld b,(hl)                   ; n
-    inc hl
-    push hl
+    ld (br_lines),a
+    ld (br_left),a
+    or a
+    jp z,br_end
+    ld (br_sp),sp
+    ld de,(br_list)             ; DE = list, HL = (s, n)
     ld a,b
     or a
-    jr nz,br_span
-    ld hl,RESTORE_DUMMY         ; empty line: a harmless one-byte copy
-    ld b,1
-    jr br_store
-br_span
-    ld a,(br_dir)
-    or a
-    ld a,(br_x)
-    jr z,br_right
-    ld hl,br_w                  ; facing left: x + w - n - s
-    add a,(hl)
-    sub b
-    sub c
-    jr br_col
-br_right
-    add a,c                     ; facing right: x + s
-br_col
-    ld l,a                      ; HL = scanline + column
-    ld a,(de)
-    add a,l
-    ld l,a
-    inc de
-    ld a,(de)
-    adc a,0
-    dec de
-    ld h,a
-br_store                        ; HL = screen, B = bytes
-    ex de,hl                    ; DE = screen, HL = line_tab entry
-    push hl
-    ld hl,(br_list)
-    ld (hl),e
-    inc hl
-    ld (hl),d
-    inc hl
-    ld (hl),b
-    inc hl
-    ld (hl),0
-    inc hl
-    ld (br_list),hl
-    pop de
-    inc de                      ; next line_tab entry
-    inc de
-    pop hl                      ; (s, n) pointer
-    pop bc
-    djnz br_line
+    jp nz,br_facing_l
+    ld a,c
+    ld (br_x_r+1),a
+    BR_LOOP 0
+    jr br_end
+br_facing_l
+    ld a,(br_w)
+    add a,c
+    ld (br_x_l+1),a
+    BR_LOOP 1
 br_end
+    pop ix
     ld a,(br_first)
     ld l,a
     ld h,0
     ld a,(br_lines)
     ret
+
 
 ;; ---------------------------------------------------------------------------
 ;; draw_r / draw_l - the generic drawers: a span stream drawn facing right,

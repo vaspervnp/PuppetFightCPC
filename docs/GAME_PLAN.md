@@ -54,6 +54,16 @@ overscan. Two fighters are loaded from disk per match.
 The input buffer keeps the last ~12 frames of joystick state for motion
 detection. It is kept forgiving, because CPC joysticks are stiff.
 
+**Built so far** (milestone 2, `src/input.asm`, `src/fighter.asm`): walk,
+crouch, jump (straight or with a direction), punch, kick, sweep (↓ + kick),
+uppercut (↓ + punch) and back kick (back + kick). There is no blocking,
+no damage and no motion input buffer yet. Keys, alongside the joysticks:
+
+| | Up | Down | Left | Right | Punch | Kick |
+|---|---|---|---|---|---|---|
+| Player 1 (joystick 0) | cursor ↑ | cursor ↓ | cursor ← | cursor → | Space | Copy |
+| Player 2 (joystick 1) | W | S | A | D | Z | X |
+
 ### Combat model
 - Every frame has a **hurtbox**, and attack frames also have a **hitbox**.
   Boxes are authored as Aseprite slices (or a JSON sidecar) and exported with
@@ -199,13 +209,27 @@ scanline pass judged):
 | Toe to toe, one fighter jumping | 130 | 0 |
 | Toe to toe, both jumping (tops at line 88) | 121 | 0 |
 
-Margin, by starting the rebuild late on purpose (`SLACK`): 1.5 ms late is
-still clean in the both-jumping case, 2 ms late is not. Before the raised
+Margin, by starting the rebuild late on purpose (`SLACK`): 1.4 ms late is
+clean in the both-jumping case. At 1.5 ms one line is caught in one picture
+(that is, 1 of 23,000 line passes), and 2 ms late is not clean. Before the raised
 floor it was 2-3 ms: the head start is 0.4 ms shorter from line 222, and
 the interrupt windows cost ~0.25 ms. Lowering the jump top by 8 lines would
 buy 0.5 ms back. This margin is the budget for projectiles and HUD changes
 in a shared window, until the on-demand compiler and further restore work
 add more.
+
+**Time between windows.** With the fighters apart, only ~5.5 ms are left
+after each window before the next tick. Job set-up used to cost ~3.5 ms
+per fighter, nearly all of it the restore list, and the game dropped to
+3 frames per picture. Now `prebuild` makes each fighter's restore list
+(2.8 ms, SP walking `line_tab`, 16 lines per interrupt-off stretch) into
+the fighter's second list as soon as there is time: A's after the first
+window, B's after the second. The set-up after the logic only points the
+jobs at lists that already exist. Measured on the play script: logic
+1.2-1.5 ms, set-up 0.6-1.1 ms, and at least 43 lines (after the first
+window) and 27 lines (after the second) to spare before the tick. The
+bench now also counts frames between pictures, and the result must be 2
+every time.
 
 Overlaps need both fighters drawn with compiled code. The on-demand
 compiler guarantees it: a frame is compiled the picture before it's needed,
@@ -218,8 +242,10 @@ while the fighters are still apart or the frame is still being held.
   after the round is decided, when the opponent is idle or doing a victory
   pose. Their window then holds only the falling fighter.
 - `make bench-all` (apart, toe to toe, toe to toe with jumps) must report
-  0 lines caught. That is the acceptance test for milestones 2 and 3, and
-  `SLACK=15` must stay clean so the 1.5 ms margin isn't eaten silently.
+  0 lines caught and 2 frames between every pair of pictures. That is the
+  acceptance test for milestones 2 and 3, and `SLACK=15` must stay clean
+  so the 1.5 ms margin isn't eaten silently. (It is 1 line short now:
+  see the margin above.)
 
 ### 3.3 Palette strategy
 
@@ -252,7 +278,7 @@ dark red, and pastel yellow (FFFF80) → olive (808000).
 | &0100-&01FF | 256 | stack |
 | &0200-&3FFF | 15.5K | engine and tables (flip, mask, chain entries). The spike ends at &10BE, ~12K free |
 | &4000-&7FFF | 16K | background mirror of the fighter band, lines 88-211 (~12K used, ~4K free in 512-byte gaps at &x240-&x43F) |
-| &8000-&FFFF | 32K | overscan screen (26K used). The unused 800-byte tails of page 3 hold `line_tab` (&C4E0) and the two restore lists (&CCE0, &D4E0); ~4K of tails are still free |
+| &8000-&FFFF | 32K | overscan screen (26K used). The unused 800-byte tails of page 3 hold `line_tab` (&C4E0) and four restore lists, two per fighter (&CCE0/&DCE0, &E4E0/&F4E0); &D4E0, &ECE0 and &FCE0 (~2.4K) are still free |
 | Bank 4-5 | 32K | fighter A's character: directory, all 48 frames (span stream + (s, n) table), compiled frames |
 | Bank 6-7 | 32K | fighter B's character |
 

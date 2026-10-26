@@ -234,38 +234,28 @@ setup_a
     ld ix,fighter_a
     ld hl,job_ra
     ld de,job_da
-    ld bc,RESTORE_LIST_A
     jr setup_fighter
 
 setup_b
     ld ix,fighter_b
     ld hl,job_rb
     ld de,job_db
-    ld bc,RESTORE_LIST_B
 
-;; setup_fighter - IX = fighter, HL = its restore job, DE = its draw job,
-;; BC = its restore list. The restore takes off what is on the screen (the
-;; F_O* fields), the draw puts down the frame load_frame fetched, and the
-;; F_O* fields then describe that frame. Destroys everything but IX.
+;; setup_fighter - IX = fighter, HL = its restore job, DE = its draw job.
+;; The restore takes off what is on the screen, from the list prebuild made
+;; of it; the draw puts down the frame load_frame fetched, and the F_O*
+;; fields then describe that frame. Destroys everything but IX.
 setup_fighter
     ld (sf_draw),de
-    ld (sf_list),bc
     ld a,(ix+F_DRAWN)
     or a
     jr z,sf_draw_job
     push hl                     ; restore job
-    ld a,(ix+F_OBANK)           ; the old frame's (s, n) table is in its bank
-    ld bc,#7F00
-    out (c),a
-    ld a,(ix+F_OW)
-    ld (br_w),a
-    ld l,(ix+F_OSN)
-    ld h,(ix+F_OSN+1)
-    ld de,(sf_list)
-    ld c,(ix+F_OX)
-    ld b,(ix+F_OFACE)
-    ld a,(ix+F_OY)
     pop iy
+    ld e,(ix+F_RLIST)
+    ld d,(ix+F_RLIST+1)
+    ld l,(ix+F_RFIRST)
+    ld a,(ix+F_RLINES)
     call setup_restore
 sf_draw_job
     ld a,(ix+F_FBANK)           ; the new frame's spans
@@ -337,13 +327,9 @@ sf_record
     out (c),c
     ret
 
-;; setup_restore - IY = job, HL = (s, n) table, DE = list buffer, A = y,
-;; C = x, B = facing (0 right, 1 left), (br_w) = frame width. Builds the
-;; restore list and points the job at it. Destroys everything but IX, IY.
+;; setup_restore - IY = job, DE = restore list, L = its first scanline,
+;; A = its lines. Points the job at the list. Destroys AF, BC, DE, HL.
 setup_restore
-    push de
-    call build_restore          ; HL = first scanline, A = lines
-    pop de
     ld (iy+J_SP),e
     ld (iy+J_SP+1),d
     ld (iy+J_LEFT),a
@@ -352,6 +338,37 @@ setup_restore
     ld (iy+J_RAM),#C0
     ld a,l
     jr sj_cur
+
+;; prebuild - IX = fighter: build the restore list of what the F_O* fields
+;; say is on the screen (or will be, once a pending window has run), into
+;; the fighter's other list, for the next setup_fighter. The main loop runs
+;; it in the time between windows, so the set-up after the logic is cheap.
+;; Destroys everything but IX.
+prebuild
+    ld a,(ix+F_DRAWN)
+    or a
+    ret z
+    ld a,(ix+F_OBANK)           ; the (s, n) table is in the frame's bank
+    ld bc,#7F00
+    out (c),a
+    ld a,(ix+F_OW)
+    ld (br_w),a
+    ld a,(ix+F_RLIST+1)         ; the list not in use
+    xor RESTORE_FLIP
+    ld (ix+F_RLIST+1),a
+    ld d,a
+    ld e,(ix+F_RLIST)
+    ld l,(ix+F_OSN)
+    ld h,(ix+F_OSN+1)
+    ld c,(ix+F_OX)
+    ld b,(ix+F_OFACE)
+    ld a,(ix+F_OY)
+    call build_restore
+    ld (ix+F_RFIRST),l
+    ld (ix+F_RLINES),a
+    ld bc,#7FC0
+    out (c),c
+    ret
 
 ;; setup_job - IY = job, HL = span stream, A = sprite top scanline. Points
 ;; the job at the stream's first line. Destroys AF, BC, DE, HL.

@@ -78,11 +78,13 @@ TICK_LINE       EQU 222
 ;; 2 KB slice of screen page 3: rows 21-33 fill #C000-#C4DF of every slice,
 ;; and the CRTC never fetches #C4E0-#C7FF.
 LINE_TAB_AT     EQU #C4E0
-;; The same unused tails of later slices hold the restore lists that prepare
-;; builds (4 bytes per scanline, at most 64 lines), and the dummy byte an
-;; empty line copies into.
-RESTORE_LIST_A  EQU #CCE0       ; slice 1: #CCE0-#CFFF free
-RESTORE_LIST_B  EQU #D4E0       ; slice 2: #D4E0-#D7FF free
+;; The same unused tails of later slices hold the restore lists that
+;; prebuild makes (4 bytes per scanline, at most 64 lines), two per fighter
+;; #1000 apart, and the dummy byte an empty line copies into.
+RESTORE_LIST_A  EQU #CCE0       ; slices 1 and 3: #xCE0-#xFFF free
+RESTORE_LIST_B  EQU #E4E0       ; slices 4 and 6: #x4E0-#x7FF free
+RESTORE_FLIP    EQU #10         ; high byte: one list of a pair to the other
+    ASSERT (RESTORE_LIST_A AND #FF)==(RESTORE_LIST_B AND #FF)
 RESTORE_DUMMY   EQU #C7FF       ; past line_tab in slice 0
 
 ;; --- Spike scene ---------------------------------------------------------
@@ -124,7 +126,12 @@ PH_DRAW_A       EQU 3
 PH_DRAW_B       EQU 4
 PH_LOGIC        EQU 5
 PH_SCHED        EQU 6           ; the banded scheduler between jobs
+PH_PREPARE      EQU 7           ; job set-up for the next picture
+PH_PREBUILD     EQU 8           ; restore lists for the next set-up
 
+    IFNDEF DEMO
+DEMO            EQU 0           ; -DDEMO=1: scripted fighters (the bench)
+    ENDIF
     IFNDEF SLACK
 SLACK           EQU 0           ; -DSLACK=n: margin test, rebuild n*100 us late
     ENDIF
@@ -134,3 +141,4 @@ SLACK           EQU 0           ; -DSLACK=n: margin test, rebuild n*100 us late
 SCN_CLOSE_UP    EQU CLOSE_UP
 SCN_JUMP        EQU JUMP
 SCN_PUTIN_COMPILED EQU PUTIN_COMPILED
+SCN_DEMO        EQU DEMO

@@ -19,9 +19,10 @@ PYTHON ?= python3
 PUTIN_DRAW ?= generic
 CLOSE_UP ?= 0
 JUMP ?= 0
+DEMO ?= 0
 SLACK ?= 0
 RASMFLAGS := $(if $(filter compiled,$(PUTIN_DRAW)),-DPUTIN_COMPILED=1,-DPUTIN_COMPILED=0) \
-             -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK)
+             -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEMO)
 BUILD  := build
 
 GEN := src/gen/tables.asm src/gen/trump_bank0.asm src/gen/trump_bank1.asm \
@@ -58,9 +59,9 @@ bench: $(BUILD)/pfspike.sna
 # Apart (two windows), and toe to toe with jumps (one shared window, banded).
 # Overlaps need compiled draws for both fighters: see GAME_PLAN 3.2b.
 bench-all:
-	$(MAKE) --no-print-directory bench
-	$(MAKE) --no-print-directory bench PUTIN_DRAW=compiled CLOSE_UP=1
-	$(MAKE) --no-print-directory bench PUTIN_DRAW=compiled CLOSE_UP=1 JUMP=1
+	$(MAKE) --no-print-directory bench DEMO=1
+	$(MAKE) --no-print-directory bench DEMO=1 PUTIN_DRAW=compiled CLOSE_UP=1
+	$(MAKE) --no-print-directory bench DEMO=1 PUTIN_DRAW=compiled CLOSE_UP=1 JUMP=1
 
 run: $(BUILD)/pfspike.sna
 	caprice32 $(abspath $(BUILD)/pfspike.sna)
@@ -69,4 +70,12 @@ clean:
 	rm -rf $(BUILD)
 
 FORCE:
-.PHONY: all bench bench-all run clean FORCE
+.PHONY: all bench bench-all bench-play run clean FORCE
+
+# The game with scripted controls: walk in, jump over, attacks. Close combat
+# needs the runtime compiler (only idle frames have compiled draws), so this
+# reports caught lines rather than gating on them.
+PLAY_KEYS := RIGHT@2-26,a@2-20,SPACE@30,z@34,x@40,DOWN@46-56,x@48,DOWN@60-64,SPACE@62,UP@70-71,RIGHT@70-80,LEFT@86-90,x@88
+bench-play:
+	$(MAKE) --no-print-directory $(BUILD)/pfspike.sna
+	$(PYTHON) tools/spike_bench.py --keys $(PLAY_KEYS) --shots 20,31,50,76,90 || true

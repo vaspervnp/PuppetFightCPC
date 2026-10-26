@@ -22,6 +22,11 @@ CRTC, with the 6128's own ROMs). The snapshot is quickloaded and stepped
   with the screen. Any difference is debris or a drawing bug.
 
     tools/spike_bench.py [--renders 96] [--png build/spike.png]
+                         [--keys RIGHT@10-30,a@10-30,SPACE@40]
+
+--keys holds keys by picture number (render_count): NAME@n for one picture,
+NAME@n-m for a run. Player 1 is the cursor keys and SPACE (punch); player 2
+is w a s d, z (punch) and x (kick).
 """
 import argparse
 import os
@@ -49,7 +54,8 @@ BLANK = 40          # scanlines from the start of VSYNC to display line 0
 LINES = 272
 PHASES = {1: "restore A (Trump, right)", 2: "restore B (Putin, left)",
           3: "draw A", 4: "draw B (Putin, left)",
-          6: "scheduler overhead", 5: "logic + prepare"}
+          6: "scheduler overhead", 5: "logic", 7: "prepare",
+          8: "restore lists (both)"}
 REBUILD_PHASES = (1, 2, 3, 4, 6)
 
 
@@ -101,7 +107,7 @@ class Bench:
         return bytes(p[addr - 0x4000 + i] for i in range(size))
 
     def jump_state(self):
-        fa, fb = self.field("FIGHTER_A", "F_Y"), self.field("FIGHTER_B", "F_Y")
+        fa, fb = self.field("FIGHTER_A", "F_OY"), self.field("FIGHTER_B", "F_OY")
         return (("A up" if fa < self.fighter_y else "A down") + ", " +
                 ("B up" if fb < self.fighter_y else "B down"))
 
@@ -109,6 +115,8 @@ class Bench:
         close = self.S.get("SCN_CLOSE_UP", 0)
         jump = self.S.get("SCN_JUMP", 0)
         comp = self.S.get("SCN_PUTIN_COMPILED", 0)
+        if not self.S.get("SCN_DEMO", 0):
+            return "play (controls)" + (": " + self.keys if self.keys else "")
         return "%s%s, Putin %s" % ("toe to toe (one shared window)" if close else "apart (two windows)",
                                    ", taking turns to jump then jumping together" if jump else "",
                                    "compiled" if comp else "generic")
@@ -120,23 +128,56 @@ class Bench:
     def band(self):
         return {L: self.c.read_ram(self.line_addr[L], 96) for L in range(self.band_top, self.band_end)}
 
+    KEYS = {"LEFT": cpcmod.KEY_LEFT, "RIGHT": cpcmod.KEY_RIGHT,
+            "UP": cpcmod.KEY_UP, "DOWN": cpcmod.KEY_DOWN, "SPACE": cpcmod.KEY_SPACE}
+
+    def set_keys(self, script):
+        self.script = []
+        for item in filter(None, (script or "").split(",")):
+            name, _, span = item.partition("@")
+            a, _, b = span.partition("-")
+            code = self.KEYS.get(name, ord(name[0]) if len(name) == 1 else None)
+            if code is None:
+                sys.exit("unknown key %r" % name)
+            self.script.append((code, int(a), int(b or a)))
+        self.held = set()
+
+    def apply_keys(self, pic):
+        want = {code for code, a, b in self.script if a <= pic <= b}
+        for code in want - self.held:
+            self.c.key_down(code)
+        for code in self.held - want:
+            self.c.key_up(code)
+        self.held = want
+
     def run(self, renders):
         last_ph = self.peek("BENCH_PHASE")
+        last_pic = None
         ph_start = self.t
         durations = defaultdict(list)
         acc = defaultdict(int)              # this picture's time per phase
         epochs = []                         # band snapshot at each rebuild start
         seen = []                           # (epoch, line, bytes) per beam pass
         start_line = []                     # beam line at each rebuild start
+        self.pic_starts = []                # time each picture's first rebuild starts
+        self.pic_tick = self.peek("LAST_RENDER")
+        self.trace = []                     # (time, beam, phase) for --trace
         last_beam = None
         state = None
         done = 0
         while done < renders:
             self.step()
+            pic = self.peek("RENDER_COUNT")
+            if pic != last_pic:
+                last_pic = pic
+                self.apply_keys(done)
             ph = self.peek("BENCH_PHASE")
             if ph != last_ph:
                 if last_ph in PHASES:
                     acc[last_ph] += self.t - ph_start
+                if ph in REBUILD_PHASES and self.peek("LAST_RENDER") != self.pic_tick:
+                    self.pic_tick = self.peek("LAST_RENDER")   # wait_render: a new picture
+                    self.pic_starts.append(self.t)
                 if last_ph in (0, 5) and ph in REBUILD_PHASES:
                     epochs.append(self.band())      # nothing touched yet
                     start_line.append(self.beam())
@@ -148,9 +189,13 @@ class Bench:
                         durations[k].append(v)
                     acc.clear()
                     done += 1
+                if ph == 7:                         # prepare: the picture is drawn
+                    if done in getattr(self, "shots", ()):
+                        self.c.screenshot(os.path.join(BUILD, "play_%03d.png" % done), scale=1)
                 if last_ph == 5:
                     durations[5].append(acc.pop(5, 0))
                 last_ph, ph_start = ph, self.t
+                self.trace.append((self.t, self.beam(), ph, done))
             b = self.beam()
             if b != last_beam:
                 last_beam = b
@@ -211,11 +256,21 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--renders", type=int, default=96)   # two jump cycles
     ap.add_argument("--png", default=os.path.join(BUILD, "spike.png"))
+    ap.add_argument("--keys", default="")
+    ap.add_argument("--trace", action="store_true", help="print phase changes with frame and beam line")
+    ap.add_argument("--shots", default="", help="pictures to screenshot, e.g. 20,40")
     args = ap.parse_args()
 
     b = Bench()
+    b.keys = args.keys
+    b.shots = {int(x) for x in args.shots.split(",") if x}
+    b.set_keys(args.keys)
     durations, starts, caught, late, npics, nseen = b.run(args.renders)
 
+    if args.trace:
+        t0 = b.vsync0
+        for t, beam, ph, n in b.trace:
+            print("trace pic %3d frame %4d line %3d phase %d" % (n, (t - t0) // FRAME_US, beam, ph))
     print("Scenario: %s" % b.scenario())
     print("Phase timings per picture over %d pictures (us, from the cycle-accurate 6128):" % npics)
     for ph, name in PHASES.items():
@@ -224,6 +279,12 @@ def main():
             print("  %-28s min %5d  mean %5d  max %5d" % (name, min(d), sum(d) // len(d), max(d)))
     print("  rebuilds start with the beam on line %d-%d (the tick is line %d)" % (
         min(starts), max(starts), b.S["TICK_LINE"]))
+    gaps = defaultdict(int)
+    ps = b.pic_starts
+    for t0, t1 in zip(ps, ps[1:]):
+        gaps[round((t1 - t0) / FRAME_US)] += 1
+    print("  frames between pictures: %s (2 = 25 fps)" % ", ".join(
+        "%d x%d" % (k, gaps[k]) for k in sorted(gaps)))
     print("  fighter band: lines %d-%d; a standing fighter's top is line %d" % (
         b.band_top, b.band_end - 1, b.fighter_y))
     print("  rebuilds end with the beam on line (next frame), by jump state:")
