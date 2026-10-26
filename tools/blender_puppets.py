@@ -59,8 +59,10 @@ PUTIN = dict(
     shoulder_w=0.26, upper_arm=0.30, forearm=0.28, arm_r=0.072,
     hand_r=0.065,
     head_size=(0.30, 0.28, 0.36), neck=0.05,
-    suit="suit_grey", pants="suit_grey", shirt="shirt", tie="tie_blue",
-    tie_len=0.34, skin="skin_pink", hair="hair_grey", shoe="shoe",
+    # a white sleeveless vest over bare arms, grey trousers
+    suit="vest_white", arms="arm_skin", pants="suit_grey", shirt=None,
+    tie=None, tie_len=0, skin="skin_pink", hair="hair_grey", shoe="shoe",
+    vest=True,
 )
 
 SPECS = {"trump": TRUMP, "putin": PUTIN}
@@ -72,6 +74,8 @@ MATERIALS = [
     # arms get their own materials (near/far) so the sprite converter can
     # draw separation lines where a sleeve crosses the jacket
     "arm_navy_n", "arm_navy_f", "arm_grey_n", "arm_grey_f",
+    # Putin's vest and bare arms (appended, so earlier ID colours stay put)
+    "vest_white", "arm_skin_n", "arm_skin_f",
 ]
 
 
@@ -225,13 +229,19 @@ def build_character(s):
     tx, ty, tz = s["torso_size"]
     th = s["torso_h"]
     new_part(sc, "jacket", "sphere", torso, (s["belly"] * 0.5, 0, th * 0.5), (tx + s["belly"], ty, tz), s["suit"])
-    new_part(sc, "chest", "sphere", torso, (0, 0, th * 0.78), (tx * 0.92, ty * 1.02, tz * 0.5), s["suit"])
-    # white shirt V and tie on the front (+X)
     front = tx + s["belly"] * 0.6
-    new_part(sc, "shirt", "sphere", torso, (front * 0.72, 0, th * 0.86), (0.07, 0.1, 0.14), s["shirt"])
-    new_part(sc, "tie_knot", "sphere", torso, (front * 0.86, 0, th * 0.93), (0.035, 0.04, 0.035), s["tie"])
-    tl = s["tie_len"]
-    new_part(sc, "tie", "box", torso, (front * 0.9 + 0.02, 0, th * 0.93 - tl / 2), (0.02, 0.045, tl / 2), s["tie"], rot=(0, -8, 0))
+    if s.get("vest"):
+        # sleeveless: narrower across the shoulders so they show bare, and a
+        # scoop neck of skin at the front
+        new_part(sc, "chest", "sphere", torso, (0, 0, th * 0.78), (tx * 0.92, ty * 0.84, tz * 0.5), s["suit"])
+        new_part(sc, "neckline", "sphere", torso, (front * 0.78, 0, th * 0.93), (0.07, 0.11, 0.08), s["skin"])
+    else:
+        new_part(sc, "chest", "sphere", torso, (0, 0, th * 0.78), (tx * 0.92, ty * 1.02, tz * 0.5), s["suit"])
+        # white shirt V and tie on the front (+X)
+        new_part(sc, "shirt", "sphere", torso, (front * 0.72, 0, th * 0.86), (0.07, 0.1, 0.14), s["shirt"])
+        new_part(sc, "tie_knot", "sphere", torso, (front * 0.86, 0, th * 0.93), (0.035, 0.04, 0.035), s["tie"])
+        tl = s["tie_len"]
+        new_part(sc, "tie", "box", torso, (front * 0.9 + 0.02, 0, th * 0.93 - tl / 2), (0.02, 0.045, tl / 2), s["tie"], rot=(0, -8, 0))
 
     # neck + head
     neck = J["head"] = new_empty(sc, "neck", torso, (0.02, 0, th + s["neck"]))
@@ -241,11 +251,12 @@ def build_character(s):
     # arms
     for side, y in (("N", -1), ("F", 1)):
         sh = J["sh" + side] = new_empty(sc, "shoulder" + side, torso, (0, y * s["shoulder_w"], th * 0.86))
-        arm = s["suit"].replace("suit", "arm") + "_" + side.lower()
+        arm = s.get("arms", s["suit"].replace("suit", "arm")) + "_" + side.lower()
         limb(sc, "upperarm" + side, sh, s["upper_arm"], s["arm_r"], arm)
         el = J["el" + side] = new_empty(sc, "elbow" + side, sh, (0, 0, -s["upper_arm"]))
         limb(sc, "forearm" + side, el, s["forearm"], s["arm_r"] * 0.95, arm, end_cap=False)
-        new_part(sc, "cuff" + side, "cyl", el, (0, 0, -s["forearm"] + 0.01), (s["arm_r"] * 0.85,) * 2 + (0.02,), s["shirt"])
+        if s["shirt"]:
+            new_part(sc, "cuff" + side, "cyl", el, (0, 0, -s["forearm"] + 0.01), (s["arm_r"] * 0.85,) * 2 + (0.02,), s["shirt"])
         wr = J["wr" + side] = new_empty(sc, "wrist" + side, el, (0, 0, -s["forearm"]))
         r = s["hand_r"]
         new_part(sc, "hand" + side, "sphere", wr, (0, 0, -r * 0.9), (r, r * 0.9, r * 1.1), s["skin"])

@@ -49,6 +49,9 @@ RAMPS = {
     "arm_navy_f":  (2, 1, 1),
     "arm_grey_n":  (11, 9, 1),
     "arm_grey_f":  (11, 9, 1),
+    "vest_white":  (10, 10, 9),
+    "arm_skin_n":  (6, 6, 3),
+    "arm_skin_f":  (6, 6, 3),
 }
 
 WEIGHT = {"eye_white": 5, "pupil": 8, "mouth": 6, "brow": 3,
@@ -112,7 +115,7 @@ def add_separation(px, mat):
             return None
         if m.startswith("arm_"):
             return "near" if m.endswith("_n") else "far"
-        if m.startswith("suit_"):
+        if m.startswith("suit_") or m.startswith("vest_"):
             return "body"
         return None
 

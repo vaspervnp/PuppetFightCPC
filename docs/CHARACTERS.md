@@ -28,7 +28,8 @@ These are the official show billings from GZERO's "About the Show" page.
   Authoritarian Life"). "Feline malice". Recent sketches show him shirtless
   with an Orthodox cross and an ushanka, dancing to EDM.
 - **Look**: pale egg-shaped head, receding light hair, narrow eyes, smirk,
-  dark grey suit.
+  a white sleeveless vest over bare arms (the strongman image the show plays
+  on), grey trousers.
 - **Specials**: **Judo Throw** ✅ (grab, hip load, throw). Planned:
   **Shirtless Bear Rush** (ushanka on, shirt off, charging shoulder).
   Alternate costume: shirtless with ushanka.
