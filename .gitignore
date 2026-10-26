@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+art/render/_preview/
+*.blend1
