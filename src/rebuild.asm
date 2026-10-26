@@ -208,8 +208,100 @@ rb_done
 ;; ---------------------------------------------------------------------------
 prepare
     call rebuild_clear
-    call setup_a
+    ld ix,fighter_a             ; decide both before either is set up
+    ld iy,fighter_b
+    call can_skip
+    ld (skip_a),a
+    ld ix,fighter_b
+    ld iy,fighter_a
+    call can_skip
+    ld (skip_b),a
+    ld a,(skip_a)
+    or a
+    call z,setup_a
+    ld a,(skip_b)
+    or a
+    ret nz
     jp setup_b
+
+;; can_skip - IX = fighter, IY = the other: A = 1 if IX's window work can be
+;; left out: it shows the same frame in the same place as on the screen, and
+;; neither the other's old box (its restore) nor its new one (its draw)
+;; reaches IX's box. Else A = 0. Destroys AF, B, DE, HL.
+can_skip
+    call fighter_same
+    jr nz,cs_no
+    push ix                     ; the other unchanged too: nothing touches
+    push iy
+    pop ix
+    call fighter_same
+    pop ix
+    jr z,cs_yes
+    ld a,(iy+F_DRAWN)           ; the other's old box
+    or a
+    jr z,cs_new
+    ld d,(iy+F_OX)
+    ld e,(iy+F_OW)
+    call cs_overlap
+    jr c,cs_no
+cs_new
+    ld a,(iy+F_X)               ; and its new one
+    add a,(iy+F_OFF)
+    ld d,a
+    ld e,(iy+F_W)
+    call cs_overlap
+    jr c,cs_no
+cs_yes
+    ld a,1
+    ret
+cs_no
+    xor a
+    ret
+
+;; cs_overlap - CY if bytes D..D+E-1 meet IX's box on the screen.
+cs_overlap
+    ld a,(ix+F_OX)              ; D < OX + OW
+    add a,(ix+F_OW)
+    ld b,a
+    ld a,d
+    cp b
+    ret nc
+    ld a,d                      ; and OX < D + E
+    add a,e
+    ld b,a
+    ld a,(ix+F_OX)
+    cp b
+    ret
+
+;; fighter_same - IX = fighter: Z if what it will show is what the screen
+;; has: same frame (bank, spans) in the same facing, place and width.
+;; Destroys AF, B.
+fighter_same
+    ld a,(ix+F_DRAWN)
+    or a
+    jr z,fs_diff
+    ld a,(ix+F_X)
+    add a,(ix+F_OFF)
+    cp (ix+F_OX)
+    ret nz
+    ld a,(ix+F_Y)
+    cp (ix+F_OY)
+    ret nz
+    ld a,(ix+F_DFACE)
+    cp (ix+F_OFACE)
+    ret nz
+    ld a,(ix+F_FBANK)
+    cp (ix+F_OBANK)
+    ret nz
+    ld a,(ix+F_SPANS)
+    cp (ix+F_OSPANS)
+    ret nz
+    ld a,(ix+F_SPANS+1)
+    cp (ix+F_OSPANS+1)
+    ret
+fs_diff
+    or 1
+    ret
 
 rebuild_clear
     xor a
@@ -233,14 +325,15 @@ setup_b
     ld de,job_db
 
 ;; setup_fighter - IX = fighter, HL = its restore job, DE = its draw job.
-;; The restore takes off what is on the screen, from the list prebuild made
-;; of it; the draw puts down the frame load_frame fetched, and the F_O*
-;; fields then describe that frame. Destroys everything but IX.
+;; The restore takes off what is on the screen, from its restore list. Then
+;; the F_O* fields take the new frame and prebuild makes that frame's list,
+;; which the draw job walks for its scanline addresses (see jit.asm
+;; JC_BODY) and the next picture restores from. Destroys everything but IX.
 setup_fighter
     ld (sf_draw),de
     ld a,(ix+F_DRAWN)
     or a
-    jr z,sf_draw_job
+    jr z,sf_record
     push hl                     ; restore job
     pop iy
     ld e,(ix+F_RLIST)
@@ -248,35 +341,9 @@ setup_fighter
     ld l,(ix+F_RFIRST)
     ld a,(ix+F_RLINES)
     call setup_restore
-sf_draw_job
-    ld a,(ix+F_FBANK)           ; the new frame's spans
-    ld bc,#7F00
-    out (c),a
-    ld a,(ix+F_X)               ; the frame's left edge: box x + offset
-    add a,(ix+F_OFF)
-    ld (sf_x),a
-    ld iy,(sf_draw)
-    ld l,(ix+F_SPANS)
-    ld h,(ix+F_SPANS+1)
-    ld a,(ix+F_Y)
-    call setup_job              ; lines are padded to whole chunks
-    ld a,(iy+J_LEFT)
-    rrca
-    rrca
-    rrca
-    and #1F
-    ld (iy+J_LEFT),a
-    ld a,(ix+F_CDRAW)           ; compiled: runs from where it is, DE = x
-    ld (iy+J_RESUME),a
-    ld a,(ix+F_CDRAW+1)
-    ld (iy+J_RESUME+1),a
-    ld a,(ix+F_CBANK)
-    ld (iy+J_RAM),a
-    ld a,(sf_x)
-    ld (iy+J_DE),a
-    ld (iy+J_DE+1),0
 sf_record
-    ld a,(sf_x)                 ; what is now on the screen
+    ld a,(ix+F_X)               ; what will be on the screen: the frame's
+    add a,(ix+F_OFF)            ; left edge, box x + offset
     ld (ix+F_OX),a
     ld a,(ix+F_Y)
     ld (ix+F_OY),a
@@ -295,9 +362,27 @@ sf_record
     ld a,(ix+F_SN+1)
     ld (ix+F_OSN+1),a
     ld (ix+F_DRAWN),1
-    ld bc,#7FC0
-    out (c),c
-    ret
+    call prebuild               ; its list (unless it is the same as now)
+    ld iy,(sf_draw)             ; the draw: compiled code, walking it
+    ld a,(ix+F_RLIST)
+    ld (iy+J_SP),a
+    ld a,(ix+F_RLIST+1)
+    ld (iy+J_SP+1),a
+    ld a,(ix+F_RLINES)          ; whole chunks
+    add a,CHUNK-1
+    rrca
+    rrca
+    rrca
+    and #1F
+    ld (iy+J_LEFT),a
+    ld a,(ix+F_CDRAW)
+    ld (iy+J_RESUME),a
+    ld a,(ix+F_CDRAW+1)
+    ld (iy+J_RESUME+1),a
+    ld a,(ix+F_CBANK)
+    ld (iy+J_RAM),a
+    ld a,(ix+F_RFIRST)
+    jp sj_cur
 
 ;; setup_restore - IY = job, DE = restore list, L = its first scanline,
 ;; A = its lines. Points the job at the list. Destroys AF, BC, DE, HL.
@@ -312,11 +397,9 @@ setup_restore
     jr sj_cur
 
 ;; prebuild - IX = fighter: build the restore list of what the F_O* fields
-;; say is on the screen (or will be, once a pending window has run), into
-;; the fighter's other list, for the next setup_fighter. The main loop runs
-;; it in the time between windows, so the set-up after the logic is cheap.
-;; A fighter showing the same frame in the same place keeps its list.
-;; Destroys everything but IX.
+;; say will be on the screen into the fighter's other list (the one in use
+;; is still the restore job's). A fighter showing the same frame in the same
+;; place keeps its list. Destroys everything but IX.
 prebuild
     ld a,(ix+F_DRAWN)
     or a
@@ -362,23 +445,8 @@ pb_cmp
     ld (ix+F_RLINES),a
     ret
 
-;; setup_job - IY = job, HL = span stream, A = sprite top scanline. Points
-;; the job at the stream's first line. Destroys AF, BC, DE, HL.
-setup_job
-    add a,(hl)                  ; first drawn scanline (y + top < 256)
-    inc hl
-    ld c,(hl)                   ; lines
-    inc hl
-    ld (iy+J_DE),l
-    ld (iy+J_DE+1),h
-    ld (iy+J_LEFT),c
-    ld e,a
-    ld d,0
-    ld hl,line_tab
-    add hl,de
-    add hl,de
-    ld (iy+J_SP),l
-    ld (iy+J_SP+1),h
+;; sj_cur - IY = job, A = its first scanline: J_CUR, and band_end pulled
+;; up to it + BAND. Destroys AF, HL.
 sj_cur
     sub BAND_TOP
     ld (iy+J_CUR),a

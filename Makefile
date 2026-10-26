@@ -38,11 +38,11 @@ src/gen/tables.asm: tools/sprite_codegen.py
 
 # A character's two bank images come out of one run. Draws are compiled at
 # run time (src/jit.asm); --slot checks every frame fits a cache slot.
-src/gen/trump_bank0.asm src/gen/trump_bank1.asm &: tools/sprite_codegen.py \
+src/gen/trump_bank0.asm src/gen/trump_bank1.asm &: tools/sprite_codegen.py src/config.asm \
         art/sprites/trump.json $(wildcard art/sprites/trump/*.png)
 	$(PYTHON) tools/sprite_codegen.py character trump --slot $(CACHE_SLOT)
 
-src/gen/putin_bank0.asm src/gen/putin_bank1.asm &: tools/sprite_codegen.py \
+src/gen/putin_bank0.asm src/gen/putin_bank1.asm &: tools/sprite_codegen.py src/config.asm \
         art/sprites/putin.json $(wildcard art/sprites/putin/*.png)
 	$(PYTHON) tools/sprite_codegen.py character putin --slot $(CACHE_SLOT)
 

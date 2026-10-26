@@ -168,10 +168,7 @@ jw_start
     ld a,(hl)
     add a,(ix+F_RAM0)
     ld (jw_bank),a
-    inc hl
-    ld a,(hl)
-    dec a
-    ld (jw_w),a                 ; w - 1
+    inc hl                      ; (width, offset)
     inc hl
     inc hl
     ld e,(hl)
@@ -231,8 +228,6 @@ jw_resume
     ld iy,(jw_sn)
     ld a,(jw_lines)
     ld ixh,a
-    ld a,(jw_w)
-    ld (jc_lw+1),a
     ld a,(jw_face)
     or a
     jr nz,jr_left
@@ -258,6 +253,9 @@ jr_back
     inc hl
     ld a,(jw_face)
     ld (hl),a
+    ld hl,(jit_done)            ; (for the bench)
+    inc hl
+    ld (jit_done),hl
     xor a
     ld (jw_busy),a
     pop hl
@@ -513,12 +511,15 @@ rec_addr
     out (c),c
     ret
 
-;; JC_BODY - jit_compile for one facing. HL = code, DE = spans, IXH = lines
-;; left. Both facings read a line's bytes in order: facing right the code
-;; starts at column s and steps right (inc hl), facing left it starts at
-;; column w - 1 - s, steps left (dec hl) and stores each byte mirrored
-;; (flip_tab). Bytes come escaped (sprite_codegen.py escaped): an opaque
-;; byte as itself, anything else as 0 then the byte.
+;; JC_BODY - the compiler for one facing. HL = code, DE = spans, IXH = lines
+;; left, IY = the (s, n) table it writes. The draw job's SP walks the
+;; fighter's restore list for the new frame (setup_fighter): per line the
+;; screen address of the line's leftmost byte, then its byte count. So a
+;; line starts pop hl : pop af facing right, then one store per byte with an
+;; inc hl between. Facing left it starts pop hl : pop bc : add hl,bc (one
+;; past the rightmost byte) and each byte is dec hl, then the store, of the
+;; byte mirrored (flip_tab). Bytes come escaped (sprite_codegen.py escaped):
+;; an opaque byte as itself, anything else as 0 then the byte.
     MACRO JC_BODY left,entry
 {entry}
 @first
@@ -528,73 +529,51 @@ rec_addr
     call jc_time
     jp c,@stop
 @go
-    ld (hl),#E1                 ; pop hl : add hl,de : ld bc,column
-    inc hl                      ; : add hl,bc (always the long form:
-    ld (hl),#19                 ; no tests)
+    ld (hl),#E1                 ; pop hl
     inc hl
-    ld (hl),#01
-    inc hl
-    ld a,(de)                   ; s
-    inc de
-    ld (iy+0),a                 ; the (s, n) table, for build_restore
     IF {left}
-    ld c,a
-jc_lw
-    ld a,0                      ; w - 1 (patched)
-    sub c
-    ENDIF
-    ld (hl),a
-    inc hl
-    ld (hl),0
+    ld (hl),#C1                 ; pop bc : add hl,bc
     inc hl
     ld (hl),#09
+    ELSE
+    ld (hl),#F1                 ; pop af
+    ENDIF
     inc hl
-    ld a,(de)                   ; n
+    ld a,(de)                   ; s, n: into the (s, n) table
+    inc de
+    ld (iy+0),a
+    ld a,(de)
     inc de
     ld (iy+1),a
     inc iy
     inc iy
     or a                        ; nothing on this line
     jp z,@eol
-    ld b,a
     IF {left}
-    ld ixl,b                    ; IXL counts, B = flip_tab's page
+    ld ixl,a                    ; IXL counts, B = flip_tab's page
     ld b,flip_tab>>8
-    ELSE
-    ld c,#23                    ; C = inc hl, B counts
-    ENDIF
 @byte
+    ld (hl),#2B                 ; dec hl
+    inc hl
     ld a,(de)
     inc de
     or a
     jr z,@esc
-    IF {left}
     ld c,a
     ld a,(bc)                   ; mirrored
-    ENDIF
     ld (hl),#36                 ; ld (hl),byte
     inc hl
     ld (hl),a
     inc hl
-@step
-    IF {left}
-    ld (hl),#2B                 ; dec hl
-    inc hl
+@next
     dec ixl
     jp nz,@byte
-    ELSE
-    ld (hl),c                   ; inc hl
-    inc hl
-    djnz @byte
-    ENDIF
-    dec hl                      ; no step after the last byte
     jp @eol
 @esc
     ld a,(de)
     inc de
     or a
-    jr z,@step                  ; a hole: leave the ground
-    IF {left}
+    jr z,@next                  ; a hole: leave the ground
     ld c,a
     ld a,(bc)                   ; mirrored
     ld c,a
@@ -602,6 +581,28 @@ jc_lw
     ld a,(bc)
     dec b
     ELSE
+    ld b,a                      ; B counts, C = inc hl
+    ld c,#23
+@byte
+    ld a,(de)
+    inc de
+    or a
+    jr z,@esc
+    ld (hl),#36                 ; ld (hl),byte
+    inc hl
+    ld (hl),a
+    inc hl
+@next
+    ld (hl),c                   ; inc hl
+    inc hl
+    djnz @byte
+    dec hl                      ; no step after the last byte
+    jp @eol
+@esc
+    ld a,(de)
+    inc de
+    or a
+    jr z,@next                  ; a hole: leave the ground
     push bc
     ld c,a
     ld b,mask_tab>>8
@@ -622,7 +623,7 @@ jc_lw
     IF {left} == 0
     pop bc
     ENDIF
-    jr @step
+    jr @next
 @eol
     dec ixh
     jr z,@end
@@ -689,7 +690,7 @@ jc_time
 ;; ---------------------------------------------------------------------------
 ;; jc_right / jc_left - compile from the start of a line: HL = code,
 ;; DE = the line in the span stream (its bank paged in), IXH = lines left,
-;; IY = the (s, n) table, (jc_lw+1) = width - 1. Out: Z when the frame is done, NZ when it stopped for
+;; IY = the (s, n) table. Out: Z when the frame is done, NZ when it stopped for
 ;; lack of time (jw_hl, jw_de, jw_lines saved). Destroys everything.
 ;; ---------------------------------------------------------------------------
     JC_BODY 0,jc_right

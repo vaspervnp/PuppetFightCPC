@@ -316,11 +316,43 @@ A `PUSH` compiler doesn't help. An opaque byte's code is 3 bytes
 would make compiling cheap, but on the CPC `LDIR` costs 6 µs a byte
 against 5 for `ld (hl),n : inc hl`. Facing left also needs flipped data.
 
+### Improvements
+
+- **The draw walks the new frame's restore list.** A restore list already
+  holds, per line, the screen address of the frame's leftmost byte and its
+  byte count. It is now built in `prepare` for the frame about to be drawn,
+  not after the window for the one just drawn. The draw job's SP walks it,
+  and the next picture restores from the same list. A compiled line starts
+  `pop hl : pop af` facing right, or `pop hl : pop bc : add hl,bc` facing
+  left, where each byte is then `dec hl` and its store. Before, a line
+  started `pop hl : add hl,de : ld bc,col : add hl,bc`. The largest frame
+  shrank from 1,871 to 1,740 bytes, so slots are now 1,744 bytes and Putin
+  gets a sixth bank slot. Draws are ~0.35 ms faster per fighter, and the
+  separate restore-list step after the window is gone.
+- **Fighters that don't change are left alone.** If a fighter shows the
+  same frame in the same place and the other fighter's old and new boxes
+  don't reach it, neither its restore nor its draw runs.
+
+| Play script | Before | Now |
+|---|---|---|
+| Compile per frame | 17.4 ms | 16.0 ms |
+| Frames compiled | 80 | 67 |
+| Pictures with a held frame (Trump / Putin) | 52 / 23 | 32 / 30 |
+| Latest window end, fighters standing (DEMO) | line 124 | line 116 |
+
+The DEMO scenarios still show 2 frames between every pair of pictures,
+0 lines caught and no held frames. `SLACK=15` is clean, and at `SLACK=20`
+2 lines are caught (it was 26 before the raised floor).
+
+What's left in the compiler is the byte loop itself: ~24 µs per opaque
+byte facing right and ~29 facing left (read, test, two stores and a step,
+count). The remaining tweaks (`exx` for the (s, n) pointer, the mask
+worked out instead of looked up) are worth ~5%.
+
 ## Next (milestone 2 work this feeds)
 
-- Compiler: shave the byte loop (~24 → ~18 µs), line headers and masked
-  bytes. Expect ~35% faster, not 2×.
-- Skip a fighter's restore and draw when it shows the same frame in the
-  same place and the other fighter doesn't touch it. That gives the
-  compiler the time back.
+- Held frames in busy play: the compiler does about one frame per picture,
+  and a new move or a turn needs 3-4. Options: let the logic start a move
+  on a frame that is already cached, or compile a move's first frame ahead
+  when its input is likely (an attack button held, the opponent close).
 - Confirm on real hardware (CRTC types 0-2), as OverscanCPC did.

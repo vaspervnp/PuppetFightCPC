@@ -79,11 +79,8 @@ ml_slack_in
     djnz ml_slack
     ENDIF
     call rebuild                ; both fighters, set up by prepare
-    ld ix,fighter_a             ; then, while the beam goes round twice:
-    call ml_prebuild            ; restore lists for the next set-up,
-    ld ix,fighter_b
-    call ml_prebuild
-    call ml_logic               ; the logic (compiling new frames),
+    call ml_logic               ; then, while the beam goes round twice:
+                                ; the logic,
     call ml_prepare             ; the next picture's jobs,
     call jit_work               ; and compiling, in the time that's left
     jr main_loop
@@ -104,13 +101,6 @@ ml_prepare
     ld (bench_phase),a
     ret
 
-ml_prebuild
-    ld a,PH_PREBUILD
-    ld (bench_phase),a
-    call prebuild
-    xor a
-    ld (bench_phase),a
-    ret
 
 ;; make_tables - flip_tab (the two pixels of a Mode 0 byte swapped) and
 ;; mask_tab (#AA / #55 set where a pixel is pen 0), which the compiler
@@ -452,8 +442,11 @@ key_rows        defs 10
 p1_ctl          defb 0
 p2_ctl          defb 0
 sf_draw         defw 0
+skip_a          defb 0          ; prepare: no window work for A / B
+skip_b          defb 0
 sf_x            defb 0
 br_w            defb 0
+jit_done        defw 0          ; frames compiled (the bench reads it)
 jit_clock       defb 0          ; jit.asm: cache use counter,
 jit_force       defb 1          ; compile whatever the time (at boot),
 jg_rec          defw 0          ; the frame asked for,
@@ -466,7 +459,6 @@ jw_slot         defw 0          ; facing, frame bank, width - 1, and where
 jw_rec          defw 0          ; it stopped (code, spans, lines left)
 jw_face         defb 0
 jw_bank         defb 0
-jw_w            defb 0
 jw_hl           defw 0
 jw_de           defw 0
 jw_lines        defb 0

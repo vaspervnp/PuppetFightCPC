@@ -97,7 +97,7 @@ mask_tab        EQU #CF00       ; of slice 1's tail: page aligned
 ;; compiled draw in either facing (tools/sprite_codegen.py checks: --slot).
 CACHE_SLOTS_A   EQU 4           ; main RAM slots: Trump,
 CACHE_SLOTS_B   EQU 2           ; Putin (who has more in bank 1)
-CACHE_SLOT      EQU 1872
+CACHE_SLOT      EQU 1744
 CACHE_AT        EQU #4000-(CACHE_SLOTS_A+CACHE_SLOTS_B)*CACHE_SLOT
 MAX_SLOTS       EQU 8           ; main + bank 1, per fighter
 ;; The slot tables live after line_tab in slice 0 (#C700-#C7FE), and each

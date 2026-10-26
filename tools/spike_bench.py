@@ -165,6 +165,7 @@ class Bench:
         state = None
         done = 0
         last_done_t = self.t
+        self.done0 = self.peek("JIT_DONE", 2)
         while done < renders:
             self.step()
             if self.t - last_done_t > 50 * FRAME_US:
@@ -183,10 +184,12 @@ class Bench:
                     self.pic_starts.append(self.t)
                 if last_ph in (0, 5) and ph in REBUILD_PHASES:
                     epochs.append(self.band())      # nothing touched yet
+                    self.epoch_t = self.t
                     start_line.append(self.beam())
                     state = self.jump_state()
                 if ph in (0, 5) and last_ph in REBUILD_PHASES and state:
-                    self.windows[state].append(self.beam())
+                    if self.t - self.epoch_t > 2 * LINE_US * 16:   # not an empty window
+                        self.windows[state].append(self.beam())
                 if ph == 5 and last_ph != 9:
                     for k, v in acc.items():
                         durations[k].append(v)
@@ -298,6 +301,10 @@ def main():
         gaps[round((t1 - t0) / FRAME_US)] += 1
     print("  frames between pictures: %s (2 = 25 fps)" % ", ".join(
         "%d x%d" % (k, gaps[k]) for k in sorted(gaps)))
+    n_done = b.peek("JIT_DONE", 2) - b.done0
+    if n_done:
+        tot = sum(durations.get(9, []))
+        print("  frames compiled: %d, %.1f ms each" % (n_done, tot / n_done / 1000))
     print("  frame held (not compiled yet): Trump %d, Putin %d pictures of %d" % (
         b.waits["FIGHTER_A"], b.waits["FIGHTER_B"], npics))
     print("  fighter band: lines %d-%d; a standing fighter's top is line %d" % (

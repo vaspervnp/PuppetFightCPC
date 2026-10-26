@@ -276,7 +276,7 @@ dark red, and pastel yellow (FFFF80) → olive (808000).
 |---|---|---|
 | &0038 | 3 | interrupt jump (both ROMs are off, so this is RAM) |
 | &0100-&01FF | 256 | stack |
-| &0200-&3FFF | 15.5K | engine (to &1229), then the compiled frame cache: 4 slots for fighter A and 2 for B, 1,872 bytes each, from &1420 |
+| &0200-&3FFF | 15.5K | engine (to &12AC), then the compiled frame cache: 4 slots for fighter A and 2 for B, 1,744 bytes each, from &1720 |
 | &4000-&7FFF | 16K | background mirror of the fighter band, lines 88-211 (~12K used, ~4K free in 512-byte gaps at &x240-&x43F) |
 | &8000-&FFFF | 32K | overscan screen (26K used). The unused 800-byte tails of page 3 hold `line_tab` (&C4E0), the cache slot tables (&C700), four restore lists (&CCE0/&DCE0, &E4E0/&F4E0), `flip_tab`/`mask_tab` built at boot (&CE00) and the compiler's (s, n) tables (&D4E0, &ECE0, &FCE0) |
 | Bank 4-5 | 32K | fighter A's character: directory, all 48 frames (escaped span streams), and compiled frame cache slots at the top of bank 1 |

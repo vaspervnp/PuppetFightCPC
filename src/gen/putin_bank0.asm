@@ -3,7 +3,7 @@
     ORG #4000
 putin_dir
     defb "P","F",2,14
-    defb 5 : defw #5B70        ; cache slots in bank 1
+    defb 6 : defw #5720        ; cache slots in bank 1
     defb 4 : defw putin_m_idle
     defb 4 : defw putin_m_walk
     defb 3 : defw putin_m_crouch
@@ -34,10 +34,10 @@ putin_m_crouch
     defb 1,16,0 : defw putin_crouch_2_spans : defs 7
 putin_m_jump
     defb 1,16,0 : defw putin_jump_0_spans : defs 7
-    defb 1,16,0 : defw putin_jump_1_spans : defs 7
-    defb 1,16,0 : defw putin_jump_2_spans : defs 7
+    defb 0,16,0 : defw putin_jump_1_spans : defs 7
+    defb 0,16,0 : defw putin_jump_2_spans : defs 7
 putin_m_punch
-    defb 1,16,0 : defw putin_punch_0_spans : defs 7
+    defb 0,16,0 : defw putin_punch_0_spans : defs 7
     defb 0,16,0 : defw putin_punch_1_spans : defs 7
     defb 0,16,0 : defw putin_punch_2_spans : defs 7
 putin_m_kick
@@ -46,7 +46,7 @@ putin_m_kick
     defb 0,16,0 : defw putin_kick_2_spans : defs 7
 putin_m_sweep
     defb 0,16,0 : defw putin_sweep_0_spans : defs 7
-    defb 0,16,0 : defw putin_sweep_1_spans : defs 7
+    defb 1,16,0 : defw putin_sweep_1_spans : defs 7
     defb 0,16,0 : defw putin_sweep_2_spans : defs 7
 putin_m_uppercut
     defb 0,16,0 : defw putin_uppercut_0_spans : defs 7
@@ -80,6 +80,199 @@ putin_m_victory
     defb 0,16,0 : defw putin_victory_0_spans : defs 7
     defb 0,16,0 : defw putin_victory_1_spans : defs 7
     defb 0,16,0 : defw putin_victory_2_spans : defs 7
+
+putin_jump_1_spans  ; 16 bytes wide
+    defb 11,56,51
+    defb 7,2,#FF,#00,#AA
+    defb 6,3,#FF,#3C,#7D
+    defb 5,5,#00,#55,#C3,#69,#83,#00,#AA
+    defb 5,5,#00,#55,#96,#69,#83,#57
+    defb 5,5,#EB,#1E,#3C,#3C,#DD
+    defb 5,5,#EB,#1E,#3C,#3C,#DD
+    defb 5,5,#AF,#3C,#3C,#3C,#7D
+    defb 4,6,#00,#55,#87,#3C,#3C,#3C,#7D
+    defb 4,7,#00,#55,#87,#3C,#3C,#3C,#6C,#00,#AA
+    defb 4,7,#00,#55,#C3,#3C,#29,#03,#03,#00,#AA
+    defb 4,7,#00,#55,#C3,#3C,#2D,#BE,#0B,#00,#AA
+    defb 5,5,#BE,#3C,#2D,#BE,#5F
+    defb 5,5,#BE,#3C,#3C,#3C,#7D
+    defb 5,6,#BE,#3C,#3C,#3C,#CC,#00,#AA
+    defb 5,6,#BE,#3C,#3C,#3C,#CC,#00,#AA
+    defb 5,7,#BE,#3C,#3C,#6C,#CC,#00,#AA,#00,#AA
+    defb 5,7,#BE,#3C,#3C,#6C,#CC,#FF,#7D
+    defb 5,8,#00,#55,#3C,#3C,#3C,#DD,#BE,#3C,#00,#AA
+    defb 5,7,#00,#55,#3C,#3C,#6C,#DD,#BE,#7D
+    defb 5,7,#00,#55,#3C,#3C,#CC,#9C,#BE,#7D
+    defb 6,6,#BE,#6C,#CC,#BE,#3C,#7D
+    defb 6,6,#EE,#CC,#DD,#3C,#3C,#DD
+    defb 6,6,#00,#55,#3C,#DD,#3C,#3C,#DD
+    defb 6,6,#FF,#1E,#3C,#6C,#BE,#DD
+    defb 5,7,#00,#55,#3C,#FF,#3C,#6C,#BE,#00,#AA
+    defb 5,7,#00,#55,#3C,#3C,#3C,#7D,#6C,#00,#AA
+    defb 5,7,#00,#55,#3C,#3C,#3C,#DD,#6C,#00,#AA
+    defb 5,7,#00,#55,#3C,#3C,#6C,#BE,#6C,#00,#AA
+    defb 5,6,#AF,#EE,#3C,#6C,#EE,#DD
+    defb 5,6,#AF,#5F,#EE,#6C,#FF,#00,#AA
+    defb 5,4,#AF,#0F,#5F,#FF
+    defb 5,5,#AF,#0F,#0F,#C3,#00,#AA
+    defb 5,5,#AF,#0F,#4B,#C3,#00,#AA
+    defb 5,5,#AF,#0F,#4B,#C3,#00,#AA
+    defb 5,5,#AF,#0F,#4B,#C3,#00,#AA
+    defb 5,4,#00,#55,#0F,#C3,#D7
+    defb 5,4,#00,#55,#C3,#C3,#D7
+    defb 5,4,#00,#55,#C7,#C3,#D5
+    defb 5,4,#00,#55,#C3,#CB,#D5
+    defb 5,5,#00,#55,#C1,#CF,#C2,#00,#AA
+    defb 6,4,#EA,#C3,#CA,#00,#AA
+    defb 6,4,#00,#55,#C1,#C2,#D7
+    defb 7,3,#EF,#C2,#D7
+    defb 7,3,#EF,#C3,#D5
+    defb 6,4,#00,#55,#C3,#C1,#D5
+    defb 6,4,#00,#55,#C3,#C0,#00,#AA
+    defb 6,3,#00,#55,#C2,#D5
+    defb 6,3,#00,#55,#D7,#D5
+    defb 6,3,#00,#55,#C3,#00,#AA
+    defb 7,2,#FF,#00,#AA
+    defb 7,2,#00,#55,#00,#AA
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+
+putin_jump_2_spans  ; 16 bytes wide
+    defb 6,64,57
+    defb 6,2,#00,#55,#FF
+    defb 5,4,#00,#55,#BE,#C3,#00,#AA
+    defb 5,4,#EB,#2D,#C3,#57
+    defb 5,4,#EB,#3C,#96,#57
+    defb 4,6,#00,#55,#87,#3C,#3C,#6C,#00,#AA
+    defb 4,6,#00,#55,#1E,#3C,#3C,#6C,#00,#AA
+    defb 4,6,#00,#55,#1E,#3C,#3C,#6C,#00,#AA
+    defb 4,6,#EB,#1E,#3C,#3C,#3C,#00,#AA
+    defb 4,6,#EB,#1E,#3C,#29,#03,#57
+    defb 4,6,#EB,#96,#3C,#57,#2D,#00,#AA
+    defb 4,6,#EB,#96,#3C,#5F,#0F,#00,#AA
+    defb 4,6,#EB,#3C,#3C,#3C,#3C,#DD
+    defb 4,6,#00,#55,#3C,#3C,#3C,#3C,#DD
+    defb 4,6,#00,#55,#3C,#3C,#3C,#6C,#DD
+    defb 4,6,#00,#55,#3C,#3C,#3C,#CC,#DD
+    defb 4,6,#00,#55,#3C,#3C,#3C,#CC,#DD
+    defb 4,6,#00,#55,#3C,#3C,#3C,#6C,#DD
+    defb 5,7,#BE,#3C,#3C,#6C,#DD,#00,#55,#00,#AA
+    defb 5,7,#BE,#3C,#3C,#CC,#00,#AA,#BE,#7D
+    defb 5,7,#BE,#3C,#CC,#CC,#00,#AA,#BE,#7D
+    defb 5,7,#00,#55,#3C,#6C,#DD,#FF,#BE,#7D
+    defb 6,6,#EE,#CC,#FF,#3C,#3C,#7D
+    defb 6,6,#BE,#3C,#3C,#3C,#3C,#DD
+    defb 5,7,#00,#55,#AF,#1E,#3C,#6C,#3C,#DD
+    defb 5,7,#BE,#7D,#1E,#3C,#DD,#3C,#00,#AA
+    defb 5,7,#BE,#3C,#BE,#3C,#DD,#6C,#00,#AA
+    defb 5,7,#BE,#3C,#7D,#3C,#BE,#6C,#00,#AA
+    defb 5,7,#00,#55,#3C,#3C,#6C,#BE,#6C,#00,#AA
+    defb 5,6,#AF,#BE,#3C,#6C,#BE,#DD
+    defb 5,6,#AF,#BE,#3C,#CC,#BE,#DD
+    defb 5,6,#AF,#5F,#3C,#DD,#EE,#DD
+    defb 5,6,#AF,#0F,#BE,#DD,#00,#55,#00,#AA
+    defb 5,5,#AF,#0F,#5F,#EB,#00,#AA
+    defb 5,5,#AF,#0F,#4B,#C3,#00,#AA
+    defb 5,4,#AF,#0F,#4B,#D7
+    defb 5,4,#EB,#0F,#C3,#D7
+    defb 5,4,#00,#55,#C3,#C3,#D5
+    defb 5,4,#00,#55,#C7,#C3,#D5
+    defb 5,4,#00,#55,#C3,#C2,#D5
+    defb 5,4,#00,#55,#C7,#C0,#00,#AA
+    defb 6,3,#EF,#C2,#00,#AA
+    defb 6,3,#EF,#C2,#00,#AA
+    defb 6,3,#EB,#C2,#00,#AA
+    defb 6,3,#EB,#C2,#00,#AA
+    defb 6,3,#EB,#C2,#00,#AA
+    defb 6,3,#EB,#C2,#00,#AA
+    defb 6,3,#EB,#C2,#00,#AA
+    defb 6,3,#EF,#CA,#00,#AA
+    defb 5,4,#00,#55,#C7,#C2,#00,#AA
+    defb 5,4,#00,#55,#C3,#C2,#00,#AA
+    defb 5,4,#00,#55,#C3,#C2,#00,#AA
+    defb 5,3,#00,#55,#C3,#D7
+    defb 5,3,#00,#55,#C3,#D7
+    defb 5,3,#00,#55,#C3,#D7
+    defb 6,3,#FF,#D7,#00,#AA
+    defb 6,3,#FF,#FF,#00,#AA
+    defb 7,1,#FF
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+
+putin_punch_0_spans  ; 16 bytes wide
+    defb 6,64,57
+    defb 6,2,#00,#55,#FF
+    defb 5,4,#00,#55,#BE,#C3,#00,#AA
+    defb 5,4,#EB,#2D,#C3,#57
+    defb 5,4,#EB,#3C,#96,#57
+    defb 4,6,#00,#55,#96,#3C,#3C,#6C,#00,#AA
+    defb 4,6,#00,#55,#1E,#3C,#3C,#6C,#00,#AA
+    defb 4,6,#00,#55,#1E,#3C,#3C,#6C,#00,#AA
+    defb 4,6,#EB,#1E,#3C,#3C,#3C,#00,#AA
+    defb 4,6,#EB,#1E,#3C,#03,#29,#57
+    defb 4,6,#EB,#96,#3C,#57,#29,#57
+    defb 4,6,#EB,#3C,#3C,#5F,#2D,#00,#AA
+    defb 4,6,#EB,#3C,#3C,#3C,#3C,#DD
+    defb 4,6,#00,#55,#3C,#3C,#3C,#6C,#DD
+    defb 4,6,#00,#55,#3C,#3C,#3C,#6C,#DD
+    defb 4,6,#00,#55,#3C,#3C,#3C,#CC,#DD
+    defb 4,6,#00,#55,#3C,#3C,#3C,#CC,#DD
+    defb 4,6,#00,#55,#3C,#3C,#3C,#6C,#DD
+    defb 5,5,#BE,#3C,#3C,#6C,#00,#AA
+    defb 5,5,#BE,#3C,#3C,#CC,#00,#AA
+    defb 5,5,#BE,#3C,#CC,#CC,#00,#AA
+    defb 5,4,#00,#55,#3C,#6C,#DD
+    defb 6,5,#EE,#CC,#00,#AA,#00,#00,#FF
+    defb 6,6,#BE,#3C,#00,#AA,#00,#55,#3C,#00,#AA
+    defb 5,7,#FF,#AF,#3C,#7D,#00,#55,#3C,#00,#AA
+    defb 4,8,#00,#55,#3C,#AF,#3C,#3C,#FF,#3C,#00,#AA
+    defb 4,8,#00,#55,#3C,#AF,#3C,#3C,#9C,#6C,#00,#AA
+    defb 4,8,#00,#55,#3C,#BE,#3C,#DD,#3C,#6C,#00,#AA
+    defb 4,7,#00,#55,#3C,#BE,#2D,#C3,#BE,#7D
+    defb 4,7,#00,#55,#3C,#3C,#2D,#C3,#BE,#DD
+    defb 4,7,#00,#55,#3C,#3C,#AF,#C3,#BE,#DD
+    defb 4,7,#00,#55,#3C,#3C,#AF,#C3,#BE,#DD
+    defb 4,7,#00,#55,#3C,#6C,#AF,#C3,#BE,#DD
+    defb 4,7,#00,#55,#3C,#6C,#AF,#C3,#EE,#00,#AA
+    defb 5,6,#BE,#7D,#4B,#C3,#EE,#00,#AA
+    defb 5,6,#BE,#DD,#4B,#C3,#EE,#00,#AA
+    defb 5,5,#BE,#DD,#C3,#C3,#FF
+    defb 5,4,#EE,#AF,#C3,#D7
+    defb 5,4,#00,#55,#C7,#C3,#D5
+    defb 5,4,#00,#55,#C3,#C2,#D5
+    defb 5,4,#00,#55,#C5,#C0,#D5
+    defb 6,3,#EF,#C2,#00,#AA
+    defb 6,3,#EF,#C2,#00,#AA
+    defb 6,3,#EB,#C2,#00,#AA
+    defb 6,3,#EB,#C2,#00,#AA
+    defb 6,3,#EB,#C2,#00,#AA
+    defb 6,3,#EB,#C2,#00,#AA
+    defb 6,3,#EF,#C2,#00,#AA
+    defb 5,4,#00,#55,#CF,#CA,#00,#AA
+    defb 5,4,#00,#55,#CB,#C2,#00,#AA
+    defb 5,4,#00,#55,#C3,#C2,#00,#AA
+    defb 5,4,#00,#55,#C3,#C2,#00,#AA
+    defb 5,4,#EB,#C3,#C2,#00,#AA
+    defb 5,4,#EB,#C3,#C2,#00,#AA
+    defb 5,3,#00,#55,#C3,#D7
+    defb 5,4,#00,#55,#FF,#C3,#00,#AA
+    defb 6,3,#FF,#FF,#00,#AA
+    defb 7,1,#FF
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
+    defb 0,0
 
 putin_punch_1_spans  ; 16 bytes wide
     defb 8,56,54
@@ -440,57 +633,6 @@ putin_sweep_0_spans  ; 16 bytes wide
     defb 7,1,#FF
     defb 0,0
     defb 0,0
-    defb 0,0
-    defb 0,0
-
-putin_sweep_1_spans  ; 16 bytes wide
-    defb 16,48,46
-    defb 9,1,#FF
-    defb 8,3,#00,#55,#C3,#00,#AA
-    defb 8,3,#EB,#C3,#7D
-    defb 7,5,#00,#55,#C3,#96,#3C,#00,#AA
-    defb 7,5,#00,#55,#87,#3C,#C3,#57
-    defb 7,5,#00,#55,#0F,#3C,#4B,#57
-    defb 7,6,#EB,#0F,#3C,#69,#83,#00,#AA
-    defb 7,6,#EB,#1E,#3C,#3C,#03,#00,#AA
-    defb 7,6,#EB,#3C,#3C,#3C,#6C,#00,#AA
-    defb 7,6,#EB,#3C,#3C,#3C,#6C,#00,#AA
-    defb 7,6,#BE,#3C,#3C,#3C,#6C,#00,#AA
-    defb 7,6,#BE,#3C,#3C,#3C,#6C,#00,#AA
-    defb 7,6,#BE,#3C,#3C,#16,#6C,#00,#AA
-    defb 7,6,#BE,#3C,#29,#03,#6C,#00,#AA
-    defb 7,6,#BE,#3C,#2D,#AB,#03,#00,#AA
-    defb 7,6,#BE,#3C,#3C,#BE,#0B,#00,#AA
-    defb 7,5,#BE,#3C,#3C,#3C,#5F
-    defb 7,5,#BE,#3C,#3C,#3C,#DD
-    defb 7,5,#BE,#3C,#3C,#3C,#DD
-    defb 7,5,#00,#55,#3C,#3C,#CC,#DD
-    defb 7,5,#00,#55,#3C,#3C,#CC,#00,#AA
-    defb 7,5,#AF,#6C,#CC,#CC,#00,#AA
-    defb 6,5,#00,#55,#AF,#3C,#CC,#DD
-    defb 6,5,#BE,#7D,#1E,#7D,#00,#AA
-    defb 6,4,#BE,#7D,#1E,#7D
-    defb 6,5,#BE,#3C,#BE,#6C,#00,#AA
-    defb 5,6,#00,#55,#5F,#3C,#BE,#6C,#00,#AA
-    defb 5,5,#00,#55,#5F,#3C,#BE,#DD
-    defb 5,5,#00,#55,#5F,#3C,#EB,#DD
-    defb 5,5,#00,#55,#5F,#3C,#DD,#D7
-    defb 5,6,#00,#55,#0F,#BE,#7D,#FF,#FF
-    defb 5,7,#00,#55,#0F,#BE,#3C,#3C,#3C,#00,#AA
-    defb 5,7,#00,#55,#0F,#BE,#3C,#3C,#3C,#00,#AA
-    defb 5,7,#EB,#0F,#BE,#3C,#3C,#3C,#00,#AA
-    defb 5,6,#EB,#C3,#D7,#CC,#CC,#DD
-    defb 5,6,#EB,#C7,#CF,#FF,#FF,#FF
-    defb 5,6,#EA,#C3,#C3,#CF,#CB,#D7
-    defb 5,6,#00,#55,#C0,#C1,#C3,#D7,#FF
-    defb 6,5,#FF,#C7,#C0,#D7,#FF
-    defb 6,5,#EB,#C3,#D7,#FF,#00,#AA
-    defb 6,4,#EF,#CB,#C2,#00,#AA
-    defb 5,5,#00,#55,#C3,#CB,#C2,#00,#AA
-    defb 6,4,#EB,#C3,#C2,#00,#AA
-    defb 6,3,#FF,#EA,#D5
-    defb 6,3,#00,#55,#FF,#00,#AA
-    defb 7,1,#00,#AA
     defb 0,0
     defb 0,0
 

@@ -177,20 +177,18 @@ def compiled_size(rows):
 
 
 def runtime_size(rows):
-    """Bytes src/jit.asm writes for these rows (either facing): per line
-    pop hl : add hl,de : ld bc,col : add hl,bc, then one store per byte and
-    an inc hl (dec hl facing left) between, over the padded lines, with a
-    yield every CHUNK lines."""
+    """Bytes src/jit.asm writes for these rows, facing left (the larger):
+    per line pop hl : pop bc : add hl,bc, then per byte a dec hl and its
+    store, over the padded lines, with a yield every CHUNK lines."""
     _top, lines = spans(rows)
     lines = lines + [(0, [])] * (-len(lines) % CHUNK)
     size = 5                                            # ld hl,0 : jp (iy)
     for k, (s, d) in enumerate(lines):
         if k and k % CHUNK == 0:
             size += 9
-        size += 6
+        size += 3
         for b in d:
-            size += 0 if b == 0 else 2 if mask_of(b) == 0 else 6
-        size += max(len(d) - 1, 0)
+            size += 1 + (0 if b == 0 else 2 if mask_of(b) == 0 else 6)
     return size
 
 
