@@ -74,7 +74,7 @@ trump_m_ko
 trump_m_special
     defb 0,16,0 : defw trump_special_0_spans,568 : defb 2,11,1,62,0,0,0,0 : defs 1
     defb 0,16,0 : defw trump_special_1_spans,591 : defb 1,11,1,62,0,0,0,0 : defs 1
-    defb 0,16,0 : defw trump_special_2_spans,530 : defb 5,15,2,62,0,0,0,0 : defs 1
+    defb 0,16,0 : defw trump_special_2_spans,530 : defb 5,15,2,62,12,17,27,35 : defs 1
     defb 0,16,0 : defw trump_special_3_spans,550 : defb 5,13,1,62,0,0,0,0 : defs 1
 trump_m_victory
     defb 0,16,0 : defw trump_victory_0_spans,565 : defb 3,11,1,62,0,0,0,0 : defs 1

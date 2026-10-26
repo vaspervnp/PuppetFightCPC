@@ -441,6 +441,54 @@ Checked on the emulator, with keys scripted per picture:
 `make bench-all`, `bench-fight` and `bench-play` still show 2 frames
 between pictures and 0 lines caught, and `SLACK=15` is clean.
 
+## Milestone 3 step 3: clock, motion history, hitstun
+
+- **Clock** (`round.asm`). 99 seconds a round, in BCD, as two 3 × 5 pixel
+  digits between the bars, 3 lines a pixel row. It is drawn only when a
+  second passes, in the logic, while the beam is below the HUD. At 0 the
+  fighter with more health wins the round, in its victory pose, as after a
+  KO. With the same health it is a draw: no marker, and the round starts
+  again.
+- **Motion history** (`fighter.asm`). Every picture the stick goes in front
+  of a 12-picture history (0.48 s), turned to the fighter's facing (up,
+  down, back, forward). A motion is a list of steps, newest first, each a
+  mask and a value, and it matches when the history shows the steps in
+  order, each in an older picture than the one before. Motions:
+  - special: ↓, ↘, → with either button. The history is cleared once it
+    fires, so the next press is a plain attack.
+  - uppercut: ↓ then ↑ + punch, so it can come out of standing as an
+    anti-air. ↓ + punch still works.
+- **Special.** Both characters already had `special` frames (move 12).
+  Until milestone 5 makes them Trump's tweet storm and Putin's throw, they
+  are a strong strike: 8 damage, hit boxes in the `_hits.json` sidecars.
+- **Hitstun and blockstun.** A hit now holds the hit reaction for the
+  attack's hitstun, in pictures: punch 6, kick 8, sweep 10, uppercut 12,
+  back kick 10, special 14. The reaction's own frames take 6. A punch
+  leaves the attacker 2 pictures ahead, but not enough for a second punch
+  to land before the defender recovers. A heavier move gives more. A
+  standing block holds at least 4 pictures (`BLOCK_STUN`), even if back is
+  let go.
+- **Memory.** Each fighter record grows by 13 bytes (`F_STUN`, `F_HIST`).
+  The clock sits in the second cold block (81 bytes left). The payload
+  ends at &13FB, leaving ~800 bytes before the caches with the staging
+  buffer.
+
+Checked on the emulator with keys and pokes per picture:
+
+| Test | Result |
+|---|---|
+| Trump ↓ ↘ → + punch, up close | special, Putin −8, 14 pictures of hitstun |
+| Putin ↓ ↙ ← + punch | special |
+| Trump ↓, then ↑ + punch | uppercut (↑ alone: a jump) |
+| Putin punches Trump | −4, 6 pictures of hitstun |
+| Trump blocks, lets go of back during the punch | block held 4 pictures after it lands |
+| Clock set to 1 s, Putin on less health | time-out: Trump's victory pose, his marker, a new round at 99 |
+| Clock set to 1 s, health level | draw: no marker, a new round at 99 |
+
+A bench with both specials landing (−8 each) and the motion uppercut, and
+`make bench-all`, `bench-fight`, `bench-play` and `SLACK=15`, all show
+2 frames between pictures, 0 lines caught and 0 bytes wrong.
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

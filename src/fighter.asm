@@ -6,10 +6,17 @@
 ;;     idle, walk, crouch    free: controls choose the next move
 ;;     jump                  in the air for JUMP_PICS pictures
 ;;     punch, kick, ...      attacks: play through once, then idle
+;;     block, hit            held for their stun (and a block while the
+;;                           opponent attacks), then idle
 ;; Frames advance every FRAME_PICS pictures (12.5 fps). An attack frame with
 ;; a hit box that reaches the opponent's hurt box lands once per attack
 ;; (combat): blocked if the opponent holds back while free, otherwise damage,
-;; a hit reaction, and at no health a KO.
+;; a hit reaction for the move's hitstun, and at no health a KO.
+;;
+;; Every picture the stick goes into a motion history, turned to the
+;; fighter's facing, so moves can ask for a motion: down, down-forward,
+;; forward + a button for the special, down then up + punch for the
+;; uppercut (down + punch also works).
 ;;
 ;; Positions are box x in bytes (the frame's left edge before its offset)
 ;; and the top scanline. Fighters face each other while they are free, stay
@@ -29,6 +36,7 @@ MV_BACKKICK     EQU 8
 MV_BLOCK        EQU 9
 MV_HIT          EQU 10
 MV_KO           EQU 11
+MV_SPECIAL      EQU 12
 MV_VICTORY      EQU 13
 
 FRAME_PICS      EQU 2           ; pictures per animation frame
@@ -40,6 +48,12 @@ MIN_SEP         EQU 10          ; closest two standing boxes may be (bytes)
 HEALTH_MAX      EQU 40          ; a full health bar, one byte a point
 HIT_PUSH        EQU 3           ; bytes a hit knocks the defender back,
 BLOCK_PUSH      EQU 1           ; and a block
+BLOCK_STUN      EQU 4           ; pictures a standing block holds at least
+HIST_LEN        EQU 12          ; pictures of motion history (0.48 s)
+DR_UP           EQU 1           ; the history: the stick turned to the
+DR_DOWN         EQU 2           ; fighter's facing
+DR_BACK         EQU 4           ; (facing right these are the CT_ bits)
+DR_FWD          EQU 8
 
 ;; ---------------------------------------------------------------------------
 ;; think - IX = fighter, IY = its opponent. One picture of the fighter's
@@ -52,6 +66,7 @@ think
     and c
     ld b,a                      ; B = pressed this picture
     ld (ix+F_PCTL),c
+    call record_motion
     ld a,(ix+F_MOVE)
     cp MV_JUMP
     jp z,th_jump
@@ -61,16 +76,32 @@ think
     jp z,animate_hold           ; and the winner stays up
     cp MV_BLOCK
     jp z,th_block
+    cp MV_HIT
+    jp z,th_stun
     cp MV_PUNCH
-    jp nc,th_attack             ; attacks, block and hit play out
+    jp nc,th_attack             ; attacks play out
 
-    ;; Free: attacks first, then a jump, a crouch, a walk, or standing.
+    ;; Free: the special, attacks, then a jump, a crouch, a walk, or standing.
+    ld a,b
+    and 1<<CT_PUNCH|1<<CT_KICK
+    jr z,th_no_kick
+    ld hl,mo_special
+    call motion
+    jr nc,th_no_special
+    call clear_motion           ; used up
+    ld a,MV_SPECIAL
+    jr th_go
+th_no_special
     bit CT_PUNCH,b
     jr z,th_no_punch
-    ld a,MV_PUNCH
-    bit CT_DOWN,c
-    jr z,th_go
     ld a,MV_UPPERCUT
+    bit CT_DOWN,c
+    jr nz,th_go
+    ld hl,mo_uppercut
+    call motion
+    ld a,MV_UPPERCUT
+    jr c,th_go
+    ld a,MV_PUNCH
     jr th_go
 th_no_punch
     bit CT_KICK,b
@@ -144,8 +175,15 @@ th_stand
     call animate_loop
     jp face_opponent
 
-;; Blocking: held while back is held and the opponent attacks.
+;; Blocking: held for BLOCK_STUN, then while back is held and the opponent
+;; attacks.
 th_block
+    ld a,(ix+F_STUN)
+    or a
+    jr z,th_bl_free
+    dec (ix+F_STUN)
+    jp animate_hold
+th_bl_free
     call back_held
     jr z,th_unblock
     call opp_attacking
@@ -154,13 +192,28 @@ th_unblock
     ld a,MV_IDLE
     jp start_move
 
-;; opp_attacking - IY = opponent: CY if it is in an attack. Destroys AF.
+;; Hit: the reaction plays, then holds for the rest of the hitstun.
+th_stun
+    call animate_hold
+    dec (ix+F_STUN)
+    ret nz
+    ld a,MV_IDLE
+    jp start_move
+
+;; opp_attacking - IY = opponent: CY if it is in an attack.
+;; attacking - A = move: CY if it is an attack. Destroy AF.
 opp_attacking
     ld a,(iy+F_MOVE)
+attacking
     cp MV_PUNCH
     ccf
     ret nc
     cp MV_BACKKICK+1
+    ret c
+    cp MV_SPECIAL
+    scf
+    ret z
+    ccf
     ret
 
 ;; An attack plays through once. A sweep ends crouched if down is held.
@@ -275,6 +328,108 @@ frame_tick
 ft_wait
     ld (ix+F_TIMER),a
     ret
+
+;; record_motion - C = held: this picture's stick, turned to the fighter's
+;; facing, goes in front of its motion history. Keeps BC. Destroys AF, DE,
+;; HL.
+record_motion
+    ld a,c
+    and DR_UP|DR_DOWN|DR_BACK|DR_FWD
+    ld e,a
+    ld a,(ix+F_FACE)
+    or a
+    ld a,e
+    jr z,rm_store
+    and DR_UP|DR_DOWN           ; facing left: left is forward
+    bit CT_LEFT,e
+    jr z,rm_l
+    or DR_FWD
+rm_l
+    bit CT_RIGHT,e
+    jr z,rm_store
+    or DR_BACK
+rm_store
+    push bc
+    push af
+    push ix
+    pop hl
+    ld bc,F_HIST+HIST_LEN-1
+    add hl,bc
+    ld d,h                      ; DE = the oldest,
+    ld e,l
+    dec hl                      ; HL = the one before: all one older
+    ld bc,HIST_LEN-1
+    lddr
+    pop af
+    ld (de),a                   ; and this picture's in front
+    pop bc
+    ret
+
+;; motion - HL = a motion: its steps newest first, each a mask and the
+;; value the history must show under it, and 0 to end. CY if the history
+;; holds the steps in order, each in an older picture than the last.
+;; Keeps BC. Destroys AF, DE, HL.
+motion
+    push bc
+    ex de,hl                    ; DE = steps
+    push ix
+    pop hl
+    ld bc,F_HIST
+    add hl,bc                   ; HL = the newest picture
+    ld b,HIST_LEN+1
+mo_step
+    ld a,(de)
+    or a
+    jr z,mo_found               ; every step found
+mo_pic
+    dec b
+    jr z,mo_none                ; out of history (NC)
+    ld a,(de)
+    and (hl)
+    inc hl
+    inc de
+    ex de,hl
+    cp (hl)
+    ex de,hl
+    dec de
+    jr nz,mo_pic                ; not this picture: an older one
+    inc de                      ; found: the next step, further back
+    inc de
+    jr mo_step
+mo_found
+    pop bc
+    scf
+    ret
+mo_none
+    pop bc
+    or a
+    ret
+
+;; clear_motion - forget the history (a motion used up). Destroys AF, HL.
+clear_motion
+    push bc
+    push ix
+    pop hl
+    ld bc,F_HIST
+    add hl,bc
+    ld b,HIST_LEN
+cm_byte
+    ld (hl),0
+    inc hl
+    djnz cm_byte
+    pop bc
+    ret
+
+;; Motions for motion: mask, value, ... 0.
+mo_special                      ; down, down-forward, forward
+    defb DR_DOWN|DR_FWD,DR_FWD
+    defb DR_DOWN|DR_FWD,DR_DOWN|DR_FWD
+    defb DR_DOWN|DR_FWD,DR_DOWN
+    defb 0
+mo_uppercut                     ; down, then up
+    defb DR_UP|DR_DOWN,DR_UP
+    defb DR_DOWN,DR_DOWN
+    defb 0
 
 ;; back_held - NZ if the stick is pushed away from the opponent (C = held).
 ;; Destroys AF.

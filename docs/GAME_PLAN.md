@@ -58,8 +58,13 @@ detection. It is kept forgiving, because CPC joysticks are stiff.
 walk, crouch, jump (straight or with a direction), punch, kick, sweep
 (↓ + kick), uppercut (↓ + punch) and back kick (back + kick). Hits, damage,
 blocking (hold back: standing stops all but the sweep, crouching stops
-everything), hit reactions, KO, and rounds (best of three, win markers
-under the bars). No timer or motion input buffer yet. Keys, alongside the joysticks:
+everything), hitstun per move and blockstun, KO, and rounds (best of
+three, win markers under the bars, a 99-second clock: at time-out more
+health wins, level health is a draw). A 12-picture motion history gives
+the special (↓ ↘ → + either button, the `special` frames as a strong
+strike for now, until milestone 5 makes them a projectile and a throw) and
+the uppercut from ↓ then ↑ + punch (↓ + punch also works). No second
+special yet. Keys, alongside the joysticks:
 
 | | Up | Down | Left | Right | Punch | Kick |
 |---|---|---|---|---|---|---|

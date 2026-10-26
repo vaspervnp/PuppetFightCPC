@@ -1,13 +1,19 @@
 ;; ===========================================================================
-;; round.asm - rounds and the match: a KO ends the round, the winner holds
-;; its victory pose for ROUND_END_PICS pictures, gets a win marker under its
-;; bar, and both fighters start again. WINS_NEEDED round wins take the
-;; match, and the next one starts from nothing. Cold code (COLD2_ORG).
+;; round.asm - rounds and the match: a KO ends the round, and so does the
+;; clock running out after ROUND_SECS seconds, when more health wins (the
+;; same health: a draw, nobody's round). The winner holds its victory pose
+;; for ROUND_END_PICS pictures, gets a win marker under its bar, and both
+;; fighters start again. WINS_NEEDED round wins take the match, and the
+;; next one starts from nothing. Cold code (COLD2_ORG).
 ;; ===========================================================================
 
 ROUND_END_PICS  EQU 75          ; 3 s
 WINS_NEEDED     EQU 2
 MARK_LINE       EQU 18          ; win markers: under the bars, 3 x 3
+ROUND_SECS      EQU #99         ; the clock, BCD
+PICS_PER_SEC    EQU 25
+CLOCK_LINE      EQU 5           ; its digits: 3 x 5 pixels, 3 lines a row,
+CLOCK_X         EQU 46          ; between the bars
 
 ;; round_tick - once a picture, after combat. Destroys everything.
 round_tick
@@ -21,21 +27,51 @@ round_tick
     ld ix,fighter_a
     ld a,(fighter_b+F_MOVE)
     cp MV_KO
+    jr z,rt_ko
+    ld hl,rnd_tick              ; nobody down: the clock
+    dec (hl)
     ret nz
+    ld (hl),PICS_PER_SEC
+    ld a,(rnd_secs)
+    sub 1
+    daa
+    ld (rnd_secs),a
+    push af
+    call draw_clock
+    pop af
+    ret nz
+    ld a,(fighter_a+F_HEALTH)   ; time: more health wins
+    ld hl,fighter_b+F_HEALTH
+    cp (hl)
+    ld ix,fighter_a
+    jr z,rt_draw
+    jr nc,rt_ko
+    ld ix,fighter_b
 rt_ko
     ld (rnd_winner),ix
+    call rt_end
+    ld (ix+F_Y),FIGHTER_Y
+    ld a,MV_VICTORY
+    jp start_move
+rt_draw
+    ld hl,0
+    ld (rnd_winner),hl
+rt_end
     ld a,ROUND_END_PICS
     ld (rnd_timer),a
     ld a,1
     ld (rnd_state),a
-    ld (ix+F_Y),FIGHTER_Y
-    ld a,MV_VICTORY
-    jp start_move
+    ret
 rt_over
     ld hl,rnd_timer
     dec (hl)
     ret nz
-    ld ix,(rnd_winner)          ; the round to the winner
+    ld hl,(rnd_winner)          ; the round to the winner, if any
+    ld a,h
+    or l
+    jr z,rt_next
+    push hl
+    pop ix
     inc (ix+F_WINS)
     call win_marker
     ld a,(ix+F_WINS)
@@ -48,6 +84,7 @@ rt_over
 rt_next
     xor a
     ld (rnd_state),a
+    call clock_reset
     ld ix,fighter_a
     ld a,TRUMP_X0
     ld b,0
@@ -64,6 +101,7 @@ fighter_reset
     ld (ix+F_Y),FIGHTER_Y
     ld (ix+F_JX),0
     ld (ix+F_HEALTH),HEALTH_MAX
+    ld (ix+F_STUN),0
     ld a,MV_IDLE
     call start_move
     call is_a                   ; and its bar full again
@@ -75,7 +113,85 @@ fighter_reset
 fr_bar
     ld b,8
     ld de,8
-    jr hud_rect
+    jp hud_rect
+
+;; clock_reset - the clock back to ROUND_SECS, on the screen too.
+;; draw_clock - its two digits. Destroy AF, BC, DE, HL.
+clock_reset
+    ld a,ROUND_SECS
+    ld (rnd_secs),a
+    ld a,PICS_PER_SEC
+    ld (rnd_tick),a
+draw_clock
+    push ix
+    ld a,(rnd_secs)
+    rrca
+    rrca
+    rrca
+    rrca
+    and 15
+    ld c,CLOCK_X
+    call dc_digit
+    ld a,(rnd_secs)
+    and 15
+    ld c,CLOCK_X+2
+    call dc_digit
+    pop ix
+    ret
+
+;; dc_digit - A = digit, C = x: 5 rows, each three lines of 2 bytes.
+dc_digit
+    ld l,a
+    add a,a
+    add a,a
+    add a,l
+    ld e,a
+    ld d,0
+    ld hl,digits
+    add hl,de                   ; HL = its rows
+    ld ix,LINE_TAB_AT+CLOCK_LINE*2
+    ld b,5
+dc_row
+    ld a,(hl)                   ; the row's 3 pixels as 2 bytes
+    inc hl
+    push hl
+    add a,a
+    ld e,a
+    ld d,0
+    ld hl,row_bytes
+    add hl,de
+    ld e,(hl)
+    inc hl
+    ld d,(hl)
+    call dc_line
+    call dc_line
+    call dc_line
+    pop hl
+    djnz dc_row
+    ret
+
+;; dc_line - E, D at x C of the line IX points at in line_tab; IX to the
+;; next. Destroys AF, HL.
+dc_line
+    ld a,(ix+0)
+    add a,c
+    ld l,a
+    ld a,(ix+1)
+    adc a,0
+    ld h,a
+    inc ix
+    inc ix
+    ld (hl),e
+    inc hl
+    ld (hl),d
+    ret
+
+digits                          ; 3 pixels a row (bit 2 left), 5 rows
+    defb 7,5,5,5,7, 2,6,2,2,7, 7,1,7,4,7, 7,1,3,1,7, 5,5,7,1,1
+    defb 7,4,7,1,7, 7,4,7,5,7, 7,1,1,2,2, 7,5,7,5,7, 7,5,7,1,7
+row_bytes                       ; the 3 pixels in pen 10 (white): two
+    defb #00,#00, #00,#0A, #05,#00, #05,#0A   ; Mode 0 bytes, the 4th pixel
+    defb #0A,#00, #0A,#0A, #0F,#00, #0F,#0A   ; blank
 
 ;; win_marker - IX = fighter: the marker for its latest round win.
 win_marker

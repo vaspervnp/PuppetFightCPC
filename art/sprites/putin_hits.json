@@ -4,5 +4,6 @@
   "kick":     {"frame": 1, "box": [15, 36, 24, 45]},
   "sweep":    {"frame": 1, "box": [12, 48, 24, 60]},
   "uppercut": {"frame": 2, "box": [14, 6, 24, 30]},
-  "backkick": {"frame": 2, "box": [16, 36, 25, 48]}
+  "backkick": {"frame": 2, "box": [16, 36, 25, 48]},
+  "special":  {"frame": 1, "box": [21, 14, 27, 30]}
 }

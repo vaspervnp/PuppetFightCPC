@@ -73,7 +73,7 @@ putin_m_ko
     defb 0,32,-8 : defw putin_ko_3_spans,322 : defb 4,17,39,60,0,0,0,0 : defs 1
 putin_m_special
     defb 0,16,0 : defw putin_special_0_spans,459 : defb 6,14,8,61,0,0,0,0 : defs 1
-    defb 0,16,0 : defw putin_special_1_spans,424 : defb 5,13,10,61,0,0,0,0 : defs 1
+    defb 0,16,0 : defw putin_special_1_spans,424 : defb 5,13,10,61,10,15,14,30 : defs 1
     defb 0,16,0 : defw putin_special_2_spans,424 : defb 2,9,6,62,0,0,0,0 : defs 1
     defb 0,16,0 : defw putin_special_3_spans,420 : defb 5,13,11,61,0,0,0,0 : defs 1
 putin_m_victory

@@ -73,6 +73,7 @@ start
     call set_black
     call build_line_tab
     call draw_stage
+    call clock_reset            ; and the round clock on it
     call copy_mirror
     call clear_lists
     call make_tables
@@ -252,8 +253,10 @@ F_NSLOTS        EQU 43
 F_PKEY          EQU 44          ; F_OX..F_OSN when its restore list was made
 F_HEALTH        EQU F_PKEY+F_OSN+2-F_OX     ; combat (fighter.asm): health,
 F_HITDONE       EQU F_HEALTH+1              ; this attack has landed,
-F_WINS          EQU F_HITDONE+1             ; rounds won (round.asm)
-F_SIZE          EQU F_WINS+1
+F_WINS          EQU F_HITDONE+1             ; rounds won (round.asm),
+F_STUN          EQU F_WINS+1                ; hitstun or blockstun left,
+F_HIST          EQU F_STUN+1                ; motion history, newest first
+F_SIZE          EQU F_HIST+HIST_LEN
 
 MOVE_IDLE       EQU 0
 DIR_SLOTS       EQU #4004       ; in a character's bank 0: bank 1 cache
@@ -496,7 +499,9 @@ skip_a          defb 0          ; prepare: no window work for A / B
 skip_b          defb 0
 rnd_state       defb 0          ; round.asm: 0 fighting, 1 round over,
 rnd_timer       defb 0          ; pictures to the next round, winner
-rnd_winner      defw 0
+rnd_winner      defw 0          ; (0: a draw), the clock (BCD seconds, and
+rnd_secs        defb 0          ; pictures into the second)
+rnd_tick        defb 0
 bx_a            defs 8          ; combat: attacker's boxes, defender's
 bx_b            defs 8
 bx_w1           defb 0          ; boxes: frame width - 1, left edge

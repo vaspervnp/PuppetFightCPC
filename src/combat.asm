@@ -20,9 +20,7 @@ combat
 ;; strike - IX = attacker, IY = defender: does IX's attack land now?
 strike
     ld a,(ix+F_MOVE)            ; an attack that hasn't landed yet,
-    cp MV_PUNCH
-    ret c
-    cp MV_BACKKICK+1
+    call attacking
     ret nc
     ld a,(ix+F_HITDONE)
     or a
@@ -68,16 +66,23 @@ sk_stand
     cp MV_BLOCK
     ld a,MV_BLOCK
     call nz,start_move
+    ld (ix+F_STUN),BLOCK_STUN
 sk_crouch
     ld b,BLOCK_PUSH
     jr knock_back
 sk_hit
-    ld a,(iy+F_MOVE)            ; damage for the move
+    ld a,(iy+F_MOVE)            ; damage and hitstun for the move
     sub MV_PUNCH
     ld e,a
     ld d,0
     ld hl,damage
     add hl,de
+    ld de,hitstun-damage
+    push hl
+    add hl,de
+    ld a,(hl)
+    ld (ix+F_STUN),a
+    pop hl
     ld a,(ix+F_HEALTH)
     sub (hl)
     jr nc,sk_alive
@@ -108,8 +113,12 @@ kb_left
     sub b
     jp set_x
 
-damage                          ; punch, kick, sweep, uppercut, back kick
-    defb 4,5,4,6,6
+;; Per attack, from MV_PUNCH: punch, kick, sweep, uppercut, back kick,
+;; (block, hit, KO: not attacks), special.
+damage                          ; health points
+    defb 4,5,4,6,6,0,0,0,8
+hitstun                         ; pictures in the hit reaction: the hit
+    defb 6,8,10,12,10,0,0,0,14  ; reaction's own frames take 6
 
 ;; boxes - IX = fighter, HL = 8 bytes: the hurt box then the hit box of its
 ;; logic frame (F_MOVE, F_FRAME) on the screen, each x0, x1 (bytes), y0, y1
