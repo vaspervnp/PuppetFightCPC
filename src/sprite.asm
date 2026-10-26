@@ -195,7 +195,18 @@ dl_chain_end
 dl_next
     ld hl,dl_count
     dec (hl)
+    jr z,dl_done
+    ld a,(hl)
+    and 7
     jp nz,dl_line
+    ld (dl_sp),sp               ; every 8 lines: let a pending interrupt in
+    ld sp,(rebuild_sp)          ; on the real stack (see irq.asm), so the
+    ei                          ; slow drawer never keeps them off for long
+    nop
+    di
+    ld sp,(dl_sp)
+    jp dl_line
+dl_done
     ld hl,draw_l
     jp (iy)
 

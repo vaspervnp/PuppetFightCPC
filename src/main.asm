@@ -75,17 +75,17 @@ ml_logic
     ld (bench_phase),a
     jr main_loop
 
-;; wait_render - 25 pictures a second: return on a frame tick at least two
+;; wait_render - 25 pictures a second: return on a rebuild tick at least two
 ;; ticks after the last picture started. Destroys AF, HL.
 wait_render
     call wait_tick
     ld a,(last_render)
     ld l,a
-    ld a,(frame_count)
+    ld a,(tick_count)
     sub l
     cp 2
     jr c,wait_render
-    ld a,(frame_count)
+    ld a,(tick_count)
     ld (last_render),a
     ret
 
@@ -276,6 +276,7 @@ putin_frames                    ; spans, compiled left-facing draw, (s, n)
 bench_phase     defb 0          ; first, so the bench can find it easily
 frame_count     defb 0
 irq_count       defb 0
+tick_count      defb 0
 last_render     defb 0
 render_count    defb 0
 fa_drawn        defb 0
@@ -289,6 +290,7 @@ br_dir          defb 0
 br_first        defb 0
 br_lines        defb 0
 dl_count        defb 0
+dl_sp           defw 0
 fr_h            defb 0
 fr_x            defb 0
 fr_w            defb 0

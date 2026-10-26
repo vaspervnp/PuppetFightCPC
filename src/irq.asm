@@ -6,6 +6,16 @@
 ;; frame tick: the handler recognises it by reading VSYNC on PPI port B
 ;; rather than counting, so every frame's work starts at the same raster
 ;; position. Counting stays as a fallback (OverscanCPC src/irq.asm).
+;;
+;; The rebuild tick is a different interrupt: the TICK_IRQ'th after VSYNC
+;; (line 222, just below the fighters - see config.asm), counted in
+;; tick_count. The rebuild runs across the next VSYNC, so it must never keep
+;; interrupts off for more than ~2 ms at a time: an interrupt acknowledged 32
+;; or more lines late gets bit 5 of the Gate Array's counter cleared and the
+;; rest of the frame's interrupts move, and one that is still pending when
+;; the next arrives is lost. Short gaps keep the count exact, so the
+;; interrupt in VSYNC is still the 0th even when it is serviced too late to
+;; see VSYNC on the PPI.
 ;; ===========================================================================
 
 IRQS_PER_FRAME  EQU 6
@@ -44,9 +54,15 @@ irq_handler_mid
     ld hl,irq_count
     inc (hl)
     ld a,(hl)
+    cp TICK_IRQ
+    jr nz,irq_not_tick
+    ld hl,tick_count
+    inc (hl)
+    jr irq_handler_done
+irq_not_tick
     cp IRQS_PER_FRAME
     jr c,irq_handler_done
-    ld (hl),0                   ; no interrupt landed in VSYNC: count instead
+    ld (hl),0                   ; VSYNC was over before we got here: count
     ld hl,frame_count
     inc (hl)
 irq_handler_done
@@ -69,9 +85,9 @@ wait_vsync_on
     jr nc,wait_vsync_on
     ret
 
-;; wait_tick - return on the next frame tick. Destroys AF, HL.
+;; wait_tick - return on the next rebuild tick (line 222). Destroys AF, HL.
 wait_tick
-    ld hl,frame_count
+    ld hl,tick_count
     ld a,(hl)
 wait_tick_loop
     cp (hl)

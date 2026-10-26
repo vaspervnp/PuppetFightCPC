@@ -23,9 +23,23 @@
 ;;
 ;; Lines are kept relative to BAND_TOP so all the arithmetic is 8-bit: a
 ;; fighter is never above BAND_TOP, the top of the background mirror.
+;;
+;; The rebuild starts on line 222 and runs across VSYNC, so interrupts are
+;; let in after every job (INT_WINDOW, on the real stack): no stretch with
+;; them off is longer than ~1.3 ms, and the interrupt count stays exact
+;; (irq.asm).
 ;; ===========================================================================
 
 BAND            EQU 16          ; scanlines per band
+
+;; INT_WINDOW - take any pending interrupt on the real stack. The next job
+;; reloads SP from its record, so SP is free to point anywhere here.
+    MACRO INT_WINDOW
+    ld sp,(rebuild_sp)
+    ei
+    nop                         ; EI takes effect after the next instruction
+    di
+    MEND
 CHUNK           EQU 8           ; compiled draws yield every CHUNK lines
 LOOK_RESTORE    EQU 2*CHUNK
 LOOK_DRAW_A     EQU CHUNK
@@ -80,6 +94,7 @@ J_SIZE          EQU 8
     ld ({job}+J_DE),de
     ld a,PH_SCHED
     ld (bench_phase),a
+    INT_WINDOW
 @skip
     MEND
 
@@ -128,6 +143,7 @@ J_SIZE          EQU 8
     ld ({job}+J_RESUME),hl
     ld a,PH_SCHED
     ld (bench_phase),a
+    INT_WINDOW
 @skip
     MEND
 

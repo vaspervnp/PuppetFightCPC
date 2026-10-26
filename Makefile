@@ -8,7 +8,8 @@
 # drawer; PUTIN_DRAW=compiled uses compiled left-facing routines instead.
 # CLOSE_UP=1 puts the fighters toe to toe, so both are rebuilt in one window.
 # JUMP=1 makes them take turns to jump, then jump together (top at line 144).
-# SLACK=n starts every rebuild n*100 us late: the margin test.
+# SLACK=n starts every rebuild n*100 us late: the margin test (SLACK=15
+# must stay clean in the jump scenario).
 #
 #   make bench-all   every scenario the 25 fps rule has to hold in
 

@@ -40,22 +40,39 @@ PAYLOAD_ORG     EQU #0200
 LOAD_ORG        EQU #4000
 STACK_TOP       EQU #0200       ; grows down from just under the payload
 
-;; --- Fighter band and background mirror ------------------------------------
-;; Lines BAND_TOP..271 can hold a fighter. Their background is copied once
-;; into #4000-#7FFF at the screen address with H = (H AND #3F) OR #40: page 3
-;; rows 21-33 use offsets #000-#4DF of each 2 KB slice, page 2 rows 18-20 use
-;; #6E0-#7FF, so the two halves never collide. Restoring a sprite is then a
-;; straight copy from the mirror: no save buffers, and fighters can overlap.
-BAND_TOP        EQU 144
-MIRROR_H_AND    EQU #3F
-MIRROR_H_OR     EQU #40
-
-;; --- Sprites -----------------------------------------------------------------
+;; --- Floor, fighter band and background mirror ---------------------------
+;; Every stage has a raised floor: the bottom FLOOR_H lines are floor, never
+;; fighters. The bottom of a full overscan picture is cut off on some
+;; emulators and monitors (RVM), so nothing that matters is drawn there.
+FLOOR_H         EQU 60
+FLOOR_Y         EQU DISPLAY_LINES-FLOOR_H   ; 212: the fighters' feet
 SPR_W           EQU 16          ; bytes (32 mode 0 pixels)
 SPR_H           EQU 64
-FLOOR_Y         EQU 268         ; feet; a standing fighter's top is 204
-FIGHTER_Y       EQU FLOOR_Y-SPR_H
-JUMP_MAX        EQU FIGHTER_Y-BAND_TOP  ; 60: a jump's top is the mirror's top
+FIGHTER_Y       EQU FLOOR_Y-SPR_H           ; 148: a standing fighter's top
+JUMP_MAX        EQU 60                      ; a jump's top is BAND_TOP
+BAND_TOP        EQU FIGHTER_Y-JUMP_MAX      ; 88
+BAND_BOTTOM        EQU FLOOR_Y                 ; first line below the band
+
+;; Lines BAND_TOP..BAND_BOTTOM-1 can hold a fighter. Their background is copied
+;; once into #4000-#7FFF at the screen address with H = (H AND #3F) OR #40:
+;; page 3 rows 21-26 use offsets #000-#23F of each 2 KB slice, page 2 rows
+;; 11-20 use #440-#7FF, so the two never collide (#240-#43F stays free).
+;; Restoring a sprite is then a straight copy from the mirror: no save
+;; buffers, and fighters can overlap.
+MIRROR_H_AND    EQU #3F
+MIRROR_H_OR     EQU #40
+    ASSERT BAND_TOP>=11*8 && BAND_BOTTOM<=27*8
+
+;; --- When a rebuild starts -------------------------------------------------
+;; Not on the frame tick (VSYNC) but on the interrupt just after the beam
+;; has passed the fighters' lowest line. Interrupts come every 52 lines,
+;; the first two lines into VSYNC (line 274), so the fifth after it falls on
+;; line 222: 10 lines into the floor. From there the beam needs 90 + L lines
+;; to reach line L again: 15.2 ms to a standing fighter's top, 11.4 ms to
+;; the top of a jump.
+TICK_IRQ        EQU 5
+TICK_LINE       EQU 222
+    ASSERT TICK_LINE>=BAND_BOTTOM
 
 ;; line_tab (272 words, built at boot) lives in the unused tail of the first
 ;; 2 KB slice of screen page 3: rows 21-33 fill #C000-#C4DF of every slice,
@@ -70,8 +87,6 @@ RESTORE_DUMMY   EQU #C7FF       ; past line_tab in slice 0
 
 ;; --- Spike scene ---------------------------------------------------------
 HUD_LINES       EQU 24
-SKY_END         EQU 200
-HORIZON_END     EQU 204
 TRUMP_X0        EQU 20
     IFNDEF CLOSE_UP
 CLOSE_UP        EQU 0
@@ -98,6 +113,8 @@ PB_9_1   EQU #C2
 PB_12_12 EQU #33
 PB_4_4   EQU #30
 PB_10_10 EQU #0F
+PB_1_1   EQU #C0
+PB_2_2   EQU #0C
 
 ;; --- Bench phases (tools/spike_bench.py watches bench_phase) ---------------
 PH_IDLE         EQU 0

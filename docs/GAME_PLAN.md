@@ -76,24 +76,37 @@ Overscan Mode 0, **192×272 visible pixels**: 96 bytes per line × 272 lines
 ones OverscanCPC proved on a real 6128 (R1=48, R6=34, R12/R13=&2C10, so the
 fetch rolls from page 2 into page 3 at row 21 with no rupture).
 
+**Raised floor on every stage.** The bottom 60 lines (212-271) are always
+floor, a raised platform the fighters stand on. The bottom of a full
+overscan picture is cut off on some emulators (Retro Virtual Machine) and
+monitors, so nothing that matters is drawn there. Fighters' feet are on
+line 212, a standing fighter's top is line 148, and the top of a jump is
+line 88.
+
 **Single buffer.** A second overscan screen plus engine does not fit
 comfortably in 128K, and the spike shows we don't need one:
 
 - **Background mirror.** Main RAM &4000-&7FFF holds a copy of the fighter
-  band (lines 144-271). Each screen byte is mirrored at the same address
-  with `H = (H AND &3F) OR &40`. Page 3 rows land at offsets &000-&4DF and
-  page 2 rows 18-20 at &6E0-&7FF of each 2K slice, so they never collide.
+  band (lines 88-211). Each screen byte is mirrored at the same address
+  with `H = (H AND &3F) OR &40`. Page 3 rows 21-26 land at offsets
+  &000-&23F and page 2 rows 11-20 at &440-&7FF of each 2K slice, so they
+  never collide.
   Erasing a fighter is a copy from the mirror over the spans of its old
   frame. There are no save buffers, and fighters can overlap freely because
   the mirror never holds a fighter.
 - **Two windows per picture.** We render at 25 fps, so each picture spans
-  two frames. The beam reaches the fighters' top line (204 when standing)
-  15.6 ms after the frame tick. Fighter A is rebuilt (restore + draw) right
-  after the first tick, fighter B right after the second. When their ground
-  overlaps, both are restored and redrawn in one window.
-- Interrupts are recognised on VSYNC, as in OverscanCPC: a frame tick is the
-  interrupt that lands inside VSYNC, so every frame's work starts at the
-  same raster position.
+  two frames. A rebuild starts on the **interrupt at line 222**, the fifth
+  after VSYNC, just after the beam has left the fighters' lowest line. From
+  there the beam needs 15.2 ms to reach a standing fighter's top (line
+  148) and 11.4 ms to reach the top of a jump (line 88). Fighter A is
+  rebuilt in the first window, fighter B in the second. When their ground
+  overlaps, both are rebuilt in one window.
+- That window runs across VSYNC, so it lets interrupts in after every job
+  (on the real stack). No stretch with them off is longer than ~1.3 ms.
+  Otherwise the Gate Array would lose or move interrupts and the count that
+  finds line 222 would drift. The interrupt in VSYNC is still recognised
+  as the frame tick, as in OverscanCPC, even when it's serviced too late to
+  see VSYNC on the PPI.
 
 Measured on the cycle-accurate emulator, with both idle fighters swaying:
 no scanline is caught half drawn, and the screen matches mirror + sprites
@@ -101,8 +114,8 @@ byte for byte. See [SPIKE.md](SPIKE.md).
 
 Constraints this leaves:
 - When the fighters overlap, everything must fit one window. That means
-  under 15.6 ms when standing, and only ~11.8 ms when a fighter's top is at
-  line 144 (the top of a jump).
+  under 15.2 ms when standing, and only ~11.4 ms when a fighter's top is at
+  line 88 (the top of a jump).
 - Extra RAM is only paged in with &C4-&C7 (bank at &4000). That never
   touches the screen at &8000-&FFFF, whichever way the video fetch follows
   the RAM configuration. It does hide the background mirror, so restore
@@ -174,34 +187,39 @@ restore, restore, draw A, draw B on every scanline. Both windows use the
 same scheduler; a window that holds one fighter just has two jobs.
 
 The hardest case is both fighters in the air and overlapping. All the work
-then sits in lines 144-207, which the beam has finished by 15.8 ms after
-the tick, so the total has to fit before that whatever the order. Measured
-on the cycle-accurate 6128 (`make bench-all`, every frame judged):
+then sits in lines 88-151, which the beam has finished ~15.4 ms after the
+tick, so the total has to fit before that whatever the order. Measured on
+the cycle-accurate 6128 with the raised floor (`make bench-all`, every
+scanline pass judged):
 
-| Case | Window ends by | Lines caught |
+| Case | Rebuild ends with the beam on line | Lines caught |
 |---|---|---|
-| Apart, generic draw for Putin | 12.3 ms | 0 |
-| Toe to toe, standing | 12.6 ms | 0 |
-| Toe to toe, one fighter jumping | 13.2 ms | 0 |
-| Toe to toe, both jumping (tops at line 144) | 12.8 ms | 0 |
+| Apart, generic draw for Putin | 121 (fighters' top: 148) | 0 |
+| Toe to toe, standing | 120 (148) | 0 |
+| Toe to toe, one fighter jumping | 130 | 0 |
+| Toe to toe, both jumping (tops at line 88) | 121 | 0 |
 
-Margin, by starting the rebuild late on purpose (`SLACK`): 2 ms late is
-still clean in the both-jumping case, 3 ms late is not. That 2 ms is the
-budget for projectiles and HUD changes in a shared window, until the
-on-demand compiler and further restore work add more.
+Margin, by starting the rebuild late on purpose (`SLACK`): 1.5 ms late is
+still clean in the both-jumping case, 2 ms late is not. Before the raised
+floor it was 2-3 ms: the head start is 0.4 ms shorter from line 222, and
+the interrupt windows cost ~0.25 ms. Lowering the jump top by 8 lines would
+buy 0.5 ms back. This margin is the budget for projectiles and HUD changes
+in a shared window, until the on-demand compiler and further restore work
+add more.
 
 Overlaps need both fighters drawn with compiled code. The on-demand
 compiler guarantees it: a frame is compiled the picture before it's needed,
 while the fighters are still apart or the frame is still being held.
 
 **Rules that keep 25 fps true:**
-- Jump apex no higher than line 144 (the top of the background mirror).
+- Jump apex no higher than line 88 (the top of the background mirror), 60
+  lines above a standing fighter's top.
 - No frame over 32×64 in a shared window. Wide 64×64 KO frames only happen
   after the round is decided, when the opponent is idle or doing a victory
   pose. Their window then holds only the falling fighter.
 - `make bench-all` (apart, toe to toe, toe to toe with jumps) must report
   0 lines caught. That is the acceptance test for milestones 2 and 3, and
-  `SLACK=20` must stay clean so the 2 ms margin isn't eaten silently.
+  `SLACK=15` must stay clean so the 1.5 ms margin isn't eaten silently.
 
 ### 3.3 Palette strategy
 
@@ -233,7 +251,7 @@ dark red, and pastel yellow (FFFF80) → olive (808000).
 | &0038 | 3 | interrupt jump (both ROMs are off, so this is RAM) |
 | &0100-&01FF | 256 | stack |
 | &0200-&3FFF | 15.5K | engine, tables (flip, mask, line_tab), hot compiled frames |
-| &4000-&7FFF | 16K | background mirror of the fighter band (~12K used, ~4K free in 512-byte gaps) |
+| &4000-&7FFF | 16K | background mirror of the fighter band, lines 88-211 (~12K used, ~4K free in 512-byte gaps at &x240-&x43F) |
 | &8000-&FFFF | 32K | overscan screen (26K used). The unused 800-byte tails of page 3 hold `line_tab` (&C4E0) and the two restore lists (&CCE0, &D4E0); ~4K of tails are still free |
 | Bank 4-5 | 32K | fighter A: span frames, move data, compiled cache |
 | Bank 6-7 | 32K | fighter B |

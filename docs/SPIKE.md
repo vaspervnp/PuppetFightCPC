@@ -116,7 +116,7 @@ every 8 lines (the generator puts a `DEC IXL : JR NZ` checkpoint there). To
 keep the per-line order, the targets are staggered: restores to
 band + 16, draw A to band + 8, draw B to band + 0. Whatever line a job
 touches has already been finished by every job that must come before it.
-Lines are kept relative to line 144 so all the bookkeeping is 8-bit.
+Lines are kept relative to the band's top line so all the bookkeeping is 8-bit.
 
 **Restore lists.** The restore was twice the cost of a compiled draw, nearly
 all of it per-line set-up (~53 µs). Now `prepare`, which runs in idle logic
@@ -158,6 +158,35 @@ Banding's job is ordering: every line is finished in top-to-bottom order,
 whichever fighter is higher. The old fixed order (all restores, then all
 draws) wasn't benchmarked with jumps, so this run doesn't show how much
 margin banding adds on its own.
+
+## Follow-up: raised floor
+
+Every stage now keeps the bottom 60 lines as a raised floor, because RVM
+cuts off the bottom of the overscan picture. The fighters moved 56 lines
+up (feet on line 212, band 88-211), so the beam reaches them 3.6 ms sooner
+after VSYNC. That would have eaten the whole margin.
+
+Instead the rebuild now starts on the interrupt at line 222, the fifth
+after VSYNC, just after the beam leaves the fighters. The head start to
+their tops is 0.4 ms shorter than before (15.2 ms standing, 11.4 ms at the
+top of a jump). Because the window now crosses VSYNC, the scheduler lets
+interrupts in after every job and the generic drawer every 8 lines. No
+stretch with them off is over ~1.3 ms, so the Gate Array keeps the
+interrupt count exact.
+
+The bench now keeps exact emulator time from boot. It fixes VSYNC from the
+first tick after `irq_init`, finds the beam by arithmetic (the frame is
+always 19968 µs), and judges each beam pass against the band at the start
+of its rebuild and at the start of the next.
+
+| Scenario | Rebuild ends with the beam on line | Lines caught | Late | Bytes wrong |
+|---|---|---|---|---|
+| Apart, generic Putin | 121 | 0 | 0 | 0 |
+| Toe to toe, compiled | 120 | 0 | 0 | 0 |
+| Toe to toe + jumps, worst state | 130 | 0 | 0 | 0 |
+
+Margin in the both-jumping case: clean at `SLACK=15` (1.5 ms late), 26
+lines caught at `SLACK=20`. That's 0.5 ms less than before the floor moved.
 
 ## Next (milestone 2 work this feeds)
 

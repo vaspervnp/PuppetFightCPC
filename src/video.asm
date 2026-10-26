@@ -123,18 +123,24 @@ ds_rect
 stage_rows
     defw HUD_LINES
     defb #00,#00
-    defw 96
+    defw 72
     defb PB_11_11,PB_11_11
-    defw 112
+    defw 88
     defb PB_11_13,PB_13_11      ; dithered seam between the two sky blues
-    defw SKY_END
+    defw 160
     defb PB_13_13,PB_13_13
-    defw HORIZON_END
-    defb PB_9_9,PB_9_9
-    defw 216
-    defb PB_14_8,PB_8_14
+    defw 164
+    defb PB_9_9,PB_9_9          ; horizon
+    defw FLOOR_Y
+    defb PB_14_8,PB_8_14        ; distant grass behind the fighters
+    defw FLOOR_Y+2
+    defb PB_10_10,PB_10_10      ; the raised floor: white edge,
+    defw FLOOR_Y+18
+    defb PB_14_14,PB_14_14      ; green top,
+    defw FLOOR_Y+20
+    defb PB_9_9,PB_9_9          ; grey lip,
     defw DISPLAY_LINES
-    defb PB_14_14,PB_14_14
+    defb PB_1_1,PB_1_1          ; navy front face
 
 ;; Rectangles: first line (word), lines, x, width, byte. #FF ends.
 stage_rects
@@ -142,14 +148,16 @@ stage_rects
     defb 8,4,40,PB_12_12        ; Trump's health bar
     defw 8
     defb 8,52,40,PB_4_4         ; Putin's health bar
-    defw 120
-    defb 80,2,4,PB_9_1          ; left pillar
-    defw 120
-    defb 80,90,4,PB_9_1         ; right pillar
-    defw 170
+    defw 100
+    defb 64,2,4,PB_9_1          ; left pillar
+    defw 100
+    defb 64,90,4,PB_9_1         ; right pillar
+    defw 130
     defb 2,0,96,PB_10_10        ; the rope, right across the band
-    defw 240
-    defb 2,0,96,PB_14_8         ; floor stripe
+    defw FLOOR_Y+32
+    defb 2,0,96,PB_2_2          ; brick courses on the front face
+    defw FLOOR_Y+46
+    defb 2,0,96,PB_2_2
     defb #FF
 
 ;; fill_rect - HL = first scanline, (fr_h) lines, (fr_x) x, (fr_w) width,
@@ -191,7 +199,7 @@ fr_byte
 copy_mirror
     ld hl,BAND_TOP
     call line_addr
-    ld a,DISPLAY_LINES-BAND_TOP
+    ld a,BAND_BOTTOM-BAND_TOP
 cm_line
     push af
     ld e,(hl)
