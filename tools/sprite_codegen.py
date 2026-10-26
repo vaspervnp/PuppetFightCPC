@@ -222,6 +222,8 @@ def padded_spans(label, width, rows):
 
 BANK_SIZE = 16384
 REC_SIZE = 16
+HIT_REACH = 2       # bytes a hit box reaches past the limb drawn: at the
+                    # closest the fighters stand, bodies only just touch
 
 
 def cmd_character(args):
@@ -316,7 +318,7 @@ def cmd_character(args):
             hitb = [0, 0, 0, 0]
             if hit and hit["frame"] == m["frames"].index(fr):
                 x0, y0, x1, y1 = hit["box"]
-                hitb = [x0 // 2, x1 // 2, y0, y1]
+                hitb = [x0 // 2, x1 // 2 + HIT_REACH, y0, y1]
             out0.append("    defb %d,%d,%d : defw %s_spans,%d : defb %s : defs %d"
                         % (where[r["label"]], r["w"], r["off"], r["label"], r["size"],
                            ",".join(str(v) for v in hurt + hitb), REC_SIZE - 15))

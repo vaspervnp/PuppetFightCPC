@@ -29,6 +29,14 @@ boot
     ld de,PAYLOAD_ORG
     ld bc,payload_end-payload_start
     ldir
+    ld hl,cold_store            ; and the cold code to its screen tails
+    ld de,COLD_ORG
+    ld bc,cold_end-cold_start
+    ldir
+    ld hl,cold2_store
+    ld de,COLD2_ORG
+    ld bc,cold2_end-cold2_start
+    ldir
     jp start
 payload_store
 
@@ -243,8 +251,9 @@ F_STAB          EQU 41          ; its cache (jit.asm): slot table, slots
 F_NSLOTS        EQU 43
 F_PKEY          EQU 44          ; F_OX..F_OSN when its restore list was made
 F_HEALTH        EQU F_PKEY+F_OSN+2-F_OX     ; combat (fighter.asm): health,
-F_HITDONE       EQU F_HEALTH+1              ; this attack has landed
-F_SIZE          EQU F_HITDONE+1
+F_HITDONE       EQU F_HEALTH+1              ; this attack has landed,
+F_WINS          EQU F_HITDONE+1             ; rounds won (round.asm)
+F_SIZE          EQU F_WINS+1
 
 MOVE_IDLE       EQU 0
 DIR_SLOTS       EQU #4004       ; in a character's bank 0: bank 1 cache
@@ -267,6 +276,13 @@ logic
     jp logic_demo
     ELSE
     call read_controls
+    ld a,(rnd_state)            ; between rounds nobody moves
+    or a
+    jr z,lg_ctl
+    xor a
+    ld (p1_ctl),a
+    ld (p2_ctl),a
+lg_ctl
     ld a,(p1_ctl)
     ld (fighter_a+F_CTL),a
     ld a,(p2_ctl)
@@ -279,6 +295,7 @@ logic
     call think
     call separate
     call combat
+    call round_tick
     ld ix,fighter_a
     call load_frame
     ld ix,fighter_b
@@ -477,6 +494,9 @@ p2_ctl          defb 0
 sf_draw         defw 0
 skip_a          defb 0          ; prepare: no window work for A / B
 skip_b          defb 0
+rnd_state       defb 0          ; round.asm: 0 fighting, 1 round over,
+rnd_timer       defb 0          ; pictures to the next round, winner
+rnd_winner      defw 0
 bx_a            defs 8          ; combat: attacker's boxes, defender's
 bx_b            defs 8
 bx_w1           defb 0          ; boxes: frame width - 1, left edge
@@ -513,10 +533,24 @@ job_db          defs J_SIZE
 
 work_end
     ASSERT work_end<=WORK_AT+WORK_ROOM
-    ORG payload_end
+;; ---------------------------------------------------------------------------
+;; Cold code: in the file after the payload, copied by boot to a screen tail.
+;; ---------------------------------------------------------------------------
+cold_store      EQU payload_store+payload_end-payload_start
+    ORG COLD_ORG,cold_store
+cold_start
+    include "combat.asm"
+cold_end
+    ASSERT cold_end<=COLD_ORG+COLD_ROOM
+cold2_store     EQU cold_store+cold_end-cold_start
+    ORG COLD2_ORG,cold2_store
+cold2_start
+    include "round.asm"
+cold2_end
+    ASSERT cold2_end<=COLD2_ORG+COLD_ROOM
 
     RUN boot
-    SAVE 'PFSPIKE.BIN',boot,payload_store-boot+payload_end-payload_start,DSK,'../build/pfspike.dsk'
+    SAVE 'PFSPIKE.BIN',boot,cold2_store-boot+cold2_end-cold2_start,DSK,'../build/pfspike.dsk'
 
 ;; ---------------------------------------------------------------------------
 ;; The characters, in the extra 64K. On the disc each bank is its own file,

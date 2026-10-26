@@ -88,6 +88,10 @@ RESTORE_FLIP    EQU #10         ; high byte: one list of a pair to the other
 RESTORE_DUMMY   EQU #C7FF       ; past line_tab in slice 0
 WORK_AT         EQU (RESTORE_LIST_A XOR #1000)+256  ; #DDE0: workspace,
 WORK_ROOM       EQU #E000-WORK_AT   ; past list A1 in slice 3's tail
+COLD_ORG        EQU (RESTORE_LIST_B)+256    ; #E5E0: cold code (combat.asm),
+COLD_ROOM       EQU #E800-COLD_ORG          ; past list B0 in slice 4's tail
+COLD2_ORG       EQU (RESTORE_LIST_B XOR #1000)+256  ; #F5E0: round.asm, past
+    ASSERT COLD2_ORG+COLD_ROOM<=#F800               ; list B1 in slice 6
 flip_tab        EQU #CE00       ; built at boot (make_tables), in the rest
 mask_tab        EQU #CF00       ; of slice 1's tail: page aligned
     ASSERT RESTORE_LIST_A+256<=flip_tab

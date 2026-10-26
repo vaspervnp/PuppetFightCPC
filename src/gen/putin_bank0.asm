@@ -38,25 +38,25 @@ putin_m_jump
     defb 0,16,0 : defw putin_jump_2_spans,464 : defb 4,11,6,62,0,0,0,0 : defs 1
 putin_m_punch
     defb 0,16,0 : defw putin_punch_0_spans,481 : defb 4,11,6,62,0,0,0,0 : defs 1
-    defb 0,16,0 : defw putin_punch_1_spans,461 : defb 6,14,8,61,11,15,32,41 : defs 1
+    defb 0,16,0 : defw putin_punch_1_spans,461 : defb 6,14,8,61,11,17,32,41 : defs 1
     defb 0,16,0 : defw putin_punch_2_spans,467 : defb 5,12,6,62,0,0,0,0 : defs 1
 putin_m_kick
     defb 0,16,0 : defw putin_kick_0_spans,435 : defb 3,10,6,61,0,0,0,0 : defs 1
-    defb 0,16,0 : defw putin_kick_1_spans,490 : defb 1,11,9,62,7,12,36,45 : defs 1
+    defb 0,16,0 : defw putin_kick_1_spans,490 : defb 1,11,9,62,7,14,36,45 : defs 1
     defb 0,16,0 : defw putin_kick_2_spans,430 : defb 3,10,6,61,0,0,0,0 : defs 1
 putin_m_sweep
     defb 0,16,0 : defw putin_sweep_0_spans,431 : defb 5,12,10,61,0,0,0,0 : defs 1
-    defb 1,16,0 : defw putin_sweep_1_spans,375 : defb 5,12,16,61,6,12,48,60 : defs 1
+    defb 1,16,0 : defw putin_sweep_1_spans,375 : defb 5,12,16,61,6,14,48,60 : defs 1
     defb 0,16,0 : defw putin_sweep_2_spans,428 : defb 5,12,13,62,0,0,0,0 : defs 1
 putin_m_uppercut
     defb 0,16,0 : defw putin_uppercut_0_spans,441 : defb 4,12,9,61,0,0,0,0 : defs 1
     defb 0,16,0 : defw putin_uppercut_1_spans,423 : defb 5,12,6,61,0,0,0,0 : defs 1
-    defb 0,16,0 : defw putin_uppercut_2_spans,448 : defb 2,10,7,62,7,12,6,30 : defs 1
+    defb 0,16,0 : defw putin_uppercut_2_spans,448 : defb 2,10,7,62,7,14,6,30 : defs 1
     defb 0,16,0 : defw putin_uppercut_3_spans,490 : defb 4,11,6,62,0,0,0,0 : defs 1
 putin_m_backkick
     defb 0,16,0 : defw putin_backkick_0_spans,483 : defb 4,12,7,61,0,0,0,0 : defs 1
     defb 0,16,0 : defw putin_backkick_1_spans,434 : defb 2,9,10,61,0,0,0,0 : defs 1
-    defb 0,16,0 : defw putin_backkick_2_spans,403 : defb 0,11,17,62,8,12,36,48 : defs 1
+    defb 0,16,0 : defw putin_backkick_2_spans,403 : defb 0,11,17,62,8,14,36,48 : defs 1
     defb 0,16,0 : defw putin_backkick_3_spans,482 : defb 4,12,7,61,0,0,0,0 : defs 1
 putin_m_block
     defb 0,16,0 : defw putin_block_0_spans,462 : defb 5,10,6,62,0,0,0,0 : defs 1

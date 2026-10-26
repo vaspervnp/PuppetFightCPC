@@ -57,8 +57,9 @@ detection. It is kept forgiving, because CPC joysticks are stiff.
 **Built so far** (milestones 2-3, `src/input.asm`, `src/fighter.asm`):
 walk, crouch, jump (straight or with a direction), punch, kick, sweep
 (↓ + kick), uppercut (↓ + punch) and back kick (back + kick). Hits, damage,
-standing block (hold back while the opponent attacks), hit reactions and KO.
-No crouch block, rounds, timer or motion input buffer yet. Keys, alongside the joysticks:
+blocking (hold back: standing stops all but the sweep, crouching stops
+everything), hit reactions, KO, and rounds (best of three, win markers
+under the bars). No timer or motion input buffer yet. Keys, alongside the joysticks:
 
 | | Up | Down | Left | Right | Punch | Kick |
 |---|---|---|---|---|---|---|

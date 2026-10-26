@@ -410,6 +410,37 @@ worked out instead of looked up) are worth ~5%.
   in and lands one, Trump blocks a kick and lands another. It ends at
   Trump 36, Putin 32, with 2 frames per picture and 0 lines caught.
 
+## Milestone 3 step 2: crouch block, reach, rounds
+
+- **Blocks.** Holding back blocks while standing (free or in the block
+  pose) or crouching. A standing block stops everything but the sweep,
+  which is low. A crouching block stops everything.
+- **Reach.** At the closest the fighters can stand (10 bytes apart), their
+  bodies just touch, so a hit box exactly over the drawn limb could stay
+  inside the attacker's own outline (Putin's sweep did). Hit boxes now reach
+  2 bytes past the limb (`HIT_REACH` in `sprite_codegen.py`).
+- **Rounds** (`round.asm`). A KO ends the round. The winner holds its
+  victory pose for 3 seconds, and nobody can move. Then the winner gets a
+  white marker under its bar, both fighters start again at full health
+  with full bars, and 2 round wins take the match. The next match starts
+  with no markers.
+- **Cold code.** Combat and rounds run once a picture in the logic, never
+  in the window. They now live in the unused tails of screen slices 4 and 6
+  (&E5E0, &F5E0), copied there by `boot` from the file, so main RAM stays
+  free for the engine and the frame caches. The payload ends at &1343.
+
+Checked on the emulator, with keys scripted per picture:
+
+| Test | Result |
+|---|---|
+| Putin punches a standing Trump who holds back | blocked: 1 byte pushback, no damage |
+| Putin sweeps a standing Trump who holds back | hit: −4, 3 bytes knockback |
+| Putin sweeps a crouching Trump who holds back | blocked |
+| Putin's health set to 4, Trump punches, twice | KO and victory pose; round to Trump with a marker after 75 pictures; second KO, then a new match with no markers |
+
+`make bench-all`, `bench-fight` and `bench-play` still show 2 frames
+between pictures and 0 lines caught, and `SLACK=15` is clean.
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the
