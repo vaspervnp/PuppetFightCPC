@@ -18,8 +18,10 @@ FONT_CHARS      EQU 'Z'+1-FONT_FIRST
 ;; victory - IX = the winner of the match, from round_tick. Destroys
 ;; everything.
 victory
+    push ix
     ld hl,song_win
-    call music_play
+    call music_play             ; (it takes IX)
+    pop ix
     ld a,2
     ld (rnd_state),a
     ld a,VICTORY_PICS

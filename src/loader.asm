@@ -49,7 +49,16 @@ STAGE_AT        EQU #2000       ; src/config.asm
 SETTINGS_AT     EQU #3FF0       ; (the engine's game_mode)
 GM_CPU_B        EQU 1
 GM_LEVEL        EQU 2
-KEY_C           EQU 62
+FIGHTERS        EQU #4000       ; FIGHTERS.BIN in bank 4 (tools/title_art.py)
+FI_INKS         EQU 0           ; per character: its own colours, a mirror
+FI_ALT          EQU 4           ; match's, its frame as fighter A and as B
+FI_A            EQU 8
+FI_B            EQU FI_A+1024
+FI_SIZE         EQU FI_B+1024
+FI_Y            EQU 30          ; where the select screen has them: line,
+FI_XA           EQU 10          ; and bytes across
+FI_XB           EQU 54
+MENU_ROW        EQU 14          ; the menu's first text row
 ST_LEN          EQU 6           ; a stage file: header, packed length
 ST_HEADER       EQU 8
 TITLE_AT        EQU #9800       ; the packed title, up to the firmware's
@@ -65,6 +74,8 @@ REC_SIZE        EQU 16
 PS_LEFT         EQU 0           ; a player's controls this frame
 PS_RIGHT        EQU 1
 PS_FIRE         EQU 2
+PS_UP           EQU 3
+PS_DOWN         EQU 4
 
     ORG #8000
 loader
@@ -84,6 +95,8 @@ ld_zero
     jp nc,disc_error
     call read_headers
     jp nc,disc_error
+    call read_fighters
+    jp nc,disc_error
     call title_wait
     call select
     ld a,(cpu_b)                ; the computer's part, for the engine
@@ -98,6 +111,7 @@ ld_mode
     ld hl,(sel_a)               ; and who: sel_a, sel_b
     ld (SETTINGS_AT+1),hl
 
+    call how_to                 ; the controls while they load
     ld hl,s_loading
     call say
     ld a,(sel_a)                ; fighter A: banks 4-5, own colours moved
@@ -117,6 +131,9 @@ ld_mode
     out (c),c
     call load_stage
     jp nc,disc_error
+    ld hl,s_fight
+    call say
+    call fire_wait
     scf
     ret
 
@@ -130,13 +147,21 @@ de_wait
 
 ;; ---------------------------------------------------------------------------
 ;; show_title - TITLE.SCR into the screen, in its colours: title_up = 1.
-;; Nothing if it isn't there. Destroys everything.
+;; Nothing if it isn't there. show_screen - HL = a screen file's name, B
+;; its length: the same for that one, CY if it was there. Destroys
+;; everything.
 ;; title_wait - if the title is up: wait for fire (either player, pressed
 ;; after this is called), then back to the text screen.
 ;; ---------------------------------------------------------------------------
 show_title
     ld hl,f_title
     ld b,f_title_end-f_title
+    call show_screen
+    ret nc
+    ld a,1
+    ld (title_up),a
+    ret
+show_screen
     ld de,cas_buffer
     call CAS_IN_OPEN
     ret nc
@@ -166,27 +191,43 @@ sti_ink
     inc a
     cp 16
     jr nz,sti_ink
-    ld a,1
-    ld (title_up),a
+    scf
     ret
 
 title_wait
     ld a,(title_up)
     or a
     ret z
-tw_up                           ; fire let go first,
-    call tw_fire
-    jr nz,tw_up
-tw_down                         ; then pressed
-    call tw_fire
-    jr z,tw_down
+    call fire_wait
     xor a
     call SCR_SET_MODE
     jp text_inks
 
-;; text_inks - the text screen's 4 inks. Destroys everything.
+;; fire_wait - fire (either player) let go, then pressed. Destroys
+;; everything.
+fire_wait
+    call tw_fire
+    jr nz,fire_wait
+fw_down
+    call tw_fire
+    jr z,fw_down
+    ret
+
+;; how_to - the controls and the moves, in Mode 1, while the fighters load.
+;; Destroys everything.
+how_to
+    ld a,1
+    call SCR_SET_MODE
+    ld hl,ht_inks
+    call set_inks
+    ld hl,s_howto
+    jp say
+
+;; text_inks - the text screen's 4 inks. set_inks - HL = 4 inks: pens 0-3
+;; those. Destroy everything.
 text_inks
     ld hl,inks
+set_inks
     xor a
 ld_ink
     ld b,(hl)
@@ -636,15 +677,26 @@ alt_inks
     ret
 
 ;; ---------------------------------------------------------------------------
-;; select - both players choose: sel_a, sel_b.
+;; select - the menu, over SELECT.SCR (tools/title_art.py): player 1's and
+;; player 2's characters, the opponent (a player or the computer) and, for
+;; the computer, its level, a row each. Up and down choose a row, left and
+;; right change it, fire starts (either player's controls). The fighters
+;; chosen stand above it in their own colours (FIGHTERS.BIN, in bank 4
+;; meanwhile). Sets sel_a, sel_b, cpu_b. Destroys everything.
 ;; ---------------------------------------------------------------------------
 select
-    ld hl,s_screen
-    call say
+    xor a
+    call SCR_SET_MODE
+    ld hl,f_select
+    ld b,f_select_end-f_select
+    call show_screen
+    jp nc,disc_error
     xor a
     ld (sel_a),a
-    ld (rdy_a),a
-    ld (rdy_b),a
+    ld (m_row),a
+    ld (m_cpu),a
+    inc a
+    ld (m_level),a              ; medium
     ld a,(n_chars)              ; B starts on the second character
     cp 2
     ld a,0
@@ -652,93 +704,356 @@ select
     inc a
 se_b
     ld (sel_b),a
-    call show_a
-    call show_b
-    call show_p2
+    call menu_keys              ; (what is held now isn't pressed)
+se_show
+    call show_menu
 se_frame
     call MC_WAIT_FLYBACK
-    call cpu_key
-    ld hl,keys_a
-    call controls
-    ld c,a
-    ld a,(cpu_b)
+    call menu_keys
     or a
-    jr z,se_a
-    ld a,(rdy_a)                ; the computer plays B: once A is ready,
-    or a                        ; player 1 chooses for it
-    jr nz,se_p1b
-se_a
-    ld a,c
-    ld hl,ps_a
-    ld de,sel_a
-    ld bc,rdy_a
-    call choose
-    call c,show_a
-    ld a,(cpu_b)
-    or a
-    jr nz,se_done
-    ld hl,keys_b
-    call controls
-    ld hl,ps_b
-    jr se_b_choose
-se_p1b
-    ld a,c
-    ld hl,ps_a
-se_b_choose
-    ld de,sel_b
-    ld bc,rdy_b
-    call choose
-    call c,show_b
-se_done
-    ld a,(rdy_a)
-    ld hl,rdy_b
-    and (hl)
     jr z,se_frame
-    ld b,25                     ; both ready: half a second to see it
-se_wait
-    push bc
-    call MC_WAIT_FLYBACK
-    pop bc
-    djnz se_wait
+    bit PS_FIRE,a
+    jr nz,se_go
+    ld c,a
+    ld a,(m_cpu)                ; rows: 3, or 4 with the computer
+    add a,3
+    ld b,a
+    ld hl,m_row
+    bit PS_UP,c
+    jr z,se_down
+    ld a,(hl)
+    or a
+    jr nz,se_up
+    ld a,b
+se_up
+    dec a
+    ld (hl),a
+    jr se_show
+se_down
+    bit PS_DOWN,c
+    jr z,se_side
+    ld a,(hl)
+    inc a
+    cp b
+    jr c,se_row
+    xor a
+se_row
+    ld (hl),a
+    jr se_show
+se_side
+    ld a,c                      ; left or right: the row's value
+    and 1<<PS_LEFT|1<<PS_RIGHT
+    jr z,se_frame
+    ld a,(hl)
+    ld de,sel_a
+    or a
+    jr z,se_char
+    ld de,sel_b
+    dec a
+    jr z,se_char
+    dec a
+    jr nz,se_level
+    ld a,(m_cpu)                ; the opponent: a player or the computer
+    xor 1
+    ld (m_cpu),a
+    jr se_show
+se_level
+    ld a,(m_level)              ; the computer's level: 0-2
+    bit PS_LEFT,c
+    jr z,se_harder
+    or a
+    jr z,se_show
+    dec a
+    jr se_lset
+se_harder
+    cp 2
+    jr z,se_show
+    inc a
+se_lset
+    ld (m_level),a
+    jr se_show
+se_char
+    ld a,(de)                   ; a character: round the roster
+    bit PS_LEFT,c
+    jr z,se_next
+    or a
+    jr nz,se_prev
+    ld a,(n_chars)
+se_prev
+    dec a
+    jr se_cset
+se_next
+    inc a
+    ld hl,n_chars
+    cp (hl)
+    jr c,se_cset
+    xor a
+se_cset
+    ld (de),a
+    jp se_show
+se_go
+    ld a,(m_cpu)                ; cpu_b: 0 a player, else the level + 1
+    or a
+    jr z,se_cpu
+    ld a,(m_level)
+    inc a
+se_cpu
+    ld (cpu_b),a
     ret
 
-;; cpu_key - C just pressed: player 2 the next of player, computer easy,
-;; normal, hard; its label and its choice not ready. Destroys everything.
-cpu_key
-    ld a,KEY_C
-    call KM_TEST_KEY
-    ld hl,c_held
-    ld a,(hl)
-    ld (hl),0
-    ret z
-    ld (hl),1
-    or a
-    ret nz                      ; (held, not pressed)
-    ld a,(cpu_b)
-    inc a
-    and 3
-    ld (cpu_b),a
-    xor a
-    ld (rdy_b),a
-    call show_b
-    ; fall into show_p2
+;; menu_keys - A = the PS_ bits newly pressed on either player's controls.
+;; Destroys everything.
+menu_keys
+    ld hl,keys_a
+    call controls
+    push af
+    ld hl,keys_b
+    call controls
+    pop bc
+    or b
+    ld hl,ps_a                  ; pressed: held, and not held before
+    ld c,(hl)
+    ld (hl),a
+    ld b,a
+    ld a,c
+    cpl
+    and b
+    ret
 
-;; show_p2 - player 2's label: a player or the computer at its level.
-show_p2
-    ld a,(cpu_b)
+;; show_menu - the rows (the one chosen in yellow, with an arrow), the
+;; fighters and their colours. Destroys everything.
+show_menu
+    xor a
+    ld (m_i),a
+    ld hl,s_rows
+sm_row
+    ld (m_lbl),hl
+    ld a,(m_i)                  ; every other text row
     add a,a
+    add a,MENU_ROW
+    ld l,a
+    ld h,1
+    call TXT_SET_CURSOR
+    ld a,(m_row)
+    ld hl,m_i
+    cp (hl)
+    ld a,2                      ; white,
+    ld b,' '
+    jr nz,sm_pen
+    ld a,15                     ; or yellow, with the arrow
+    ld b,'>'
+sm_pen
+    push bc
+    call TXT_SET_PEN
+    pop bc
+    ld a,b
+    call TXT_OUTPUT
+    ld a,' '
+    call TXT_OUTPUT
+    ld hl,(m_lbl)               ; the label,
+    call say_str
+    inc hl
+    push hl
+    call sm_value               ; then the value
+    call say_n
+    pop hl
+    ld a,(m_i)
+    inc a
+    ld (m_i),a
+    cp 3
+    jr c,sm_row
+    jr nz,sm_fighters
+    ld a,(m_cpu)                ; the level's row only for the computer
+    or a
+    jr nz,sm_row
+    ld hl,#0100+MENU_ROW+6
+    call TXT_SET_CURSOR
+    ld hl,s_blank
+    call say_str
+sm_fighters
+    ld hl,s_start
+    call say
+    ld a,(sel_a)                ; fighter A: pens 6-9, its colours
+    ld hl,FIGHTERS+FI_INKS
+    ld c,6
+    call sm_inks
+    ld a,(sel_a)                ; fighter B: pens 10-13, the second set in
+    ld hl,sel_b                 ; a mirror match
+    cp (hl)
+    ld hl,FIGHTERS+FI_INKS
+    jr nz,sm_b
+    ld hl,FIGHTERS+FI_ALT
+sm_b
+    ld a,(sel_b)
+    ld c,10
+    call sm_inks
+    ld a,(sel_a)
+    ld hl,FIGHTERS+FI_A
+    ld de,#C000+FI_XA
+    call sm_draw
+    ld a,(sel_b)
+    ld hl,FIGHTERS+FI_B
+    ld de,#C000+FI_XB
+    ; fall into sm_draw
+
+;; sm_draw - A = character, HL = FIGHTERS + its frame's offset, DE =
+;; #C000 + the bytes across: the frame there from line FI_Y down.
+;; Destroys everything.
+sm_draw
+    push de
+    call fi_addr
+    pop de
+    ld bc,#7FC4
+    out (c),c
+    ld c,FI_Y
+    ld b,64
+sd_line
+    push bc
+    push de
+    ld a,c                      ; the line: 2K a line of a row,
+    and 7
+    add a,a
+    add a,a
+    add a,a
+    add a,d
+    ld d,a
+    ld a,c                      ; 80 bytes a row
+    rrca
+    rrca
+    rrca
+    and 31
+    push hl
     ld l,a
     ld h,0
-    ld de,s_p2
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    add hl,hl
+    ld b,h
+    ld c,l
+    add hl,hl
+    add hl,hl
+    add hl,bc
     add hl,de
-    ld a,(hl)
-    inc hl
-    ld h,(hl)
-    ld l,a
-    jp say
+    ex de,hl
+    pop hl
+    ld bc,16
+    ldir
+    pop de
+    pop bc
+    inc c
+    djnz sd_line
+    ld bc,#7FC0
+    out (c),c
+    ret
 
-;; controls - HL = a player's keys (left, right, fire: each a list of key
-;; numbers ended by #FF): A = PS_ bits held. Destroys everything.
+;; sm_value - HL = the value of row m_i, B = its length. Destroys AF, DE.
+sm_value
+    ld b,8
+    ld a,(m_i)
+    or a
+    ld a,(sel_a)
+    jr z,sv_name
+    ld a,(m_i)
+    dec a
+    ld a,(sel_b)
+    jr z,sv_name
+    ld a,(m_i)
+    cp 2
+    ld hl,s_human
+    ld a,(m_cpu)
+    jr z,sv_pick
+    ld b,6
+    ld hl,s_easy
+    ld a,(m_level)
+sv_pick
+    add a,a
+    add a,a
+    add a,a                     ; (8 characters each)
+    ld e,a
+    ld d,0
+    add hl,de
+    ret
+sv_name
+    call header_addr
+    ld de,H_NAME
+    add hl,de
+    ret
+
+;; sm_inks - A = character, HL = FIGHTERS + its colours' offset, C = the
+;; first pen: 4 pens those colours. Destroys everything.
+sm_inks
+    push bc
+    call fi_addr
+    ld bc,#7FC4
+    out (c),c
+    ld de,m_inks
+    ld bc,4
+    ldir
+    ld bc,#7FC0
+    out (c),c
+    pop bc
+    ld hl,m_inks
+    ld b,4
+si_ink
+    push bc
+    push hl
+    ld a,c
+    ld b,(hl)
+    ld c,b
+    call SCR_SET_INK
+    pop hl
+    pop bc
+    inc hl
+    inc c
+    djnz si_ink
+    ret
+
+;; fi_addr - A = character, HL = FIGHTERS + an offset in its record: HL
+;; that byte of its record. Destroys AF, BC.
+fi_addr
+    or a
+    ret z
+    ld bc,FI_SIZE
+fa_next
+    add hl,bc
+    dec a
+    jr nz,fa_next
+    ret
+
+;; read_fighters - FIGHTERS.BIN into bank 4 (FIGHTERS). CY if read.
+;; Destroys everything.
+read_fighters
+    ld hl,f_fighters
+    ld b,f_fighters_end-f_fighters
+    ld de,cas_buffer
+    call CAS_IN_OPEN
+    ret nc
+    ld bc,#7FC4
+    out (c),c
+    ld hl,FIGHTERS
+    ld a,(n_chars)
+rf_char
+    push af
+    ld de,FI_SIZE
+    call read_long              ; (HL ends past it)
+    pop bc
+    jr nc,rf_out
+    ld a,b
+    dec a
+    jr nz,rf_char
+    scf
+rf_out
+    push af
+    ld bc,#7FC0
+    out (c),c
+    call CAS_IN_CLOSE
+    pop af
+    ret
+
+;; controls - HL = a player's keys (left, right, fire, up, down: each a
+;; list of key numbers ended by #FF): A = PS_ bits held. Destroys
+;; everything.
 controls
     ld c,0                      ; C = held
     ld b,1<<PS_LEFT             ; B = this list's bit
@@ -760,132 +1075,10 @@ co_key
 co_list
     sla b
     ld a,b
-    cp 1<<(PS_FIRE+1)
+    cp 1<<(PS_DOWN+1)
     jr nz,co_key
     ld a,c
     ret
-
-;; choose - A = held, HL = last frame's held, DE = selection, BC = ready:
-;; a newly pushed left or right changes the character, fire makes the
-;; player ready (and fire again changes its mind). CY if anything changed.
-choose
-    ld (ch_ready),bc
-    ld c,(hl)                   ; pressed = held and not held before
-    ld (hl),a
-    ld b,a
-    ld a,c
-    cpl
-    and b
-    ret z                       ; (NC)
-    ld b,a
-    ld hl,(ch_ready)
-    bit PS_FIRE,b
-    jr z,ch_move
-    ld a,(hl)
-    xor 1
-    ld (hl),a
-    scf
-    ret
-ch_move
-    ld a,(hl)                   ; ready: the choice stays
-    or a
-    ret nz
-    ld a,(de)
-    bit PS_LEFT,b
-    jr z,ch_right
-    or a
-    jr nz,ch_left
-    ld a,(n_chars)
-ch_left
-    dec a
-    jr ch_set
-ch_right
-    inc a
-    ld hl,n_chars
-    cp (hl)
-    jr c,ch_set
-    xor a
-ch_set
-    ld (de),a
-    scf
-    ret
-
-;; show_a, show_b - a player's choice: name, title, ready or not.
-show_a
-    ld a,(sel_a)
-    ld hl,#0108                 ; column 1, row 8
-    ld bc,(rdy_a)
-    jr show
-show_b
-    ld a,(sel_b)
-    ld hl,#0110                 ; column 1, row 16
-    ld bc,(rdy_b)
-show
-    push bc
-    push hl
-    call header_addr
-    ex de,hl                    ; DE = header
-    pop hl
-    push hl
-    push de
-    call TXT_SET_CURSOR
-    ld a,2
-    call TXT_SET_PEN
-    ld a,'<'
-    call TXT_OUTPUT
-    ld a,' '
-    call TXT_OUTPUT
-    pop hl
-    push hl
-    ld bc,H_NAME
-    add hl,bc
-    ld b,8
-    call say_n
-    ld a,' '
-    call TXT_OUTPUT
-    ld a,'>'
-    call TXT_OUTPUT
-    pop de
-    pop hl
-    push hl
-    push de
-    inc l
-    call TXT_SET_CURSOR         ; the title on two lines of 12
-    ld a,1
-    call TXT_SET_PEN
-    pop hl
-    push hl
-    ld bc,H_TITLE
-    add hl,bc
-    ld b,12
-    call say_n
-    pop de
-    pop hl
-    push hl
-    push de
-    inc l
-    inc l
-    call TXT_SET_CURSOR
-    pop hl
-    ld bc,H_TITLE+12
-    add hl,bc
-    ld b,12
-    call say_n
-    pop hl
-    inc l
-    inc l
-    inc l
-    inc l
-    call TXT_SET_CURSOR
-    ld a,3
-    call TXT_SET_PEN
-    pop bc
-    ld hl,s_ready
-    ld a,c
-    or a
-    jr nz,say_str
-    ld hl,s_blank
-    jr say_str
 
 ;; say_n - B characters from HL. Destroys AF, B, HL.
 say_n
@@ -910,36 +1103,53 @@ say_str
 inks                            ; mode 0 pens 0-3: black, pastel blue,
     defb 0,14,24,26             ; bright yellow, bright white
 
-;; Keys (firmware key numbers), left, right, fire, each list ended by #FF.
+;; Keys (firmware key numbers), left, right, fire, up, down, each list
+;; ended by #FF.
 keys_a                          ; cursor keys, Space, Copy, joystick 0
-    defb 8,74,#FF, 1,75,#FF, 47,9,76,77,#FF
-keys_b                          ; A, D, Z, X, joystick 1
-    defb 69,50,#FF, 61,51,#FF, 71,63,52,53,#FF
+    defb 8,74,#FF, 1,75,#FF, 47,9,76,77,#FF, 0,72,#FF, 2,73,#FF
+keys_b                          ; W A S D, Z, X, joystick 1
+    defb 69,50,#FF, 61,51,#FF, 71,63,52,53,#FF, 59,48,#FF, 60,49,#FF
 
-s_screen
-    defb 31,3,2,15,2,"PUPPET FIGHT"
-    defb 31,1,6,15,3,"PLAYER 1"
-    defb 31,1,23,15,1,"< > CHOOSE"
-    defb 31,1,24,"FIRE: READY"
-    defb 31,1,25,"C: COMPUTER",0
-s_p2
-    defw s_player,s_easy,s_normal,s_hard
-s_player
-    defb 31,1,14,15,3,"PLAYER 2  ",0
+s_rows                          ; the menu's labels
+    defb "PLAYER 1: ",0
+    defb "PLAYER 2: ",0
+    defb "OPPONENT: ",0
+    defb "DIFFICULTY: ",0
+s_human                         ; its values, 8 characters each
+    defb "HUMAN   COMPUTER"
 s_easy
-    defb 31,1,14,15,3,"CPU EASY  ",0
-s_normal
-    defb 31,1,14,15,3,"CPU NORMAL",0
-s_hard
-    defb 31,1,14,15,3,"CPU HARD  ",0
-s_ready
-    defb "READY!",0
+    defb "EASY    MEDIUM  HARD    "
 s_blank
-    defb "      ",0
+    defb "                    ",0
+s_start
+    defb 31,1,23,15,14,"FIRE/SPACE TO START ",0
 s_loading
-    defb 31,1,21,15,2,"LOADING...",0
+    defb 31,15,24,15,3,"LOADING...    ",0
+s_fight
+    defb 31,15,24,15,2,"FIRE TO FIGHT!",0
+ht_inks                         ; Mode 1: black, white, yellow, pastel blue
+    defb 0,26,24,14
+s_howto                         ; (31 column row: the cursor; 15 pen)
+    defb 31,14,1,15,2,"HOW TO FIGHT"
+    defb 31,12,3,15,3,"PLAYER 1",31,28,3,"PLAYER 2"
+    defb 31,1,4,15,1,"MOVE",31,12,4,"CURSORS/JOY 1",31,28,4,"W A S D/JOY 2"
+    defb 31,1,5,"PUNCH",31,12,5,"SPACE/FIRE 1",31,28,5,"Z/FIRE 1"
+    defb 31,1,6,"KICK",31,12,6,"COPY/FIRE 2",31,28,6,"X/FIRE 2"
+    defb 31,16,8,15,2,"THE MOVES"
+    defb 31,5,9,15,3,"FORWARD: TOWARDS THE OPPONENT"
+    defb 31,1,11,15,1,"JUMP",31,16,11,"UP (+ FORWARD/BACK)"
+    defb 31,1,12,"CROUCH",31,16,12,"DOWN"
+    defb 31,1,13,"BLOCK",31,16,13,"HOLD BACK"
+    defb 31,1,14,"PUNCH, KICK",31,16,14,"PUNCH, KICK"
+    defb 31,1,15,"BACK KICK",31,16,15,"BACK + KICK"
+    defb 31,1,16,"SWEEP",31,16,16,"DOWN + KICK"
+    defb 31,1,17,"UPPERCUT",31,16,17,"DOWN + PUNCH"
+    defb 31,1,18,15,2,"SPECIAL",31,16,18,"DOWN, DOWN-FORWARD,"
+    defb 31,16,19,"FORWARD + PUNCH/KICK"
+    defb 31,1,20,15,1,"ESCAPE A THROW",31,16,20,"BACK AS IT GRABS"
+    defb 31,1,22,15,3,"2 ROUNDS WIN A MATCH, 99 SECONDS EACH.",0
 s_error
-    defb 31,1,21,15,2,"DISC ERROR",0
+    defb 31,1,23,15,14,"DISC ERROR          ",0
 
 f_roster
     defb "ROSTER.TXT"
@@ -951,6 +1161,12 @@ f_stg
 f_title
     defb "TITLE.SCR"
 f_title_end
+f_select
+    defb "SELECT.SCR"
+f_select_end
+f_fighters
+    defb "FIGHTERS.BIN"
+f_fighters_end
 
     include "gen/remap.asm"     ; page aligned
 
@@ -959,15 +1175,16 @@ loader_end
 n_chars         EQU loader_end
 sel_a           EQU n_chars+1
 sel_b           EQU sel_a+1
-rdy_a           EQU sel_b+1     ; (a word apart from rdy_b: show reads BC)
-rdy_b           EQU rdy_a+2
-ps_a            EQU rdy_b+2
-ps_b            EQU ps_a+1
-ch_ready        EQU ps_b+1
-title_up        EQU ch_ready+2  ; (ch_ready is a word)
+m_row           EQU sel_b+1     ; the menu: the row chosen, the opponent
+m_cpu           EQU m_row+1     ; (1: the computer) and its level (0-2)
+m_level         EQU m_cpu+1
+m_i             EQU m_level+1   ; show_menu: the row it is on, its label,
+m_lbl           EQU m_i+1       ; the 4 colours it sets
+m_inks          EQU m_lbl+2
+ps_a            EQU m_inks+4    ; the controls held last frame
+title_up        EQU ps_a+1
 cpu_b           EQU title_up+1  ; 0 a player, 1-3 the computer's level + 1
-c_held          EQU cpu_b+1     ; C held last frame
-lc_ram          EQU c_held+1
+lc_ram          EQU cpu_b+1
 rb_moves        EQU lc_ram+1
 rb_frames       EQU rb_moves+1
 rb_move         EQU rb_frames+1

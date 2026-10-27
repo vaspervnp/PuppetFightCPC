@@ -94,10 +94,11 @@ src/gen/stage.asm: FORCE $(call stage_file,$(STAGE))
 src/gen/music.asm: tools/music.py
 	$(PYTHON) tools/music.py
 
-# The title screen, which the loader shows first.
-$(BUILD)/TITLE.SCR: tools/title_art.py tools/stage_pack.py tools/sprite_codegen.py art/title.json \
+# The title screen, which the loader shows first, and the select screen's
+# background and fighters.
+$(BUILD)/TITLE.SCR $(BUILD)/SELECT.SCR $(BUILD)/FIGHTERS.BIN &: tools/title_art.py tools/stage_pack.py tools/sprite_codegen.py art/title.json \
         art/sprites/*.json $(wildcard art/sprites/*/*.png) | $(BUILD)
-	$(PYTHON) tools/title_art.py
+	CHARS="$(CHARS)" $(PYTHON) tools/title_art.py
 
 # Character files for the disc, made for fighter B's pens (the loader moves
 # fighter A's), and the list of them the select screen reads.
@@ -122,7 +123,7 @@ $(BUILD)/PFLOAD.BIN: src/loader.asm src/gen/remap.asm | $(BUILD)
 
 # One rasm pass writes the snapshot, the symbols and (via SAVE) the engine;
 # then the disc, an extended DSK with everything (tools/make_dsk.py).
-$(BUILD)/pfspike.sna: $(SRC) $(BUILD)/PFLOAD.BIN $(PFC) $(STG) $(BUILD)/TITLE.SCR $(BUILD)/pfc/ROSTER.TXT FORCE | $(BUILD)
+$(BUILD)/pfspike.sna: $(SRC) $(BUILD)/PFLOAD.BIN $(PFC) $(STG) $(BUILD)/TITLE.SCR $(BUILD)/SELECT.SCR $(BUILD)/FIGHTERS.BIN $(BUILD)/pfc/ROSTER.TXT FORCE | $(BUILD)
 	cd src && $(RASM) main.asm -oi ../$@ -s -sl -sq -os ../$(BUILD)/pfspike.sym -v2 $(RASMFLAGS)
 	CHARS="$(CHARS)" BOSS="$(BOSS)" $(PYTHON) tools/make_dsk.py write $(BUILD)/pfspike.dsk
 
@@ -140,11 +141,18 @@ bench-all:
 run: $(BUILD)/pfspike.sna
 	caprice32 $(abspath $(BUILD)/pfspike.sna)
 
+# The manuals, English and Greek, as PDFs (needs: pip install markdown
+# fpdf2, and the DejaVu fonts). Screenshots in docs/img.
+manual: manual.pdf manual_gr.pdf
+
+manual.pdf manual_gr.pdf: %.pdf: %.md tools/mkmanual.py $(wildcard docs/img/*.png)
+	$(PYTHON) tools/mkmanual.py $< $@
+
 clean:
 	rm -rf $(BUILD)
 
 FORCE:
-.PHONY: all bench bench-all bench-play bench-fight run clean FORCE
+.PHONY: all bench bench-all bench-play bench-fight run clean manual FORCE
 
 # The game with scripted controls: walk in, jump over, attacks. Close combat
 # needs the runtime compiler (only idle frames have compiled draws), so this

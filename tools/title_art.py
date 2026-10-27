@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """The title screen: art/title.png (160 x 200, a firmware Mode 0 screen) and
-build/TITLE.SCR, packed for the loader (src/loader.asm show_title).
+build/TITLE.SCR, packed for the loader (src/loader.asm show_title). Also
+the select screen's background (art/select.png, build/SELECT.SCR, the same
+format) and its fighters (build/FIGHTERS.BIN): for each character of the
+roster (CHARS), its 4 own and 4 mirror-match firmware colours, then its
+first idle frame, 16 bytes x 64 lines, as fighter A (pens 6-9, facing
+right) and as fighter B (pens 10-13, facing left).
 
 The picture uses the game's pens: the shared ones, Trump's own colours in
 6-9 and Putin's in 10-13 (as fighter A and B), and two title colours in 14
@@ -36,6 +41,7 @@ GLYPHS = {                              # src/victory.asm font
     "C": (3, 4, 4, 4, 3), "N": (6, 5, 5, 5, 5), "A": (2, 5, 7, 5, 5),
     "O": (2, 5, 5, 5, 2), "2": (7, 1, 7, 4, 7), "0": (7, 5, 5, 5, 7),
     "6": (7, 4, 7, 5, 7), "-": (0, 0, 7, 0, 0),
+    "8": (7, 5, 7, 5, 7), "B": (6, 5, 6, 5, 6),
 }
 
 
@@ -48,6 +54,7 @@ BIG = {                                 # 5 x 7, for the title's letters
     "I": ("01110",) + ("00100",) * 5 + ("01110",),
     "G": ("01110", "10001", "10000", "10111", "10001", "10001", "01110"),
     "H": ("10001", "10001", "10001", "11111", "10001", "10001", "10001"),
+    " ": ("00000",) * 7,
 }
 
 
@@ -123,6 +130,70 @@ def draw(cfg):
     return px
 
 
+SPR_Y = 30                              # the select screen's fighters (loader.asm)
+SPR_XA, SPR_XB = 20, 108
+
+
+def draw_select():
+    px = [[0] * W for _ in range(H)]
+    for y in range(0, 34):                  # a navy glow behind the title
+        for x in range(W):
+            if (x + y) % 2 == 0 and ((x - 80) / 84) ** 2 + ((y - 17) / 17) ** 2 < 1:
+                px[y][x] = 3
+    big(px, "PUPPET FIGHT", 6, 2, 3, 15, 4)
+    text(px, "VS", 68, SPR_Y + 24, 3, 4, 14, 3)
+    for x in range(8, W - 8):               # a stage edge under the fighters
+        px[SPR_Y + 66][x] = 2
+        px[SPR_Y + 67][x] = 5
+    text(px, "REVIVE8BIT - 2026 - VASPER", 28, 190, 1, 2, 14)
+    return px
+
+
+def frame_bytes(char, side, flip):
+    px = [[0] * 32 for _ in range(64)]
+    im = Image.open(os.path.join(REPO, "art", "sprites", char, "idle_0.png"))
+    pens = pen_map(char, side)
+    src = im.load()
+    for y in range(64):
+        for x in range(32):
+            p = pens[src[x, y]] or 0
+            px[y][31 - x if flip else x] = p
+    return bytes(encode_byte(px[y][x], px[y][x + 1]) for y in range(64) for x in range(0, 32, 2))
+
+
+def fighters():
+    out = bytearray()
+    for c in os.environ.get("CHARS", "trump putin kim xi musk zelensky").split():
+        cfg = char_settings(c)
+        out += bytes(cfg["colours"] + cfg["alt_colours"])
+        out += frame_bytes(c, "a", False) + frame_bytes(c, "b", True)
+    if len(out) > 16384:
+        sys.exit("FIGHTERS.BIN: %d bytes, more than a bank" % len(out))
+    with open(os.path.join(REPO, "build", "FIGHTERS.BIN"), "wb") as fh:
+        fh.write(out)
+
+
+def save_screen(px, inks, name, png):
+    im = Image.new("P", (W, H))
+    pal = []
+    for p in range(16):
+        pal += list(HW_COLOURS[inks[p]][1])
+    im.putpalette(pal)
+    im.putdata([p for row in px for p in row])
+    im.save(os.path.join(REPO, "art", png))
+    data = screen(px)
+    packed = pack(data)
+    assert unpack(packed) == data
+    out = b"TL\x01" + bytes(inks[p] for p in range(16))
+    out += len(packed).to_bytes(2, "little") + packed
+    if len(out) > ROOM:
+        sys.exit("%s: %d bytes, more than the %d there is room for" % (name, len(out), ROOM))
+    os.makedirs(os.path.join(REPO, "build"), exist_ok=True)
+    with open(os.path.join(REPO, "build", name), "wb") as fh:
+        fh.write(out)
+    print("%s: 16384 bytes packed to %d" % (name, len(out)))
+
+
 def screen(px):
     mem = bytearray(16384)
     for y in range(H):
@@ -141,25 +212,10 @@ def main():
     for i, k in enumerate(char_settings("putin")["colours"]):
         inks[10 + i] = k
     inks[14], inks[15] = cfg["inks"]
-    px = draw(cfg)
-    im = Image.new("P", (W, H))
-    pal = []
-    for p in range(16):
-        pal += list(HW_COLOURS[inks[p]][1])
-    im.putpalette(pal)
-    im.putdata([p for row in px for p in row])
-    im.save(os.path.join(REPO, "art", "title.png"))
-    data = screen(px)
-    packed = pack(data)
-    assert unpack(packed) == data
-    out = b"TL\x01" + bytes(inks[p] for p in range(16))
-    out += len(packed).to_bytes(2, "little") + packed
-    if len(out) > ROOM:
-        sys.exit("title: %d bytes, more than the %d there is room for" % (len(out), ROOM))
-    os.makedirs(os.path.join(REPO, "build"), exist_ok=True)
-    with open(os.path.join(REPO, "build", "TITLE.SCR"), "wb") as fh:
-        fh.write(out)
-    print("title: 16384 bytes packed to %d" % len(out))
+    save_screen(draw(cfg), inks, "TITLE.SCR", "title.png")
+    inks[14], inks[15] = 14, 24             # the select screen: pastel blue, yellow
+    save_screen(draw_select(), inks, "SELECT.SCR", "select.png")
+    fighters()
 
 
 if __name__ == "__main__":

@@ -1363,6 +1363,36 @@ The disc now holds 123 of its 180 blocks.
 Free memory now: payload 36, low RAM 32, workspace 22, COLD/COLD2 27/60
 bytes. Gaps 1-8: 7, 12, 24, 6, 24, 73 (45 in the SHOTS build), 3, 8.
 
+## Milestone 9 step 3: the select screen and the manuals
+
+**The select screen is a menu** (loader.asm `select`). It draws over
+`SELECT.SCR` (tools/title_art.py): the title in small, "VS" between the two
+fighters, and "REVIVE8BIT - 2026 - VASPER" at the foot. The rows are
+Player 1, Player 2, Opponent (Human or Computer), and Difficulty (Easy,
+Medium, Hard), which shows only for the computer:
+- up and down choose a row, left and right change it, fire or Space
+  starts (either player's controls);
+- the chosen row is yellow with an arrow;
+- the two fighters chosen stand above the menu, in their own colours (the
+  second set in a mirror match).
+
+Their first idle frames and colours come from `FIGHTERS.BIN`, which goes
+into bank 4 until the characters load over it. Each character has its
+frame there twice, as fighter A and as fighter B (2,056 bytes a
+character).
+
+**A controls screen** (`how_to`, Mode 1) follows. It shows both players'
+keys and every move's combination while the fighters load, then "FIRE TO
+FIGHT!" and waits for fire.
+
+**A victory screen fix.** `victory` called `music_play`, which takes IX,
+before it looked at who had won. The lines shown were fighter B's whatever
+the result. It keeps IX now.
+
+**The manuals**, `manual.md` and `manual_gr.md`, are turned into PDFs by
+`make manual` (`tools/mkmanual.py`, from BuildDangerousCPC). They use
+screenshots from the disc in the emulator (`docs/img`).
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

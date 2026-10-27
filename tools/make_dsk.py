@@ -80,6 +80,8 @@ def files():
             for s in stages()]
     out += [("ROSTER.TXT", os.path.join(BUILD, "pfc", "ROSTER.TXT"), "txt", 0, 0),
             ("TITLE.SCR", os.path.join(BUILD, "TITLE.SCR"), "bin", 0x9800, 0),
+            ("SELECT.SCR", os.path.join(BUILD, "SELECT.SCR"), "bin", 0x9800, 0),
+            ("FIGHTERS.BIN", os.path.join(BUILD, "FIGHTERS.BIN"), "bin", 0x4000, 0),
             ("PFLOAD.BIN", os.path.join(BUILD, "PFLOAD.BIN"), "bin", 0x8000, 0x8000),
             ("PFSPIKE.BAS", os.path.join(REPO, "src", "pfspike.bas"), "txt", 0, 0),
             ("PFSPIKE.BIN", os.path.join(BUILD, "PFSPIKE.BIN"), "bin", 0x4000, 0x4000)]
