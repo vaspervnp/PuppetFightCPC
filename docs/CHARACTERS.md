@@ -35,7 +35,7 @@ These are the official show billings from GZERO's "About the Show" page.
   Alternate costume: shirtless with ushanka.
 - **Victory**: strongman flex ✅ (needs re-posing so it reads in profile).
 
-### Kim Jong-Un 🎯 — "The Supremest Leader"
+### Kim Jong-Un ✅ — "The Supremest Leader"
 - **Show persona**: a finely coiffed, short-tempered despot with a taste for
   surf rock, edibles and Cardi B. The 2018 sketch "Trump and Kim Enter the
   Ring" already framed the summit as a heavyweight showdown, which makes
@@ -46,6 +46,10 @@ These are the official show billings from GZERO's "About the Show" page.
   stage), **Button Slam** (giant red button: ground shockwave). Gag
   rivalry with Trump: "Mine is bigger."
 - **Palette**: black hair (outline pen + navy shading), pink skin, dark grey or navy suit.
+- **Built** (milestone 8): grey Mao suit with a stand-up collar. Special
+  **Surf's Up Missile** ✅ as a projectile fired from a launch remote.
+  Victory: applauds himself. Taunt: "MINE IS BIGGER." Home stage: Pyongyang
+  (Kim Il Sung Square).
 
 ### Xi Jinping 🎯 — "President Emperor of the People's Republic of China"
 - **Show persona**: "the big daddy of China", known for a friendship

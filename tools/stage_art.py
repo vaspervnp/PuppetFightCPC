@@ -270,7 +270,98 @@ def kremlin():
     return c
 
 
-STAGES = {"whitehouse": whitehouse, "kremlin": kremlin}
+def star(c, cx, cy, r, p):
+    """A filled five-pointed star."""
+    pts = []
+    for i in range(10):
+        a = math.pi / 2 + i * math.pi / 5
+        rr = r if i % 2 == 0 else r * 0.42
+        pts.append((cx + math.cos(a) * rr * 0.6, cy - math.sin(a) * rr))
+    for y in range(int(cy - r) - 1, int(cy + r) + 2):
+        xs = []
+        for (x0, y0), (x1, y1) in zip(pts, pts[1:] + pts[:1]):
+            if (y0 <= y < y1) or (y1 <= y < y0):
+                xs.append(x0 + (y - y0) * (x1 - x0) / (y1 - y0))
+        xs.sort()
+        for a, b in zip(xs[::2], xs[1::2]):
+            c.hline(int(round(a)), int(round(b)), y, p)
+
+
+def pyongyang():
+    """Kim Il Sung Square: a tower with a red flame against the sky, a
+    columned hall hung with red banners, the paved square behind the
+    fighters and a reviewing stand as the floor."""
+    c = Canvas(P0)
+    c.rect(0, 0, W - 1, HUD - 1, K)
+    for y in range(HUD, HUD + 16, 2):                # the sky lightens downwards
+        for x in range((y // 2) % 2 * 2, W, 4):
+            c.put(x, y, NV)
+    cloud(c, 30, 52, 6)
+    cloud(c, 164, 44, 7)
+    # The tower: a tapering white shaft, grey shading, the red flame.
+    for y in range(40, 110):
+        half = 5 + (y - 40) // 14
+        c.hline(96 - half, 95 + half, y, WH)
+        c.vline(95 + half, y, y, GR)
+        c.vline(94 + half, y, y, GR)
+    for y in range(40, 110, 6):
+        c.hline(92, 99, y, GR)
+    for i, (dy, rx) in enumerate(((0, 6), (-5, 5), (-10, 3.5), (-14, 2))):
+        c.ellipse(96, 36 + dy, rx, 4, P15)
+    c.ellipse(96, 37, 2.5, 2.5, WH)
+    # The hall: a long grey block with a deep cornice and square columns.
+    x0, x1 = 8, 183
+    c.rect(x0, 100, x1, 168, GR)
+    c.rect(x0 - 4, 96, x1 + 4, 100, WH)              # cornice
+    c.hline(x0 - 4, x1 + 4, 101, K)
+    c.rect(x0 - 2, 90, x1 + 2, 95, GR)
+    c.hline(x0 - 2, x1 + 2, 89, WH)
+    for cx in range(x0 + 2, x1, 16):                 # recesses between columns
+        c.rect(cx + 4, 106, cx + 13, 160, NV)
+        c.vline(cx + 4, 106, 160, K)
+    for cx in range(x0 + 2, x1, 16):                 # columns
+        c.rect(cx, 102, cx + 3, 164, WH)
+        c.vline(cx + 3, 102, 164, GR)
+    c.rect(x0 - 4, 164, x1 + 4, 168, WH)             # the step
+    c.hline(x0 - 4, x1 + 4, 169, K)
+    # Red banners down the recesses, a white star on each.
+    for i, cx in enumerate(range(x0 + 2, x1, 16)):
+        if i % 2:
+            continue
+        c.rect(cx + 6, 106, cx + 11, 150, P15)
+        c.vline(cx + 11, 106, 150, DR)
+        for x in range(cx + 6, cx + 12):             # swallow-tail end
+            c.vline(x, 151, 151 + int(abs(x - cx - 8.5)), P15)
+        star(c, cx + 8.5, 116, 4, WH)
+    # The big star over the centre.
+    star(c, 96, 92, 9, P15)
+    star(c, 96, 92, 4, WH)
+    # The paved square behind the fighters: pale slabs, grey joints (the
+    # fighters' grey suits stand out against them).
+    for y in range(170, FLOOR):
+        row = (y - 170) // 6
+        if (y - 170) % 6 == 5:
+            c.hline(0, W - 1, y, GR)
+            continue
+        for x in range(W):
+            c.put(x, y, WH if (x + row * 8) % 24 else GR)
+    # The reviewing stand: a white edge, grey stone, a red front with stars.
+    c.hline(0, W - 1, FLOOR, WH)
+    c.hline(0, W - 1, FLOOR + 1, WH)
+    c.rect(0, FLOOR + 2, W - 1, FLOOR + 13, GR)
+    c.checker(0, FLOOR + 10, W - 1, FLOOR + 13, GR, K)
+    c.hline(0, W - 1, FLOOR + 14, K)
+    c.rect(0, FLOOR + 15, W - 1, H - 1, P15)
+    c.hline(0, W - 1, FLOOR + 17, WH)
+    c.hline(0, W - 1, FLOOR + 42, WH)
+    for sx in range(16, W, 32):
+        star(c, sx, FLOOR + 29, 10, WH)
+        star(c, sx, FLOOR + 29, 5, P15)
+    c.checker(0, FLOOR + 46, W - 1, FLOOR + 47, P15, DR)
+    return c
+
+
+STAGES = {"whitehouse": whitehouse, "kremlin": kremlin, "pyongyang": pyongyang}
 
 
 def main():

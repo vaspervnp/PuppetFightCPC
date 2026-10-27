@@ -967,6 +967,49 @@ Putin 8 : 3 (the tweet).
 | the computer against itself, 600 pictures | 599 × 2 frames, 0 caught, 0 bytes wrong |
 | disc: C to the computer (normal), player 1 chooses both | `game_mode` &06; the computer plays B and beats a player who does nothing |
 
+## Milestone 8 step 1: Kim Jong-Un
+
+The third fighter, built through the existing pipeline:
+- **Blender** (`tools/blender_puppets.py`, scene `PF_kim`). He is short
+  and round (scale 0.88), with a full moon face and small eyes under heavy
+  black brows. The flat-top haircut sits over shaved sides.
+- **Suit.** A grey Mao suit buttoned to a stand-up collar (`mao=True`: a
+  collar ring and three buttons instead of a shirt and tie).
+- **Special.** A launch remote with a red button in his near hand, shown
+  only in the special (it hides with its button now).
+- **Sprites.** New materials `hair_black` (navy over black) and
+  `button_red`. `make_sprites.py` turns the 48 renders into sprites.
+
+| | |
+|---|---|
+| Special | **Surf's Up Missile**: a projectile (`missile.png`, 14 × 7, grey with dark red nose and fins), speed 3, damage 6, hitstun 10 |
+| Victory | applauds himself |
+| Taunt | "MINE IS BIGGER." |
+| Title | "Supremest Leader" (two lines of 12 at most) |
+| Colours | bright red (health bar), pink, pastel blue, unused; mirror match: bright magenta, orange, pastel cyan |
+| Hit boxes | Putin's, a pixel shorter (he is smaller); the missile leaves from the remote's hand |
+| File | bank 0 15,113 bytes, bank 1 5,796 bytes, 6 cache slots; `KIM.PFC` 20,973 bytes |
+
+**His home stage, Pyongyang** (`stage_art.py pyongyang`, inks sky blue,
+pastel blue, bright red; packed to 1,788 bytes).
+- Behind: a tower with a red flame, and a columned hall hung with red
+  banners under a big red star.
+- The band: a pale paved square. Grey slabs hid his grey suit, so the slabs
+  are white with grey joints.
+- The floor: a reviewing stand with a red front and a row of stars. The
+  stars are filled five-point shapes, half as wide as tall in pixels,
+  because Mode 0 pixels are wide.
+
+**The disc** now holds three characters and three stages, 94 KB of 178.
+The three to come need about 75 KB more.
+
+| Test | Result |
+|---|---|
+| `bench-fight` keys, Trump against Kim | 2 frames between pictures, 0 caught, 0 bytes wrong |
+| Kim's missile (down, down-forward, forward + punch) | flies across and hits; 0 passes missed |
+| the computer against itself, Kim against Putin, 300 pictures | 2 frames between pictures, 0 caught; Putin wins 6 rounds to 2 |
+| disc: player 2 chooses Kim | all four banks match the snapshot |
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

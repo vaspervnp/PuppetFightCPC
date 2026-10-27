@@ -65,7 +65,20 @@ PUTIN = dict(
     vest=True,
 )
 
-SPECS = {"trump": TRUMP, "putin": PUTIN}
+KIM = dict(
+    name="kim",
+    scale=0.88,                        # short and round
+    thigh=0.25, shin=0.25, leg_r=0.08, hip_w=0.12,
+    torso_h=0.48, torso_size=(0.26, 0.32, 0.30), belly=0.08,
+    shoulder_w=0.30, upper_arm=0.28, forearm=0.26, arm_r=0.08,
+    hand_r=0.058,
+    head_size=(0.32, 0.32, 0.31), neck=0.03,
+    # a grey Mao suit buttoned to a high collar
+    suit="suit_grey", pants="suit_grey", shirt=None, tie=None, tie_len=0,
+    skin="skin_pink", hair="hair_black", shoe="shoe", mao=True,
+)
+
+SPECS = {"trump": TRUMP, "putin": PUTIN, "kim": KIM}
 
 MATERIALS = [
     "suit_navy", "suit_grey", "shirt", "tie_red", "tie_blue",
@@ -76,6 +89,8 @@ MATERIALS = [
     "arm_navy_n", "arm_navy_f", "arm_grey_n", "arm_grey_f",
     # Putin's vest and bare arms (appended, so earlier ID colours stay put)
     "vest_white", "arm_skin_n", "arm_skin_f",
+    # Kim's black hair and the button of his special
+    "hair_black", "button_red",
 ]
 
 
@@ -193,7 +208,30 @@ def putin_head(sc, s, head):
     new_part(sc, "hair_front", "sphere", head, (hx * 0.25, 0, hz * 1.78), (hx * 0.45, hy * 0.55, hz * 0.18), hair)
 
 
-HEADS = {"trump": trump_head, "putin": putin_head}
+def kim_head(sc, s, head):
+    hx, hy, hz = s["head_size"]
+    sk = s["skin"]
+    hair = s["hair"]
+    # round moon face with full cheeks
+    new_part(sc, "head", "sphere", head, (0, 0, hz), (hx, hy, hz), sk)
+    new_part(sc, "cheeks", "sphere", head, (0.05, 0, hz * 0.7), (hx * 0.95, hy * 1.04, hz * 0.62), sk)
+    new_part(sc, "chin", "sphere", head, (0.08, 0, hz * 0.35), (hx * 0.7, hy * 0.8, hz * 0.32), sk)
+    new_part(sc, "nose", "sphere", head, (hx * 0.98, 0, hz * 0.95), (0.05, 0.045, 0.05), sk)
+    for side, y in (("R", -1), ("L", 1)):
+        new_part(sc, "ear_" + side, "sphere", head, (-0.02, y * hy * 0.98, hz * 1.0), (0.05, 0.035, 0.08), sk)
+        # small eyes in the round face, heavy black brows
+        new_part(sc, "eye_" + side, "sphere", head, (hx * 0.9, y * 0.12, hz * 1.12), (0.045, 0.07, 0.035), "eye_white")
+        new_part(sc, "pupil_" + side, "sphere", head, (hx * 0.98, y * 0.12, hz * 1.12), (0.033, 0.033, 0.032), "pupil")
+        new_part(sc, "brow_" + side, "box", head, (hx * 0.93, y * 0.12, hz * 1.27), (0.035, 0.085, 0.022), hair, rot=(-y * 10, 0, 0))
+    # pleased little smile
+    new_part(sc, "mouth", "box", head, (hx * 0.98, 0, hz * 0.58), (0.04, 0.09, 0.02), "mouth")
+    # the haircut: a tall flat top over shaved sides (skin shows round the ears)
+    new_part(sc, "hair_top", "box", head, (-0.01, 0, hz * 1.78), (hx * 0.92, hy * 0.78, hz * 0.26), hair)
+    new_part(sc, "hair_front", "sphere", head, (hx * 0.55, 0, hz * 1.6), (hx * 0.42, hy * 0.74, hz * 0.2), hair)
+    new_part(sc, "hair_back", "sphere", head, (-hx * 0.5, 0, hz * 1.45), (hx * 0.5, hy * 0.82, hz * 0.4), hair)
+
+
+HEADS = {"trump": trump_head, "putin": putin_head, "kim": kim_head}
 
 
 # --------------------------------------------------------------------------
@@ -230,7 +268,13 @@ def build_character(s):
     th = s["torso_h"]
     new_part(sc, "jacket", "sphere", torso, (s["belly"] * 0.5, 0, th * 0.5), (tx + s["belly"], ty, tz), s["suit"])
     front = tx + s["belly"] * 0.6
-    if s.get("vest"):
+    if s.get("mao"):
+        # buttoned up to a high stand-up collar, a row of buttons down the front
+        new_part(sc, "chest", "sphere", torso, (0, 0, th * 0.78), (tx * 0.92, ty * 1.02, tz * 0.5), s["suit"])
+        new_part(sc, "collar", "cyl", torso, (0.02, 0, th + 0.01), (0.1, 0.11, 0.035), s["suit"])
+        for i in range(3):
+            new_part(sc, "button%d" % i, "sphere", torso, (front * 0.98, 0, th * (0.82 - 0.2 * i)), (0.02, 0.02, 0.02), "pupil")
+    elif s.get("vest"):
         # sleeveless: narrower across the shoulders so they show bare, and a
         # scoop neck of skin at the front
         new_part(sc, "chest", "sphere", torso, (0, 0, th * 0.78), (tx * 0.92, ty * 0.84, tz * 0.5), s["suit"])
@@ -264,6 +308,12 @@ def build_character(s):
     if s["name"] == "trump":
         # the phone used by his Tweet Storm special; hidden unless posed
         ph = new_part(sc, "phone", "box", J["wrN"], (0.04, 0, -0.08), (0.015, 0.035, 0.06), "phone")
+        J["phone"] = ph
+    if s["name"] == "kim":
+        # the launch remote of his missile special: a box with a big red
+        # button, in the near hand; hidden unless posed
+        ph = new_part(sc, "phone", "box", J["wrN"], (0.05, 0, -0.08), (0.03, 0.045, 0.05), "phone")
+        new_part(sc, "phone_button", "sphere", ph, (0.0, 0, 1.0), (0.8, 0.8, 0.5), "button_red")
         J["phone"] = ph
 
     setup_render(sc)
@@ -439,7 +489,24 @@ PUTIN_MOVES = {
     ],
 }
 
-CHAR_MOVES = {"trump": TRUMP_MOVES, "putin": PUTIN_MOVES}
+KIM_MOVES = {
+    # Surf's Up Missile: out comes the remote, thumb on the button, the
+    # missile goes (the projectile is a separate sprite)
+    "special": [
+        P(phone=True, shN=40, elN=130, torso=-6, shF=40, elF=100, head=-6),
+        P(phone=True, shN=70, elN=100, torso=-10, head=-12, shF=50, elF=90),
+        P(phone=True, shN=95, elN=15, torso=16, twist=30, shF=30, elF=110, x=0.08),
+        P(phone=True, shN=80, elN=40, torso=10, twist=15, shF=35, elF=105, x=0.04),
+    ],
+    # applauds himself, beaming
+    "victory": [
+        P(shN=60, elN=100, shF=60, elF=100, ab=10, torso=-4, head=-10),
+        P(shN=70, elN=125, shF=70, elF=125, ab=0, torso=-8, head=-16, knN=8, knF=8),
+        P(shN=60, elN=95, shF=60, elF=95, ab=12, torso=-4, head=-10),
+    ],
+}
+
+CHAR_MOVES = {"trump": TRUMP_MOVES, "putin": PUTIN_MOVES, "kim": KIM_MOVES}
 
 MOVE_ORDER = ["idle", "walk", "crouch", "jump", "punch", "kick", "sweep",
               "uppercut", "backkick", "block", "hit", "ko", "special", "victory"]
@@ -461,8 +528,9 @@ def apply_pose(sc, J, p):
         # keep feet flat-ish against the shin/thigh rotation
         J["an" + side].rotation_euler = (0, rad(p["hp" + side] - p["kn" + side]) * 0.6, 0)
     if "phone" in J:
-        J["phone"].hide_render = not p.get("phone", False)
-        J["phone"].hide_viewport = J["phone"].hide_render
+        for o in [J["phone"]] + list(J["phone"].children):
+            o.hide_render = not p.get("phone", False)
+            o.hide_viewport = o.hide_render
 
     hip_z = J["root"]["hip_z"]
     J["root"].location = (p.get("x", 0), 0, hip_z)
@@ -477,8 +545,9 @@ def apply_pose(sc, J, p):
 def key_pose(J, frame):
     for name, o in J.items():
         if name == "phone":
-            o.keyframe_insert("hide_render", frame=frame)
-            o.keyframe_insert("hide_viewport", frame=frame)
+            for part in [o] + list(o.children):
+                part.keyframe_insert("hide_render", frame=frame)
+                part.keyframe_insert("hide_viewport", frame=frame)
             continue
         o.keyframe_insert("rotation_euler", frame=frame)
         if name == "root":
