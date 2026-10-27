@@ -77,16 +77,29 @@ start
     call copy_mirror
     call clear_lists
     call make_tables
-    ld ix,fighter_a             ; the compiled frame caches
+    call cache_split            ; the compiled frame caches
+    push bc
+    ld ix,fighter_a
     ld hl,SLOT_TAB_A
     xor a
-    ld c,CACHE_SLOTS_A
+    ld c,b
     call jit_init
+    pop bc
     ld ix,fighter_b
     ld hl,SLOT_TAB_B
-    ld a,CACHE_SLOTS_A
-    ld c,CACHE_SLOTS_B
+    ld a,b
+    ld c,MAIN_SLOTS
+    sub c
+    neg
+    ld c,a
+    ld a,b
     call jit_init
+    ld ix,fighter_a             ; each fighter's own colours
+    ld de,palette_game+6
+    call own_inks
+    ld ix,fighter_b
+    ld de,palette_game+10
+    call own_inks
     call setup_crtc
     ld hl,palette_game
     call set_palette
@@ -139,6 +152,67 @@ ml_prepare
     ld (bench_phase),a
     ret
 
+
+;; cache_split - B = fighter A's main RAM cache slots (B gets the rest of
+;; MAIN_SLOTS): about as many slots in all for both, at least one each, and
+;; at most MAX_SLOTS. Destroys AF, BC, DE, IX.
+cache_split
+    ld ix,fighter_a
+    call char_slots
+    ld d,a                      ; D = A's slots in bank 1, E = B's
+    ld ix,fighter_b
+    call char_slots
+    ld e,a
+    ld a,MAIN_SLOTS             ; (MAIN_SLOTS + E - D) / 2
+    add a,e
+    sub d
+    srl a
+    ld b,a
+    ld a,e                      ; B's total within MAX_SLOTS
+    sub MAX_SLOTS-MAIN_SLOTS
+    jr c,cs_one
+    cp b
+    jr c,cs_one
+    ld b,a
+cs_one
+    ld a,b                      ; at least one
+    or a
+    jr nz,cs_max
+    inc b
+cs_max
+    ld a,MAX_SLOTS              ; A's total within MAX_SLOTS
+    sub d
+    cp b
+    jr nc,cs_left
+    ld b,a
+cs_left
+    ld a,MAIN_SLOTS-1           ; and one left for B
+    cp b
+    ret nc
+    ld b,a
+    ret
+
+;; char_slots - IX = fighter: A = its character's cache slots in bank 1.
+;; own_inks - IX = fighter, DE = 4 palette entries: its character's inks
+;; there. Destroy AF, BC (and DE, HL).
+char_slots
+    call page_char
+    ld a,(DIR_SLOTS)
+    jr page_main
+own_inks
+    call page_char
+    ld hl,DIR_INKS
+    ld bc,4
+    ldir
+page_main
+    ld bc,#7FC0
+    out (c),c
+    ret
+page_char
+    ld a,(ix+F_RAM0)
+    ld bc,#7F00
+    out (c),a
+    ret
 
 ;; make_tables - flip_tab (the two pixels of a Mode 0 byte swapped) and
 ;; mask_tab (#AA / #55 set where a pixel is pen 0), which the compiler
@@ -260,7 +334,8 @@ F_SIZE          EQU F_HIST+HIST_LEN
 
 MOVE_IDLE       EQU 0
 DIR_SLOTS       EQU #4004       ; in a character's bank 0: bank 1 cache
-DIR_MOVES       EQU #4007       ; slots (count, first), then the moves
+DIR_INKS        EQU #4007       ; slots (count, first), the inks of its 4
+DIR_MOVES       EQU #400B       ; colours, then the moves
 REC_SIZE        EQU 16
     ASSERT REC_SIZE==16             ; rec_addr shifts
 
@@ -558,18 +633,9 @@ cold2_end
     SAVE 'PFSPIKE.BIN',boot,cold2_store-boot+cold2_end-cold2_start,DSK,'../build/pfspike.dsk'
 
 ;; ---------------------------------------------------------------------------
-;; The characters, in the extra 64K. On the disc each bank is its own file,
-;; and PFSPIKE.BAS pages the bank in before loading it at #4000.
+;; The characters, in the extra 64K, for the snapshot: fighter A in banks
+;; 4-5, fighter B in banks 6-7 (make CHAR_A=... CHAR_B=..., Trump and Putin
+;; by default). On the disc they are character files that the select
+;; screen loads (loader.asm).
 ;; ---------------------------------------------------------------------------
-BANK 4
-    include "gen/trump_bank0.asm"
-    SAVE 'TRUMP0.BIN',#4000,$-#4000,DSK,'../build/pfspike.dsk'
-BANK 5
-    include "gen/trump_bank1.asm"
-    SAVE 'TRUMP1.BIN',#4000,$-#4000,DSK,'../build/pfspike.dsk'
-BANK 6
-    include "gen/putin_bank0.asm"
-    SAVE 'PUTIN0.BIN',#4000,$-#4000,DSK,'../build/pfspike.dsk'
-BANK 7
-    include "gen/putin_bank1.asm"
-    SAVE 'PUTIN1.BIN',#4000,$-#4000,DSK,'../build/pfspike.dsk'
+    include "gen/chars.asm"

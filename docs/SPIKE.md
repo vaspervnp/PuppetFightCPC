@@ -521,6 +521,88 @@ bench-all`, `bench-fight`, `bench-play` and `SLACK=15`, show 2 frames
 between pictures, 0 lines caught and 0 bytes wrong. That completes
 milestone 3.
 
+## Milestone 4: characters from the disc
+
+**Palette** (GAME_PLAN 3.3). The pens now follow the plan:
+- 0 is the background black.
+- 1-5 are shared fighter pens: outline black, white, navy, dark red, grey.
+- 6-9 are fighter A's own colours, and 10-13 are fighter B's.
+- 14-15 belong to the stage: pastel blue and green.
+
+The art keeps its old pens. `sprite_codegen.py` turns them into game pens
+through each character's `art/sprites/<char>_pfc.json`, which holds:
+- its name and select-screen title;
+- its 4 own colours, the first of which is also its health bar;
+- 4 more colours for the second fighter in a mirror match;
+- merges for art colours that are neither shared nor its own.
+
+Trump had 5 colours of his own, so his tie goes from bright red to dark red
+and the pastel highlights merge into bright yellow and white. Putin needs 3.
+The directory carries the inks of the character's colours (version 3,
+`DIR_INKS` &4007, so the moves move to &400B). `start` copies each
+fighter's inks into pens 6-9 and 10-13. The stage and HUD were redrawn in
+the stage pens and the shared pens: sky, haze, grass, floor, white clock
+and markers, each health bar in its fighter's first colour.
+
+**Character files** (`make` → `build/pfc/NAME.PFC`, GAME_PLAN 3.5). Each is a
+64-byte header followed by bank 0 and bank 1, made for fighter A's pens. The
+header holds:
+- "PFC" and the version;
+- the name, and the title as two lines of 12 characters;
+- the two sets of 4 inks;
+- the two bank lengths.
+
+`ROSTER.TXT` lists the names. Trump's file is 26.8 KB and Putin's 22.2 KB.
+
+**Select screen and loader** (`src/loader.asm`, `PFLOAD.BIN` at &8000).
+`PFSPIKE.BAS` loads and calls it, then loads the engine as before.
+1. It runs under the firmware in mode 0. It reads the roster and every
+   header, and shows each player a name and title.
+2. Each player picks with left/right and fire. Player 1 uses the cursor
+   keys, Space or Copy, or joystick 0. Player 2 uses A, D, Z or X, or
+   joystick 1.
+3. Fighter A's file goes into banks 4-5 and fighter B's into banks 6-7, read
+   a byte at a time with `CAS IN CHAR`, so a bank is paged in at #4000 while
+   it fills.
+4. Fighter B's frames are then walked through the directory, and every
+   pixel byte goes through `remap_tab` to move pens 6-9 to 10-13. The
+   escaping never changes, because it only depends on which pixels are
+   pen 0.
+5. In a mirror match, B's directory gets the second set of inks.
+
+AMSDOS reports every &1A byte as a soft end of file, even in a binary file,
+so the loader treats &1A as data and stops only at the hard end.
+
+**Cache split.** `start` now splits the 6 main-RAM cache slots from the two
+directories, so that both fighters have about as many slots in all:
+- Trump against Putin gets 4 + 3 and 2 + 6, as before.
+- Putin against Putin gets 3 + 6 each.
+- Trump against Trump gets 3 + 3 each.
+
+A character has at most 6 slots in bank 1, so the (s, n) tables (18) and
+`MAX_SLOTS` 9 always fit.
+
+**Snapshot.** `make CHAR_A=putin CHAR_B=putin` builds the snapshot (and the
+benches) with any pair. B's banks are made with `--side b`, which gives the
+same bytes the loader's remap does.
+
+Checked on the emulator, from the disc (`RUN"PFSPIKE`, keys typed):
+
+| Test | Result |
+|---|---|
+| Select screen | both rosters' names and titles, READY per player |
+| Trump against Putin | loads in ~40 s of emulated time; all four banks match the snapshot byte for byte; the fight starts |
+| Putin against Putin | B in the second colours (orange); its banks match apart from the 2 changed inks |
+
+`make bench-all`, `bench-fight`, `bench-play` and `SLACK=15`, and
+`bench-all`, `bench-play` and `bench-fight` for Putin against Putin, Trump
+against Trump and Putin against Trump, all show 2 frames between pictures,
+0 lines caught or late and 0 bytes wrong. Held frames in `bench-play` stay
+between 25 and 42 fighter-pictures of 192, depending on the pair.
+
+The payload ends at &148F, 57 bytes below the frame caches with the staging
+buffer, so new engine code from here needs room found first.
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

@@ -52,8 +52,8 @@ LINE_US = 64
 FRAME_US = 312 * LINE_US
 BLANK = 40          # scanlines from the start of VSYNC to display line 0
 LINES = 272
-PHASES = {1: "restore A (Trump, right)", 2: "restore B (Putin, left)",
-          3: "draw A", 4: "draw B (Putin, left)",
+PHASES = {1: "restore A (right)", 2: "restore B (left)",
+          3: "draw A", 4: "draw B (left)",
           6: "scheduler overhead", 5: "logic", 7: "prepare",
           8: "restore lists (both)", 9: "compile"}
 REBUILD_PHASES = (1, 2, 3, 4, 6)
@@ -303,9 +303,9 @@ def main():
         tot = sum(durations.get(9, []))
         print("  frames compiled: %d, %.1f ms each" % (n_done, tot / n_done / 1000))
     if "F_HEALTH" in b.S and not b.S.get("SCN_DEMO", 0):
-        print("  health at the end: Trump %d, Putin %d" % (
+        print("  health at the end: A %d, B %d" % (
             b.field("FIGHTER_A", "F_HEALTH"), b.field("FIGHTER_B", "F_HEALTH")))
-    print("  frame held (not compiled yet): Trump %d, Putin %d pictures of %d" % (
+    print("  frame held (not compiled yet): A %d, B %d pictures of %d" % (
         b.waits["FIGHTER_A"], b.waits["FIGHTER_B"], npics))
     print("  fighter band: lines %d-%d; a standing fighter's top is line %d" % (
         b.band_top, b.band_end - 1, b.fighter_y))

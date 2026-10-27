@@ -52,8 +52,11 @@ set_black_loop
     jp p,set_black_loop
     ret
 
-;; The game palette (tools/cpc_palette.py GAME_PALETTE), then the border.
+;; The game palette (GAME_PLAN 3.3, tools/cpc_palette.py FIXED_COLOURS),
+;; then the border. Pens 6-9 and 10-13 are the fighters' own colours, which
+;; start copies from their characters' directories.
 palette_game
-    defb #54,#44,#55,#5C,#4C,#4E,#47,#43
-    defb #5E,#40,#4B,#5F,#4A,#46,#56,#54
+    defb #54,#54,#4B,#44,#5C,#40
+    defs 8                      ; fighter A's 4 inks, fighter B's
+    defb #5F,#56
     defb #54

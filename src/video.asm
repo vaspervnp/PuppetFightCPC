@@ -123,41 +123,39 @@ ds_rect
 stage_rows
     defw HUD_LINES
     defb #00,#00
-    defw 72
-    defb PB_11_11,PB_11_11
-    defw 88
-    defb PB_11_13,PB_13_11      ; dithered seam between the two sky blues
+    defw 148
+    defb PB_14_14,PB_14_14      ; sky,
     defw 160
-    defb PB_13_13,PB_13_13
+    defb PB_14_2,PB_2_14        ; hazy towards the horizon
     defw 164
-    defb PB_9_9,PB_9_9          ; horizon
+    defb PB_5_5,PB_5_5          ; horizon
     defw FLOOR_Y
-    defb PB_14_8,PB_8_14        ; distant grass behind the fighters
+    defb PB_15_3,PB_3_15        ; distant grass behind the fighters
     defw FLOOR_Y+2
-    defb PB_10_10,PB_10_10      ; the raised floor: white edge,
+    defb PB_2_2,PB_2_2          ; the raised floor: white edge,
     defw FLOOR_Y+18
-    defb PB_14_14,PB_14_14      ; green top,
+    defb PB_15_15,PB_15_15      ; green top,
     defw FLOOR_Y+20
-    defb PB_9_9,PB_9_9          ; grey lip,
+    defb PB_5_5,PB_5_5          ; grey lip,
     defw DISPLAY_LINES
-    defb PB_1_1,PB_1_1          ; navy front face
+    defb PB_3_3,PB_3_3          ; navy front face
 
 ;; Rectangles: first line (word), lines, x, width, byte. #FF ends.
 stage_rects
     defw 8
-    defb 8,4,40,PB_12_12        ; Trump's health bar
+    defb 8,4,40,PB_6_6          ; fighter A's health bar, in its first colour
     defw 8
-    defb 8,52,40,PB_4_4         ; Putin's health bar
+    defb 8,52,40,PB_10_10       ; fighter B's
     defw 100
-    defb 64,2,4,PB_9_1          ; left pillar
+    defb 64,2,4,PB_5_3          ; left pillar
     defw 100
-    defb 64,90,4,PB_9_1         ; right pillar
+    defb 64,90,4,PB_5_3         ; right pillar
     defw 130
-    defb 2,0,96,PB_10_10        ; the rope, right across the band
+    defb 2,0,96,PB_2_2          ; the rope, right across the band
     defw FLOOR_Y+32
-    defb 2,0,96,PB_2_2          ; brick courses on the front face
+    defb 2,0,96,PB_1_1          ; brick courses on the front face
     defw FLOOR_Y+46
-    defb 2,0,96,PB_2_2
+    defb 2,0,96,PB_1_1
     defb #FF
 
 ;; fill_rect - HL = first scanline, (fr_h) lines, (fr_x) x, (fr_w) width,

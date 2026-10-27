@@ -107,10 +107,10 @@ fighter_reset
     call start_move
     call is_a                   ; and its bar full again
     ld hl,4+40*256
-    ld c,PB_12_12
+    ld c,PB_6_6
     jr z,fr_bar
     ld hl,52+40*256
-    ld c,PB_4_4
+    ld c,PB_10_10
 fr_bar
     ld b,8
     ld de,8
@@ -190,9 +190,9 @@ dc_line
 digits                          ; 3 pixels a row (bit 2 left), 5 rows
     defb 7,5,5,5,7, 2,6,2,2,7, 7,1,7,4,7, 7,1,3,1,7, 5,5,7,1,1
     defb 7,4,7,1,7, 7,4,7,5,7, 7,1,1,2,2, 7,5,7,5,7, 7,5,7,1,7
-row_bytes                       ; the 3 pixels in pen 10 (white): two
-    defb #00,#00, #00,#0A, #05,#00, #05,#0A   ; Mode 0 bytes, the 4th pixel
-    defb #0A,#00, #0A,#0A, #0F,#00, #0F,#0A   ; blank
+row_bytes                       ; the 3 pixels in pen 2 (white): two
+    defb #00,#00, #00,#08, #04,#00, #04,#08   ; Mode 0 bytes, the 4th pixel
+    defb #08,#00, #08,#08, #0C,#00, #0C,#08   ; blank
 
 ;; win_marker - IX = fighter: the marker for its latest round win.
 win_marker
@@ -211,7 +211,7 @@ wm_x
     add a,c
     ld l,a
     ld h,3
-    ld c,PB_10_10
+    ld c,PB_2_2
     jr wm_draw
 
 ;; clear_wins - IX = fighter: no wins, no markers.

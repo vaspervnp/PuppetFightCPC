@@ -270,9 +270,12 @@ past Trump/Putin, the palette gets split:
 
 Each character file declares its personal colours. At load, the second
 fighter's pixels are remapped from pens 6-9 to 10-13 (cheap, because the
-pen bits are packed and can go through a 256-byte translation table). The
-current Trump/Putin palette in `tools/cpc_palette.py` will be refactored to
-this scheme.
+pen bits are packed and can go through a 256-byte translation table).
+Built in milestone 4: the art keeps its old pens, and
+`art/sprites/<char>_pfc.json` lists the character's 4 colours, a second
+set for mirror matches, and merges for anything else. Trump's tie went
+from bright red to dark red to fit 4 own colours. Each fighter's health bar
+is its first colour. The stage pens are pastel blue and green.
 
 The CPC has no true brown, which matters for several roster skin tones. The
 usable skin ramps are orange (FF8000) → dark red (800000), pink (FF8080) →
@@ -284,7 +287,7 @@ dark red, and pastel yellow (FFFF80) → olive (808000).
 |---|---|---|
 | &0038 | 3 | interrupt jump (both ROMs are off, so this is RAM) |
 | &0100-&01FF | 256 | stack |
-| &0200-&3FFF | 15.5K | engine (to &12AC), then the compiled frame cache: 4 slots for fighter A and 2 for B, 1,744 bytes each, from &1720 |
+| &0200-&3FFF | 15.5K | engine (to &148F), the staging buffer, then the compiled frame cache: 6 slots of 1,744 bytes from &1720, split between the fighters at start so both have about as many with their bank 1 slots |
 | &4000-&7FFF | 16K | background mirror of the fighter band, lines 88-211 (~12K used, ~4K free in 512-byte gaps at &x240-&x43F) |
 | &8000-&FFFF | 32K | overscan screen (26K used). The unused 800-byte tails of page 3 hold `line_tab` (&C4E0), the cache slot tables (&C700), four restore lists (&CCE0/&DCE0, &E4E0/&F4E0), `flip_tab`/`mask_tab` built at boot (&CE00) and the compiler's (s, n) tables (&D4E0, &ECE0, &FCE0) |
 | Bank 4-5 | 32K | fighter A's character: directory, all 48 frames (escaped span streams), and compiled frame cache slots at the top of bank 1 |
@@ -310,11 +313,11 @@ Paging rules:
 - Nothing else in &4000-&7FFF is touched while a bank is in: the screen,
   `line_tab`, the restore lists and the tables are all outside it.
 
-On the disc each bank is its own file (`TRUMP0.BIN` ...). `PFSPIKE.BAS` does
-`OUT &7F00,&C4` and so on, then `LOAD`s each one at &4000 before loading the
-engine. Checked on the emulated 6128: `RUN"PFSPIKE` loads all five files and
-the fight starts. Stage graphics and music have to come from the gaps or be
-ZX0-packed and unpacked at round start.
+On the disc each character is one file (§3.5). `PFSPIKE.BAS` loads the
+select screen (`PFLOAD.BIN`, at &8000), which reads the files into the
+banks, then loads the engine. The snapshot build puts `CHAR_A` and `CHAR_B`
+straight into the banks instead. Stage graphics and music have to come from
+the gaps or be ZX0-packed and unpacked at round start.
 
 ### 3.5 Character file format (`TRUMP.PFC` etc.)
 
@@ -331,6 +334,13 @@ text        victory taunt, select-screen title ("The Greatest American 2.0")
 
 Loaded with AMSDOS (firmware) in the select screen, before the engine takes
 over the machine. The size cap is 32K so a character fits two banks.
+
+Built in milestone 4 (`tools/sprite_codegen.py pfc`): a 64-byte header
+("PFC", version 1, name, title as two lines of 12, 4 inks, 4 mirror-match
+inks, the two bank lengths), then bank 0 and bank 1 as they go in memory.
+The move data, hit boxes and compiled frames live in the banks' directory
+and records. Damage, stun and motions are still the engine's for now, and
+so is the special's input. `ROSTER.TXT` lists the files.
 
 ### 3.6 Toolchain
 
@@ -354,7 +364,7 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 | 1 | **Tech spike** ✅ | overscan screen up. Buffering option chosen. Span-sprite and compiled-sprite drawers benchmarked. Memory map frozen. Two idle fighters animating at 25 fps |
 | 2 | **Engine core** ✅ | game loop, joystick/keyboard for 2 players, fighter state machine, walking, jumping arcs, facing and flip, ground and walls. Banded overlap rebuild, cheaper restore, on-demand compiler. `make bench` overlap+jump scenario at 25 fps with 0 lines caught |
 | 3 | **Combat** ✅ | hit/hurt boxes from Aseprite slices, damage, block, hitstun, knockdown, KO, rounds, timer, health bars |
-| 4 | **Character loading** | `.PFC` format, loader, pen remap, select screen, two characters from disk |
+| 4 | **Character loading** ✅ | `.PFC` format, loader, pen remap, select screen, two characters from disk |
 | 5 | **Specials + projectiles** | motion input, Tweet Storm (tweet-bird projectile), Judo Throw (throw state) |
 | 6 | **Presentation** | stages (White House lawn, Kremlin hall), title, music, SFX, victory screens with taunts |
 | 7 | **CPU opponent** | reactive AI with difficulty levels |

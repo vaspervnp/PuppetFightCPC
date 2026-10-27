@@ -1,0 +1,8 @@
+{
+  "_comment": "Character file settings (tools/sprite_codegen.py). colours: firmware colours of personal pens 6-9, first one also the health bar; alt_colours: the same for the second fighter in a mirror match; merge: art pen -> art pen, for art colours that are neither shared nor personal.",
+  "name": "PUTIN",
+  "title": "Tsar of All the Puppets",
+  "colours": [16, 12, 14, 0],
+  "alt_colours": [15, 12, 23, 0],
+  "merge": {}
+}

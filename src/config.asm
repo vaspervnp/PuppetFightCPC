@@ -99,13 +99,17 @@ mask_tab        EQU #CF00       ; of slice 1's tail: page aligned
 ;; Compiled frame caches (jit.asm). Each fighter has slots at the top of
 ;; main RAM below the mirror, which take any frame, and the slots its
 ;; character's directory puts at the top of bank 1, which take the frames
-;; whose spans are in bank 1 (Trump 3, Putin 5). A slot fits any frame's
-;; compiled draw in either facing (tools/sprite_codegen.py checks: --slot).
-CACHE_SLOTS_A   EQU 4           ; main RAM slots: Trump,
-CACHE_SLOTS_B   EQU 2           ; Putin (who has more in bank 1)
+;; whose spans are in bank 1 (Trump 3, Putin 6, at most BANK1_SLOTS). A
+;; slot fits any frame's compiled draw in either facing
+;; (tools/sprite_codegen.py checks: --slot). start splits the main slots
+;; so that both fighters have about as many in all.
+MAIN_SLOTS      EQU 6           ; in main RAM, for both
+BANK1_SLOTS     EQU 6           ; at most, per character (sprite_codegen.py)
 CACHE_SLOT      EQU 1744
-CACHE_AT        EQU #4000-(CACHE_SLOTS_A+CACHE_SLOTS_B)*CACHE_SLOT
-MAX_SLOTS       EQU 8           ; main + bank 1, per fighter
+CACHE_AT        EQU #4000-MAIN_SLOTS*CACHE_SLOT
+MAX_SLOTS       EQU 9           ; main + bank 1, per fighter
+    ASSERT MAIN_SLOTS+2*BANK1_SLOTS<=18     ; (s, n) tables: 3 tails of 6
+    ASSERT 2*MAX_SLOTS>=MAIN_SLOTS+2*BANK1_SLOTS
 GUESS_AGE       EQU 96          ; uses of the cache (~40 pictures) before a
                                 ; slot may go to a guessed frame
 ;; The slot tables live after line_tab in slice 0 (#C700-#C7FE), and each
@@ -136,20 +140,23 @@ PUTIN_X0        EQU 60
     ENDIF
 
 ;; --- Mode 0 bytes: both pixels of pen a,b (left,right) ---------------------
-PB_13_13 EQU #F3
-PB_11_11 EQU #CF
-PB_13_11 EQU #E7
-PB_11_13 EQU #DB
+;; Pens (GAME_PLAN 3.3, tools/cpc_palette.py): 0 background black, 1-5 shared
+;; fighter pens (outline black, white, navy, dark red, grey), 6-9 fighter A's
+;; own colours, 10-13 fighter B's, 14-15 the stage's (pastel blue, green).
+;; The first own colour of each fighter is its health bar.
 PB_14_14 EQU #3F
-PB_14_8  EQU #2B
-PB_8_14  EQU #17
-PB_9_9   EQU #C3
-PB_9_1   EQU #C2
-PB_12_12 EQU #33
-PB_4_4   EQU #30
-PB_10_10 EQU #0F
-PB_1_1   EQU #C0
+PB_14_2  EQU #2E
+PB_2_14  EQU #1D
+PB_5_5   EQU #F0
+PB_15_3  EQU #EE
+PB_3_15  EQU #DD
 PB_2_2   EQU #0C
+PB_15_15 EQU #FF
+PB_3_3   EQU #CC
+PB_1_1   EQU #C0
+PB_5_3   EQU #E4
+PB_6_6   EQU #3C
+PB_10_10 EQU #0F
 
 ;; --- Bench phases (tools/spike_bench.py watches bench_phase) ---------------
 PH_IDLE         EQU 0

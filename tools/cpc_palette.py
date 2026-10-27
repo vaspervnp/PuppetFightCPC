@@ -61,6 +61,20 @@ GAME_PALETTE = [
 TRANSPARENT = 0
 OUTLINE = 15
 
+# The game's pens (GAME_PLAN 3.3). The art keeps GAME_PALETTE's pens; the
+# sprite code generator turns them into these. Shared fighter pens, by the
+# art pen they come from:
+SHARED_PENS = {15: 1,   # outline black
+               10: 2,   # white
+               1: 3,    # navy
+               3: 4,    # dark red
+               9: 5}    # grey
+PERSONAL_A = 6          # pens 6-9: fighter A's own colours, 10-13 fighter B's
+PERSONAL_B = 10
+# Firmware colours of the pens that never change: 0 background black, the
+# shared pens, and the stage's two (pastel blue, green).
+FIXED_COLOURS = {0: 0, 1: 0, 2: 26, 3: 1, 4: 3, 5: 13, 14: 14, 15: 9}
+
 
 def pen_rgb(pen):
     return HW_COLOURS[GAME_PALETTE[pen]][1]
