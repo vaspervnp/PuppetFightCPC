@@ -1,10 +1,10 @@
 ;; ===========================================================================
 ;; sound.asm - music and sound effects on the AY-3-8912, from an interrupt.
 ;;
-;; sound_tick runs in the handler of interrupt SOUND_IRQ (line ~168), 50
-;; times a second. That one never meets the rebuild (it ends by line 150 at
-;; the latest), and in the frame before a picture's tick the compiler has
-;; stopped by then anyway. A character's bank may be paged in at #4000, so
+;; sound_tick runs in the handler of interrupt SOUND_IRQ (line ~118), 50
+;; times a second. The rebuild has finished the fighters' top half by then
+;; (it starts on line 170: config.asm), and in the frame before a picture's
+;; tick the compiler has stopped by then anyway. A character's bank may be paged in at #4000, so
 ;; all of this, code and data, is in the payload. read_controls keeps
 ;; interrupts off while it has the PSG's port A turned round.
 ;;
@@ -28,8 +28,7 @@
 ;; sfx_play) is in soundctl.asm, in a gap of the mirror.
 ;; ===========================================================================
 
-SOUND_IRQ       EQU TICK_IRQ-1  ; line ~168
-    ASSERT SOUND_IRQ==4
+SOUND_IRQ       EQU TICK_IRQ-1  ; line ~118, the period before the tick
 
 C_PTR           EQU 0           ; a channel: where it is in its pattern,
 C_ORD           EQU 2           ; and in its order list, rows to its next

@@ -31,6 +31,9 @@ BANKSET 0
 boot
     di
     ld sp,STACK_TOP
+    ld bc,#FA7E                 ; the disc's motor off (the firmware would
+    xor a                       ; have, later)
+    out (c),a
     ld bc,#7F8C                 ; mode 0, both ROMs off
     out (c),c
     ld c,16                     ; every ink black, border too, while the
@@ -54,6 +57,10 @@ bt_black                        ; stage goes into the screen
     ld hl,cold2_store
     ld de,COLD2_ORG
     ld bc,cold2_end-cold2_start
+    ldir
+    ld hl,low_store             ; and the low code under the stack
+    ld de,LOW_ORG
+    ld bc,low_end-low_start
     ldir
     ld hl,STAGE_AT+ST_INKS      ; the stage's inks: pen 0, pens 14-15
     ld de,palette_game
@@ -113,15 +120,10 @@ payload_store
 payload_start
 
 main_loop
-    call wait_render            ; first frame of the picture
     IF SLACK                    ; margin test only: start SLACK*100 us late
-    ld b,SLACK
-ml_slack
-    ld c,24
-ml_slack_in
-    dec c
-    jr nz,ml_slack_in
-    djnz ml_slack
+    call slack_wait
+    ELSE
+    call wait_render            ; first frame of the picture
     ENDIF
     call rebuild                ; both fighters, set up by prepare
     call ml_logic               ; then, while the beam goes round twice:
@@ -194,17 +196,35 @@ page_char
     out (c),a
     ret
 
-;; wait_render - 25 pictures a second: return on a rebuild tick at least two
-;; ticks after the last picture started. Destroys AF, BC, DE, HL, IY.
+;; wait_render - 25 pictures a second: return in interrupt period start_irq
+;; of a frame at least two ticks after the last picture started (the tick is
+;; in that frame's period TICK_IRQ), with the projectiles' pass done: if it
+;; is still due on the tick, the rebuild starts on the interrupt after.
+;; Destroys AF, BC, DE, HL, IY.
 wait_render
     call shot_pass              ; (the projectiles, when the beam allows)
-    call wait_tick
     ld a,(last_render)
     ld l,a
     ld a,(tick_count)
     sub l
     cp 2
-    jr c,wait_render
+    jr c,wr_tick                ; not the frame yet
+    ld a,(irq_count)
+    ld hl,start_irq
+    cp (hl)
+    jr z,wr_start
+    cp TICK_IRQ                 ; the tick's period, to start on the next:
+    jr z,wait_render            ; nearly there
+wr_tick
+    call wait_tick
+    jr wait_render
+wr_start
+    ld a,(shot_pending)         ; the projectiles' pass not done yet (the
+    or a                        ; beam is on them): it goes first, on the
+    jr z,wr_go                  ; next interrupt (or now, if this is it)
+    ld (hl),CLEAR_IRQ
+    jr wait_render
+wr_go
     ld a,(tick_count)
     ld (last_render),a
     ret
@@ -440,7 +460,7 @@ move_frames
 ;; projectile is never drawn where a fighter's frame is, on the screen or
 ;; next (shot_vis), so this and the rebuild never touch the same bytes, and
 ;; only the beam is in the way: projectiles are on lines SHOT_TOP to the
-;; floor, so the pass runs from the rebuild tick (interrupt TICK_IRQ) until
+;; floor, so the pass runs from interrupt CLEAR_IRQ (line 222) until
 ;; interrupt 3 (line 118), and is done before the beam reaches SHOT_TOP.
 ;; jit_work calls it between compiles, and wait_render while it waits.
 ;; Destroys AF, BC, DE, HL, IY.
@@ -452,7 +472,7 @@ shot_pass
     ld a,(irq_count)
     cp 3
     jr c,sp_go
-    cp TICK_IRQ
+    cp CLEAR_IRQ
     ret c
 sp_go
     xor a
@@ -549,6 +569,7 @@ sc_ret
     include "video.asm"
     include "sprite.asm"
     include "rebuild.asm"
+    include "prepare.asm"
 
 ;; ---------------------------------------------------------------------------
 ;; Tables and sprite data
@@ -577,6 +598,7 @@ frame_count     defb 0
 irq_count       defb 0
 tick_count      defb 0
 last_render     defb 0
+start_irq       defb 0          ; prepare: the rebuild starts on this interrupt
 render_count    defb 0
 rebuild_sp      defw 0
 band_end        defb 0
@@ -658,6 +680,8 @@ sfx_dc          defb 0
 sfx_t           defb 0
 sfx_rc          defb 0
 game_mode       defb 0          ; the select screen's choices (SETTINGS_AT)
+sel_a           defb 0          ; and the characters (roster numbers)
+sel_b           defb 0
 ai_rnd_seed     defw 0          ; ai.asm: its dice
 psg_buf         defs 2*PSG_REGS ; registers 0-10: to write, as written
     ASSERT psg_buf>>8==(psg_buf+2*PSG_REGS-1)>>8
@@ -679,20 +703,28 @@ cold2_start
     include "round.asm"
 cold2_end
     ASSERT cold2_end<=COLD2_ORG+COLD_ROOM
+low_store       EQU cold2_store+cold2_end-cold2_start
+    ORG LOW_ORG,low_store
+low_start
+    include "stream.asm"
+low_end
+    ASSERT low_end<=LOW_ORG+LOW_ROOM
 
 ;; The logic: in gaps of the background mirror, which only runs with main
 ;; RAM at #4000. Boot copies it all to GAP_SCRATCH first, then each gap's
 ;; to its gap, so the image may lie over the gaps.
-gap1_store      EQU cold2_store+cold2_end-cold2_start
+gap1_store      EQU low_store+low_end-low_start
     ORG GAP1_ORG,gap1_store
 gap1_start
     include "fighter.asm"
+    include "fdc.asm"
 gap1_end
     ASSERT gap1_end<=GAP1_ORG+GAP_ROOM
 gap2_store      EQU gap1_store+gap1_end-gap1_start
     ORG GAP2_ORG,gap2_store
 gap2_start
     include "moves.asm"
+    include "discread.asm"
 gap2_end
     ASSERT gap2_end<=GAP2_ORG+GAP_ROOM
 gap3_store      EQU gap2_store+gap2_end-gap2_start
@@ -700,18 +732,21 @@ gap3_store      EQU gap2_store+gap2_end-gap2_start
 gap3_start
     include "input.asm"
     include "shotvis.asm"
+    include "ladder.asm"
 gap3_end
     ASSERT gap3_end<=GAP3_ORG+GAP_ROOM
 gap4_store      EQU gap3_store+gap3_end-gap3_start
     ORG GAP4_ORG,gap4_store
 gap4_start
     include "special.asm"
+    include "nmstage.asm"
 gap4_end
     ASSERT gap4_end<=GAP4_ORG+GAP_ROOM
 gap5_store      EQU gap4_store+gap4_end-gap4_start
     ORG GAP5_ORG,gap5_store
 gap5_start
     include "victory.asm"
+    include "skip.asm"
 gap5_end
     ASSERT gap5_end<=GAP5_ORG+GAP_ROOM
 gap6_store      EQU gap5_store+gap5_end-gap5_start
@@ -719,6 +754,7 @@ gap6_store      EQU gap5_store+gap5_end-gap5_start
 gap6_start
     include "logic.asm"
     include "boot.asm"
+    include "fdcseek.asm"
 gap6_end
     ASSERT gap6_end<=GAP6_ORG+GAP_ROOM
 gap7_store      EQU gap6_store+gap6_end-gap6_start
@@ -739,7 +775,7 @@ image_end       EQU gap8_store+gap8_end-gap8_start
     ASSERT GAP_SCRATCH+image_end-gap1_store<=SETTINGS_AT
 
     RUN boot
-    SAVE 'PFSPIKE.BIN',boot,image_end-boot,DSK,'../build/pfspike.dsk'
+    SAVE '../build/PFSPIKE.BIN',boot,image_end-boot   ; (tools/make_dsk.py)
 
 ;; ---------------------------------------------------------------------------
 ;; The characters, in the extra 64K, for the snapshot: fighter A in banks
@@ -756,4 +792,4 @@ image_end       EQU gap8_store+gap8_end-gap8_start
     include "gen/stage.asm"
     ASSERT $<=STAGE_AT+STAGE_ROOM
     ORG SETTINGS_AT             ; and its choices (make CPU=... LEVEL=...)
-    defb CPU|LEVEL<<GM_LEVEL
+    defb CPU|LEVEL<<GM_LEVEL,CHAR_A_I,CHAR_B_I

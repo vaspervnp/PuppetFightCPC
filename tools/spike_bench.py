@@ -16,7 +16,9 @@ CRTC, with the 6128's own ROMs). The snapshot is quickloaded and stepped
   it was when the current rebuild started and as it is when the next one
   starts. Neither: the line was caught half drawn, which is visible flicker.
   Still the old picture: late, the line changes a frame after the rest (a
-  tear).
+  tear). (A rebuild starts with the beam on the fighters, line 170: the
+  lines below it in that frame are judged against the epoch before, since
+  every line shows the new picture from the next frame.)
 * Correctness - after the run the band is rebuilt in Python from the
   background mirror and the span streams in RAM, and compared byte for byte
   with the screen. Any difference is debris or a drawing bug.
@@ -165,6 +167,7 @@ class Bench:
         self.trace = []                     # (time, beam, phase) for --trace
         self.shots_missed = 0               # rebuilds that found the projectiles' pass not done
         last_beam = None
+        ep_line, ep_wrapped = 0, True       # the beam when the epoch started
         state = None
         done = 0
         last_done_t = self.t
@@ -184,11 +187,13 @@ class Bench:
                 if last_ph in (0, 5) and ph in REBUILD_PHASES:
                     epochs.append(self.band())      # nothing touched yet
                     self.epoch_t = self.t
+                    ep_line, ep_wrapped = self.beam(), False
                     self.shots_missed += self.peek("SHOT_PENDING")
                     start_line.append(self.beam())
                     state = self.jump_state()
                 if ph == SHOT_PHASE:                # the projectiles' pass changes the
                     epochs.append(self.band())      # band between rebuilds: an epoch too
+                    ep_wrapped = True               # (drawn ahead of the beam)
                 if ph in (0, 5) and last_ph in REBUILD_PHASES and state:
                     if self.t - self.epoch_t > 2 * LINE_US * 16:   # not an empty window
                         self.windows[state].append(self.beam())
@@ -210,9 +215,15 @@ class Bench:
                 self.trace.append((self.t, self.beam(), ph, done))
             b = self.beam()
             if b != last_beam:
+                if last_beam is not None and b < last_beam:
+                    ep_wrapped = True
                 last_beam = b
                 if epochs and self.band_top <= b < self.band_end:
-                    seen.append((len(epochs) - 1, b, self.c.read_ram(self.line_addr[b], 96)))
+                    e = len(epochs) - 1
+                    if not ep_wrapped and b >= ep_line:
+                        e -= 1                      # still the frame it started in,
+                    if e >= 0:                      # below the beam: the old picture
+                        seen.append((e, b, self.c.read_ram(self.line_addr[b], 96)))
         while self.peek("BENCH_PHASE") in REBUILD_PHASES:
             self.step()
         epochs.append(self.band())
@@ -341,6 +352,8 @@ def main():
     print("  projectile passes missed: %d" % b.shots_missed)
     if caught:
         print("  caught lines:", sorted(caught)[:20], "..." if len(caught) > 20 else "")
+    if late:
+        print("  late lines:", sorted(late)[:20], "..." if len(late) > 20 else "")
 
     exp = b.expected_band()
     got = b.band()

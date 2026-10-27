@@ -24,10 +24,11 @@
 ;; Lines are kept relative to BAND_TOP so all the arithmetic is 8-bit: a
 ;; fighter is never above BAND_TOP, the top of the background mirror.
 ;;
-;; The rebuild starts on line 222 and runs across VSYNC, so interrupts are
-;; let in after every job (INT_WINDOW, on the real stack): no stretch with
-;; them off is longer than ~1.7 ms (a band of a fighter lying down), and the
-;; interrupt count stays exact (irq.asm).
+;; The rebuild starts on line 170 (config.asm), and a band that would reach
+;; GUARD_LINE waits for the beam to pass the floor. It runs across VSYNC, so
+;; interrupts are let in after every job (INT_WINDOW, on the real stack): no
+;; stretch with them off is longer than ~1.7 ms (a band of a fighter lying
+;; down), and the interrupt count stays exact (irq.asm).
 ;; ===========================================================================
 
 BAND            EQU 16          ; scanlines per band
@@ -44,6 +45,8 @@ CHUNK           EQU 8           ; compiled draws yield every CHUNK lines
 LOOK_RESTORE    EQU 2*CHUNK
 LOOK_DRAW_A     EQU CHUNK
 LOOK_DRAW_B     EQU 0
+GUARD_BAND      EQU GUARD_LINE-BAND_TOP-LOOK_RESTORE+1  ; a band_end that
+                                ; reaches GUARD_LINE
 
 ;; Job record
 J_RESUME        EQU 0           ; where the job continues
@@ -172,6 +175,15 @@ rebuild
     ld a,PH_SCHED
     ld (bench_phase),a
 rb_band
+    ld a,(irq_count)            ; the beam still above CLEAR_LINE: no band
+    cp TICK_IRQ                 ; may reach GUARD_LINE (config.asm)
+    jr nz,rb_go
+    ld a,(band_end)
+    cp GUARD_BAND
+    jr c,rb_go
+    INT_WINDOW
+    jr rb_band
+rb_go
     RUN_RESTORE job_ra,LOOK_RESTORE,PH_RESTORE_A,1
     RUN_RESTORE job_rb,LOOK_RESTORE,PH_RESTORE_B,1
     RUN_CHUNKS job_da,LOOK_DRAW_A,PH_DRAW_A
@@ -200,111 +212,11 @@ rb_done
 ;; ---------------------------------------------------------------------------
 ;; Job set-up, before the rebuild (ordinary code, with a stack).
 ;;
-;; prepare - set up the next picture's window: both fighters, always in one
-;; window, since every frame is drawn by compiled code. Done at the end of
-;; the logic so the rebuild can start on the tick itself.
+;; prepare (prepare.asm) decides what to set up.
 ;; rebuild_clear - no jobs, and band_end as far down as it goes.
 ;; setup_a / setup_b - the restore and draw jobs for one fighter; each pulls
 ;; band_end up to its fighter's first scanline + BAND.
 ;; ---------------------------------------------------------------------------
-prepare
-    call shot_vis               ; the projectiles' pass (special.asm)
-    call rebuild_clear
-    ld ix,fighter_a             ; decide both before either is set up
-    ld iy,fighter_b
-    call can_skip
-    ld (skip_a),a
-    ld ix,fighter_b
-    ld iy,fighter_a
-    call can_skip
-    ld (skip_b),a
-    ld a,(skip_a)
-    or a
-    call z,setup_a
-    ld a,(skip_b)
-    or a
-    ret nz
-    jp setup_b
-
-;; can_skip - IX = fighter, IY = the other: A = 1 if IX's window work can be
-;; left out: it shows the same frame in the same place as on the screen, and
-;; neither the other's old box (its restore) nor its new one (its draw)
-;; reaches IX's box. Else A = 0. Destroys AF, B, DE, HL.
-can_skip
-    call fighter_same
-    jr nz,cs_no
-    push ix                     ; the other unchanged too: nothing touches
-    push iy
-    pop ix
-    call fighter_same
-    pop ix
-    jr z,cs_yes
-    ld a,(iy+F_DRAWN)           ; the other's old box
-    or a
-    jr z,cs_new
-    ld d,(iy+F_OX)
-    ld e,(iy+F_OW)
-    call cs_overlap
-    jr c,cs_no
-cs_new
-    ld a,(iy+F_X)               ; and its new one
-    add a,(iy+F_OFF)
-    ld d,a
-    ld e,(iy+F_W)
-    call cs_overlap
-    jr c,cs_no
-cs_yes
-    ld a,1
-    ret
-cs_no
-    xor a
-    ret
-
-;; cs_overlap - CY if bytes D..D+E-1 meet IX's box on the screen.
-cs_overlap
-    ld a,(ix+F_OX)              ; D < OX + OW
-    add a,(ix+F_OW)
-    ld b,a
-    ld a,d
-    cp b
-    ret nc
-    ld a,d                      ; and OX < D + E
-    add a,e
-    ld b,a
-    ld a,(ix+F_OX)
-    cp b
-    ret
-
-;; fighter_same - IX = fighter: Z if what it will show is what the screen
-;; has: same frame (bank, spans) in the same facing, place and width.
-;; Destroys AF, B.
-fighter_same
-    ld a,(ix+F_DRAWN)
-    or a
-    jr z,fs_diff
-    ld a,(ix+F_X)
-    add a,(ix+F_OFF)
-    cp (ix+F_OX)
-    ret nz
-    ld a,(ix+F_Y)
-    cp (ix+F_OY)
-    ret nz
-    ld a,(ix+F_DFACE)
-    cp (ix+F_OFACE)
-    ret nz
-    ld a,(ix+F_FBANK)
-    cp (ix+F_OBANK)
-    ret nz
-    ld a,(ix+F_SPANS)
-    cp (ix+F_OSPANS)
-    ret nz
-    ld a,(ix+F_SPANS+1)
-    cp (ix+F_OSPANS+1)
-    ret
-fs_diff
-    or 1
-    ret
-
 rebuild_clear
     xor a
     ld (job_ra+J_LEFT),a

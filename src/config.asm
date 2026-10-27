@@ -32,6 +32,8 @@ BLANK_LINES     EQU (CRTC_R4+1)*(CRTC_R9+1)-DISPLAY_LINES
 
 ;; --- Memory map --------------------------------------------------------------
 ;; #0038        interrupt jump (ROMs are off, so this is RAM)
+;; #0040-#00FF  low code (stream.asm), copied down from the load image
+;; #0100-#01FF  the stack (it goes down to #01E0)
 ;; #0200-#3FFF  engine, tables, sprite data (copied down from the load image)
 ;; #4000-#7FFF  background mirror of the fighter band (see below)
 ;; #8000-#FFFF  overscan screen
@@ -42,8 +44,9 @@ BLANK_LINES     EQU (CRTC_R4+1)*(CRTC_R9+1)-DISPLAY_LINES
 STAGE_AT        EQU #2000
 STAGE_ROOM      EQU SETTINGS_AT-STAGE_AT
 ;; The select screen's choices, after the stage: who the computer plays
-;; (GM_CPU_A, GM_CPU_B) and how well (GM_LEVEL: 0-2). start reads them
-;; before the compiled frame caches go there.
+;; (GM_CPU_A, GM_CPU_B) and how well (GM_LEVEL: 0-2), then the characters
+;; (roster numbers). start reads them before the compiled frame caches go
+;; there; ladder.asm puts them back for the next opponent.
 SETTINGS_AT     EQU #3FF0
 GM_CPU_A        EQU 0           ; bits of the settings (game_mode)
 GM_CPU_B        EQU 1
@@ -53,6 +56,8 @@ ST_DATA         EQU 8           ; and 15, then (after the length) the data
 PAYLOAD_ORG     EQU #0200
 LOAD_ORG        EQU #4000
 STACK_TOP       EQU #0200       ; grows down from just under the payload
+LOW_ORG         EQU #0040
+LOW_ROOM        EQU #0100-LOW_ORG
 
 ;; --- Floor, fighter band and background mirror ---------------------------
 ;; Every stage has a raised floor: the bottom FLOOR_H lines are floor, never
@@ -78,15 +83,19 @@ MIRROR_H_OR     EQU #40
     ASSERT BAND_TOP>=11*8 && BAND_BOTTOM<=27*8
 
 ;; --- When a rebuild starts -------------------------------------------------
-;; Not on the frame tick (VSYNC) but on the interrupt just after the beam
-;; has passed the fighters' lowest line. Interrupts come every 52 lines,
-;; the first two lines into VSYNC (line 274), so the fifth after it falls on
-;; line 222: 10 lines into the floor. From there the beam needs 90 + L lines
-;; to reach line L again: 15.2 ms to a standing fighter's top, 11.4 ms to
-;; the top of a jump.
-TICK_IRQ        EQU 5
-TICK_LINE       EQU 222
-    ASSERT TICK_LINE>=BAND_BOTTOM
+;; Not on the frame tick (VSYNC) but on an interrupt while the beam is low
+;; on the fighters. Interrupts come every 52 lines, the first two lines into
+;; VSYNC (line 274), so the fourth after it falls on line 170 and the fifth
+;; on line 222, 10 lines into the floor. The rebuild starts on the fourth:
+;; the beam has passed every line above it, and needs 142 + L lines to reach
+;; line L again (14.7 ms to the top of a jump). Lines from GUARD_LINE down
+;; wait for the fifth, when the beam has passed the whole band (rebuild.asm).
+TICK_IRQ        EQU 4
+TICK_LINE       EQU 170
+CLEAR_IRQ       EQU TICK_IRQ+1  ; the beam below the band
+CLEAR_LINE      EQU TICK_LINE+52
+    ASSERT CLEAR_LINE>=BAND_BOTTOM
+GUARD_LINE      EQU TICK_LINE-2 ; (a line in hand for the interrupt's time)
 
 ;; line_tab (272 words, built at boot) lives in the unused tail of the first
 ;; 2 KB slice of screen page 3: rows 21-33 fill #C000-#C4DF of every slice,

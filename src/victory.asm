@@ -139,11 +139,22 @@ vb_r
     ret
 
 ;; victory_tick - each picture of the victory: at the end, the HUD back
-;; and the next match.
+;; and the next match, or the next opponent if the player beat the
+;; computer (ladder.asm).
 victory_tick
     ld hl,rnd_timer
     dec (hl)
     ret nz
+    ld a,(game_mode)
+    and 1<<GM_CPU_A|1<<GM_CPU_B
+    cp 1<<GM_CPU_B
+    jr nz,vt_again
+    ld hl,(rnd_winner)
+    ld de,fighter_a
+    or a
+    sbc hl,de
+    jp z,next_match
+vt_again
     call hud_clear
     ld ix,fighter_a
     call clear_wins

@@ -14,6 +14,8 @@ start
     ldir
     ld a,(SETTINGS_AT)          ; the choices, before the caches go there
     ld (game_mode),a
+    ld hl,(SETTINGS_AT+1)
+    ld (sel_a),hl
     ld a,1                      ; compile whatever the time until the
     ld (jit_force),a            ; first picture
     ld hl,SN_TAIL0

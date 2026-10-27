@@ -562,8 +562,8 @@ ji_same_tail
     ret
 
 ;; irqs_left - A = whole interrupt periods (52 lines, 3.3 ms) certain to be
-;; left before the tick that starts the next picture (last_render + 2).
-;; Destroys AF, BC.
+;; left before the next picture's rebuild: interrupt start_irq of the frame
+;; of tick last_render + 2. Destroys AF, BC.
 irqs_left
     di                          ; read both counts in one go
     ld a,(irq_count)
@@ -574,20 +574,25 @@ irqs_left
     ld hl,last_render
     sub (hl)                    ; ticks since this picture started
     pop hl
-    cp 2
-    jr nc,il_none
     ld c,a
-    ld a,TICK_IRQ               ; periods to the next tick
+    ld a,b
+    cp TICK_IRQ                 ; this frame's tick still to come: count it
+    jr nc,il_counted
+    inc c
+il_counted
+    ld a,2                      ; frames on to the next picture's
+    sub c
+    jr c,il_none
+    ld c,a                      ; * 6 (IRQS_PER_FRAME) + start_irq - this
+    add a,a
+    add a,c
+    add a,a
+    ld c,a
+    ld a,(start_irq)
+    add a,c
     sub b
-    jr z,il_whole
-    jr nc,il_part
-il_whole
-    add a,IRQS_PER_FRAME
-il_part
-    dec c
-    jr z,il_one                 ; that tick starts the next picture
-    add a,IRQS_PER_FRAME        ; it doesn't: one frame more
-il_one
+    jr z,il_none
+    jr c,il_none
     dec a                       ; the period we are in is partly gone
     ret
 il_none
@@ -792,26 +797,21 @@ rec_addr
     ret
     MEND
 
+;; jc_look - jc_flag is up: the projectiles' pass if it is due (and the
+;; beam allows), then jc_time.
 ;; jc_time - CY if a compile must stop: no whole interrupt period is left
-;; before the next picture's tick (never while jit_force). Destroys AF, BC.
+;; before the next picture's rebuild (never while jit_force). Destroys AF,
+;; BC.
+jc_look
+    ld a,(shot_pending)
+    or a
+    call nz,jc_shot
 jc_time
     ld a,(jit_force)
     or a
     ret nz                      ; NC
     call irqs_left
     cp 1                        ; CY if 0
-    ret
-
-;; jc_look - jc_flag is up: the projectiles' pass if it is due (and the
-;; beam allows), then CY if the compile must stop. Destroys AF, BC.
-jc_look
-    ld a,(shot_pending)
-    or a
-    call nz,jc_shot
-    ld a,(irq_count)            ; in the last period before the tick?
-    cp TICK_IRQ-1
-    jr z,jc_time
-    or a                        ; NC
     ret
 
 ;; jc_shot - shot_pass in the middle of a compile, which then goes on in

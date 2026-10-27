@@ -525,17 +525,17 @@ def starbase():
 
 def dome(c, cx, base, rx, ry, p):
     """An onion dome: a golden bulb sitting on line base, ry lines tall
-    from the narrow neck to its widest, pinched to a point at the top, with
-    a spire."""
-    top = int(base - ry * 2.3)
+    from the narrow neck to its widest, round over the shoulders (Kyiv's
+    are fat) and drawn in to a short tip, with a spire."""
+    top = int(base - ry * 2.4)
     for y in range(top, base + 1):
         t = (base - y) / ry                          # 0 at the neck
         if t <= 1:
             half = rx * math.sqrt(max(0.0, 1 - (1 - t) ** 2)) * (0.55 + 0.45 * t)
         else:
-            u = (t - 1) / 1.3                        # 0 at the widest, 1 at the tip
-            half = rx * max(0.0, 1 - u ** 1.5) ** 1.6
-        half = int(round(half))
+            u = (t - 1) / 1.4                        # 0 at the widest, 1 at the tip
+            half = rx * max(0.0, 1 - u ** 2) ** 1.0
+        half = max(1, int(round(half)))              # (the tip: a byte wide)
         if half > 0:
             c.hline(cx - half, cx + half, y, p)
             if y % 2:

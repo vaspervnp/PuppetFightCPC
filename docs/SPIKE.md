@@ -1188,6 +1188,134 @@ instead of 46.
 | disc: Trump against Putin, Xi against Zelensky | all four banks match the snapshot byte for byte |
 | disc: Musk against Musk | the same, but B's 4 inks, which the loader sets to the mirror-match colours on purpose |
 
+## Small fixes before milestone 9
+
+**Trump against Trump at `SLACK=15`.** Two Trumps both jumping caught 35
+lines (121-140) with the rebuild 1.5 ms late; the margin was ~0.7 ms. The
+work is honest (restores 6.6 ms, draws 5.5, the scheduler 1.7, and the two
+restores overlap by only ~10 bytes), so the rebuild now starts earlier
+instead:
+- **The tick is interrupt 4, line 170** (`TICK_IRQ`), not 5. The beam has
+  passed every line above it, so the top of a jump gets 3.3 ms more.
+- **A guard in the band loop.** While the interrupt count is still 4, a
+  band whose targets would reach `GUARD_LINE` (168) waits, with
+  interrupts on, for interrupt 5 (line 222): the beam is then below the
+  fighters, as before.
+- **`start_irq`, per picture.** `prepare` (now in a mirror gap,
+  `prepare.asm`, with `can_skip` in `skip.asm`) looks at the first band:
+  when it already reaches line 168, the rebuild would only wait, so it
+  starts on interrupt 5 and the compiler keeps that period. `irqs_left`,
+  `jc_look` and the interrupt's `jc_flag` count to `start_irq`, and
+  `wait_render` returns in that period. Without this, fights with both
+  fighters on the ground lost a period of compiling a picture (held frames
+  48 → 88 in `bench-fight`).
+- **The projectiles' pass** can't run in period 4 (the beam is on them).
+  If it is still due when a picture would start on line 170, that picture
+  starts on line 222 after it (`bench-ai` missed 5 passes without this).
+- **The sound** moved to interrupt 3 (line 118), so it doesn't delay the
+  start (0.4-1.7 ms when it shared the tick). That period is the
+  compiler's last before a line-170 start, which it doesn't use anyway.
+- **The bench** judges a line the beam passes below the start line, in
+  the frame the rebuild started, against the picture before: every line
+  shows the new picture from the next frame. Not for the projectiles'
+  pass, which draws ahead of the beam on purpose.
+
+Also tried: bands of 24 lines with restores capped at 16 lines between
+interrupt windows. The scheduler's time didn't drop and lines were caught
+earlier (the top of a band finishes later), so bands stay 16.
+
+| Test | Result |
+|---|---|
+| Trump against Trump, both jumping, `SLACK=15` / `25` / `35` | 0 / 0 / 3 lines caught (was 35 at `SLACK=15`) |
+| `SLACK=15` Trump against Putin; `bench-all` | 0 caught, 0 late, 0 passes missed, 0 bytes wrong |
+| `bench-fight`, `bench-play`, `bench-ai`: held frames A/B | 28/20, 21/20, 31/30 (before: 25/23, 20/20, 28/28) |
+| Kim against Zelensky in Kyiv, projectiles | 0 caught, 0 bytes wrong |
+
+**Kim's remote** was a 6×9×10 cm box behind his fist, edge-on to the
+camera: it came out as a pixel or two of grey on his grey suit. Now it is
+twice the size, black (`tshirt_black`: navy and black on the screen), with
+its red button on the face the camera sees and a stub antenna, and the
+first two frames hold it out in front instead of at his mouth.
+
+**The Kyiv domes** were drawn in from their widest to a point like a
+spinning top. Now they keep round shoulders (`1 - u²` over 1.4 ry) and
+come to a short tip a byte wide under the spire, closer to St Michael's.
+
+## Milestone 9 step 1: our own disc reading
+
+The ladder needs the next opponent mid-game, after the engine has taken
+the machine from the firmware. Of the options in GAME_PLAN ("Milestone 9
+plan"), this is B: the engine drives the µPD765 itself.
+
+**The disc** is now written by `tools/make_dsk.py`, not iDSK. It is an
+EXTENDED CPC DSK in AMSDOS's data format: 42 tracks, every one formatted.
+iDSK left tracks 40-41 with no sectors, and some drives and emulators
+choke on that. Sectors are #C1-#C9 in AMSDOS's 2:1 interleave. Every file
+is in the directory, so the loader still reads everything through the
+firmware. The files the engine reads itself come first, character files
+and then stages, so their places depend only on them. `make_dsk.py map`
+writes `src/gen/diskmap.asm` before the engine is assembled: for each
+character of the roster, the track and sector of its file and of its home
+stage. rasm now only `SAVE`s the engine's binary.
+
+**Character files are fighter B's** (pens 10-13). The engine loads the
+next opponent straight into banks 6-7, and the loader moves fighter A's
+own colours to 6-9 instead (`remap_tab` is the other way round). The
+select screen also leaves the two roster numbers at `SETTINGS_AT+1`.
+
+**The driver** is TerraCPC's, made compact:
+- sense interrupt status before every command, at most 8 times;
+- a seek ends on ST0's seek end;
+- result bytes are read while the controller is busy;
+- one sector per command, with end of cylinder not counted as an error;
+- every wait has a time out.
+
+Any fault starts the whole load again, with the border red, so no routine
+returns an error.
+
+The floooh emulator never answers sense interrupt status with "nothing"
+(#80): an unbounded drain hung there. The load runs with interrupts off
+and the inks black, a track at a time into `DISC_BUF`, which is in the
+compiled frame caches (free between matches):
+- `stream_unpack` unpacks fighter B's two banks as they come;
+- then it unpacks the stage straight into the screen. That covers the
+  screen's tails too, so the cold code is kept aside meanwhile, and
+  `start` rebuilds the workspace and the tables.
+
+Then the choices go back to `SETTINGS_AT` and the match starts through
+`start`, the same as after boot.
+
+**Where it lives:**
+
+| Where | What |
+|---|---|
+| Low RAM #0040-#00FF, new (the stack goes down to #01E0, measured) | `stream.asm` (pages the banks in), the driver's variables, the disc map |
+| Mirror gaps 1, 2, 6 | `fdc.asm`, `discread.asm`, `fdcseek.asm` |
+| Mirror gaps 3, 4 | `ladder.asm`, `nmstage.asm` |
+| Payload | `prepare` is back here: the SHOTS bench build needed gap 6 |
+
+Boot also turns the drive's motor off. The firmware would have, but it is
+gone by then.
+
+**The ladder, for now:**
+- It applies when player 1 plays the computer and wins a match.
+- The next opponent is the roster's next character, skipping the player's,
+  with its home stage.
+- If the computer wins, it is the same opponent again, as before.
+
+| Test | Result |
+|---|---|
+| Disc boot, Trump against the computer, the match won (a poke), 6 times | Kim, Xi, Musk, Zelensky, Putin, Kim. Each ~3 s in the emulator, banks 6-7 byte-exact with the character files, banks 4-5 with the snapshot's fighter A |
+| `bench-all` | 0 caught, 0 late, 0 passes missed, 0 bytes wrong |
+| `bench-fight`, `bench-play`, `bench-ai`: held frames A/B | 28/20, 21/20, 31/30 (as before) |
+
+The emulator doesn't time the disc's turning. On a real drive a track
+takes two turns (the interleave), so a load should be ~4-5 s with the
+motor's second. Not yet tried on a real 6128.
+
+Free memory now: payload 87, low RAM 37, workspace 22, COLD/COLD2 27/60
+bytes. Gaps 1-8: 7, 12, 4, 17, 24, 73 (45 in the SHOTS build), 3, 8.
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

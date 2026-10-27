@@ -7,12 +7,12 @@
 ;; rather than counting, so every frame's work starts at the same raster
 ;; position. Counting stays as a fallback (OverscanCPC src/irq.asm).
 ;;
-;; The sound plays from interrupt SOUND_IRQ, away from the rebuild
-;; (sound.asm). irq_init, which runs once, is in boot.asm.
+;; irq_init, which runs once, is in boot.asm.
 ;;
 ;; The rebuild tick is a different interrupt: the TICK_IRQ'th after VSYNC
-;; (line 222, just below the fighters - see config.asm), counted in
-;; tick_count. The rebuild runs across the next VSYNC, so it must never keep
+;; (line 170 - see config.asm), counted in tick_count. The sound plays from
+;; the one before it (SOUND_IRQ, line 118: sound.asm), out of the rebuild's
+;; way, in the period the compiler has already stopped in. The rebuild runs across the next VSYNC, so it must never keep
 ;; interrupts off for more than ~2 ms at a time: an interrupt acknowledged 32
 ;; or more lines late gets bit 5 of the Gate Array's counter cleared and the
 ;; rest of the frame's interrupts move, and one that is still pending when
@@ -22,6 +22,7 @@
 ;; ===========================================================================
 
 IRQS_PER_FRAME  EQU 6
+    ASSERT IRQS_PER_FRAME==6     ; (jit.asm irqs_left multiplies by 6)
 
 irq_handler
     push af
@@ -46,21 +47,23 @@ irq_handler_mid
     inc (hl)
     jr irq_handler_done
 irq_not_tick
-    cp SOUND_IRQ
-    jr nz,irq_not_sound
-    call sound_tick             ; the music and sound effects (sound.asm)
-    jr irq_handler_done
-irq_not_sound
     cp IRQS_PER_FRAME
     jr c,irq_handler_done
     ld (hl),0                   ; VSYNC was over before we got here: count
     ld hl,frame_count
     inc (hl)
 irq_handler_done
-    ld a,(irq_count)            ; jc_flag for the compiler (jit.asm): up in
-    cp TICK_IRQ-1               ; the last period before the tick, and
-    jr z,irq_flag               ; while the projectiles' pass is due and
-    cp 3                        ; the beam allows it (main.asm shot_pass)
+    ld a,(irq_count)
+    cp SOUND_IRQ
+    jr nz,irq_no_sound
+    call sound_tick             ; the music and sound effects (sound.asm)
+    ld a,SOUND_IRQ
+irq_no_sound
+    inc a                       ; jc_flag for the compiler (jit.asm): up in
+    ld hl,start_irq             ; the last period before the rebuild, and
+    cp (hl)                     ; while the projectiles' pass is due and
+    jr z,irq_flag               ; the beam allows it (main.asm shot_pass)
+    cp TICK_IRQ+1
     ld a,0
     jr z,irq_flag
     ld a,(shot_pending)
@@ -72,7 +75,7 @@ irq_flag
     ei
     ret
 
-;; wait_tick - return on the next rebuild tick (line 222). Destroys AF, HL.
+;; wait_tick - return on the next rebuild tick (line 170). Destroys AF, HL.
 wait_tick
     ld hl,tick_count
     ld a,(hl)

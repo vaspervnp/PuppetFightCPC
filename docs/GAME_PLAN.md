@@ -116,16 +116,18 @@ comfortably in 128K, and the spike shows we don't need one:
   frame. There are no save buffers, and fighters can overlap freely because
   the mirror never holds a fighter.
 - **Two windows per picture.** We render at 25 fps, so each picture spans
-  two frames. A rebuild starts on the **interrupt at line 222**, the fifth
-  after VSYNC, just after the beam has left the fighters' lowest line. From
-  there the beam needs 15.2 ms to reach a standing fighter's top (line
-  148) and 11.4 ms to reach the top of a jump (line 88). Fighter A is
+  two frames. A rebuild starts on the **interrupt at line 170**, the fourth
+  after VSYNC, when the beam has passed every line above it; a band that
+  would reach line 168 waits for the interrupt at line 222, below the
+  fighters. A picture with nothing above line 168 starts at 222 straight
+  away, and the compiler has that period instead. From line 170 the beam
+  needs 14.7 ms to reach the top of a jump (line 88). Fighter A is
   rebuilt in the first window, fighter B in the second. When their ground
   overlaps, both are rebuilt in one window.
 - That window runs across VSYNC, so it lets interrupts in after every job
   (on the real stack). No stretch with them off is longer than ~1.3 ms.
   Otherwise the Gate Array would lose or move interrupts and the count that
-  finds line 222 would drift. The interrupt in VSYNC is still recognised
+  finds lines 170 and 222 would drift. The interrupt in VSYNC is still recognised
   as the frame tick, as in OverscanCPC, even when it's serviced too late to
   see VSYNC on the PPI.
 
@@ -198,7 +200,7 @@ the standing fighters, plus the rest of each frame.
 | Fighters overlapping | both fighters in one window, done before the beam reaches each line | **banded rebuild**, below |
 | Projectiles | small sprites (≤ 8 bytes × 16 lines), drawn outside the rebuild where no fighter is, while the beam is clear of them | built (milestone 5): ~1 ms each, out of the compiler's time |
 | Logic, input, AI, HUD | after the rebuild in each frame | ≤ 4 ms per frame |
-| Music and sound effects | built (milestone 6): our own player in the handler of interrupt 4 (line ~168), away from the rebuild, 50 times a second | ~0.5 ms a call, 1.5 ms at worst |
+| Music and sound effects | built (milestone 6): our own player in the handler of interrupt 3 (line ~118), out of the rebuild's way, 50 times a second | ~0.5 ms a call, 1.5 ms at worst |
 
 **Banded rebuild** (`src/rebuild.asm`, built and measured). Restore A,
 restore B, draw A and draw B are jobs. The scheduler walks the screen in
@@ -221,7 +223,10 @@ scanline pass judged):
 | Toe to toe, one fighter jumping | 130 | 0 |
 | Toe to toe, both jumping (tops at line 88) | 121 | 0 |
 
-Margin, by starting the rebuild late on purpose (`SLACK`): 1.4 ms late is
+Margin, by starting the rebuild late on purpose (`SLACK`): since the
+rebuild starts on line 170, 2.5 ms late is clean with two Trumps (the
+widest pair) both jumping, and lines are caught from 3.5 ms. The history
+below is from when it started on line 222: 1.4 ms late was
 clean in the both-jumping case. At 1.5 ms one line is caught in one picture
 (that is, 1 of 23,000 line passes), and 2 ms late is not clean. Before the raised
 floor it was 2-3 ms: the head start is 0.4 ms shorter from line 222, and
@@ -329,7 +334,9 @@ Paging rules:
 
 On the disc each character is one file (§3.5). `PFSPIKE.BAS` loads the
 select screen (`PFLOAD.BIN`, at &8000), which reads the files into the
-banks, then loads the engine. The snapshot build puts `CHAR_A` and `CHAR_B`
+banks, then loads the engine. Mid-game, the engine reads the next
+opponent's file and stage itself, with no firmware (milestone 9,
+`src/ladder.asm`). The snapshot build puts `CHAR_A` and `CHAR_B`
 straight into the banks instead. The stage comes packed with the select
 screen and is unpacked at boot (milestone 6). The music and its player sit in
 the payload, because the interrupt may come with a bank paged in. The load
@@ -350,7 +357,8 @@ text        victory taunt, select-screen title ("The Greatest American 2.0")
 ```
 
 Loaded with AMSDOS (firmware) in the select screen, before the engine takes
-over the machine. The size cap is 32K so a character fits two banks.
+over the machine, and mid-game by the engine's own disc reading (the
+ladder, milestone 9). The size cap is 32K so a character fits two banks.
 
 Built in milestone 4 (`tools/sprite_codegen.py pfc`): a 64-byte header
 ("PFC", version 1, name, title as two lines of 12, 4 inks, 4 mirror-match
@@ -362,6 +370,9 @@ and made the directory version 5: a pointer to the victory lines ("NAME
 WINS!" and the taunt) follows the projectile record.
 Milestone 5 made the directory version 4: the special's kind (strike,
 projectile, throw) and a projectile record follow the inks.
+Milestone 9 made the banks fighter B's (pens 10-13): the engine loads the
+next opponent into banks 6-7 as it is, and the loader moves fighter A's
+own colours to 6-9 instead.
 The move data, hit boxes and compiled frames live in the banks' directory
 and records. Damage, stun and motions are still the engine's for now, and
 so is the special's input. `ROSTER.TXT` lists the files.
@@ -373,7 +384,8 @@ so is the special's input. `ROSTER.TXT` lists the files.
 | Blender 5.2 + MCP | puppet models, posing, rendering (`tools/blender_puppets.py`) |
 | Aseprite 1.3 + MCP | pixel touch-ups, tags, hitbox slices |
 | Python 3 + Pillow | quantise, export, compiled-sprite generator |
-| RASM | assembler (bank support, writes `.dsk` directly) |
+| RASM | assembler (bank support) |
+| `tools/make_dsk.py` | the disc: an extended DSK, and the map of where the engine finds its files |
 | `tools/music.py` | music + SFX for our own player (`src/sound.asm`), written as text. Arkos Tracker 2 was the plan, but its player and data don't fit |
 | ACE-DL / WinAPE / CPCEC | emulators (ACE-DL has a good debugger) |
 | Real 6128 + M4/HxC | hardware testing |
@@ -394,6 +406,43 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 | 7 | **CPU opponent** ✅ | reactive AI with difficulty levels |
 | 8 | **Roster wave 1** ✅ | Kim Jong-Un, Xi Jinping, Elon Musk, Zelensky (see [CHARACTERS.md](CHARACTERS.md)) |
 | 9 | **Release 1.0** | arcade ladder + Puppet Master boss, two-sided disk, real-hardware test, `.dsk` release |
+
+### Milestone 9 plan: memory first
+
+**What is free in the engine** (the build after the small fixes):
+
+| Where | Free |
+|---|---|
+| Payload (`payload_end` + `STAGE_SIZE` ≤ `CACHE_AT`) | 149 bytes, after `prepare` and `can_skip` moved to gaps |
+| Workspace (#DDE0-#DFFF) | 24 bytes |
+| COLD / COLD2 | 27 / 60 bytes |
+| Mirror gaps 1-8 | 102, 130, 99, 117, 45, 132, 9, 8 bytes |
+| Load image | #6473 of #8000 (it only matters at boot) |
+
+About 0.9 KB in all, in pieces. The ladder's own logic (who is next, a
+"next opponent" screen, the boss) fits in that. Loading the next opponent
+does not: the engine took the machine from the firmware, and the screen
+(#8000-#FFFF) covers the firmware's RAM (#A67C-#BFFF).
+
+**Loading mid-game, the options:**
+- **A. Keep a copy of the firmware's RAM.** Before taking over, save
+  #A67C-#BFFF and #0000-#003F (6.6 KB; 3.5 KB of it zeros, 3.2 KB packed
+  with our LZ, measured on the 6128 at the select screen). Between fights,
+  blank the inks, put it back, load B's file and stage with the firmware
+  as the loader does now, then take over again through the boot path.
+  Works with whatever drive the firmware knows (3" drives, Gotek/HxC,
+  M4). It needs ~3.5 KB kept through the fight: two compiled-frame cache
+  slots (player A's bank 1 slots, or main RAM ones), so more held frames.
+- **B. Our own disc reading.** A small µPD765 sector reader (~0.4-0.7 KB),
+  with the files at sectors the Makefile records. No copy to keep, but it
+  needs a real FDC: not M4 boards, and more to prove on real drives.
+- **C. No reload.** The ladder restarts the game (RESET and `RUN"PF`),
+  which isn't a ladder.
+
+**Chosen: B** (milestone 9 step 1, docs/SPIKE.md). The driver is TerraCPC's,
+made compact. The disc is an extended DSK that `tools/make_dsk.py` writes:
+42 tracks, all formatted. The engine's files come first, so their sectors
+don't depend on the engine.
 
 ## 5. Risks
 

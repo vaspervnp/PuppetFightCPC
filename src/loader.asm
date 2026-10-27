@@ -12,12 +12,15 @@
 ;; and titles from the headers. Each player picks one with left and right
 ;; and fire, the same character twice too. C makes player 2 the computer,
 ;; at three levels (and C again a player): player 1 then chooses its
-;; character as well, once ready. The engine finds that at SETTINGS_AT.
-;; Then fighter A's goes into banks
-;; 4-5 and fighter B's into banks 6-7, unpacked as they are read a byte at
-;; a time (tools/stage_pack.py's format), one bank paged in at a time. Fighter B's frames then have their own colours
-;; moved from pens 6-9 to 10-13 (remap_tab), and in a mirror match its
-;; directory gets the character's second set of colours. Last, fighter B's
+;; character as well, once ready. The engine finds that, and who was
+;; chosen (roster numbers), at SETTINGS_AT. Then fighter A's goes into
+;; banks 4-5 and fighter B's into banks 6-7, unpacked as they are read a
+;; byte at a time (tools/stage_pack.py's format), one bank paged in at a
+;; time. The files are made for fighter B's pens, as the engine loads the
+;; next opponent mid-game (src/disc.asm), so fighter A's frames then have
+;; their own colours moved from pens 10-13 to 6-9 (remap_tab), and in a
+;; mirror match fighter B's directory gets the character's second set of
+;; colours. Last, fighter B's
 ;; character's home stage (NAME.STG, tools/stage_pack.py) goes to STAGE_AT,
 ;; where the engine's boot unpacks it into the screen.
 ;; ===========================================================================
@@ -92,18 +95,20 @@ ld_zero
     or 1<<GM_CPU_B
 ld_mode
     ld (SETTINGS_AT),a
+    ld hl,(sel_a)               ; and who: sel_a, sel_b
+    ld (SETTINGS_AT+1),hl
 
     ld hl,s_loading
     call say
-    ld a,(sel_a)                ; fighter A: banks 4-5 as it is
+    ld a,(sel_a)                ; fighter A: banks 4-5, own colours moved
     ld d,#C4
     call load_char
     jp nc,disc_error
-    ld a,(sel_b)                ; fighter B: banks 6-7, own colours moved
+    call remap_a
+    ld a,(sel_b)                ; fighter B: banks 6-7 as it is
     ld d,#C6
     call load_char
     jp nc,disc_error
-    call remap_b
     ld a,(sel_a)                ; a mirror match: B in the second colours
     ld hl,sel_b
     cp (hl)
@@ -532,16 +537,16 @@ page
     out (c),a
     ret
 
-;; remap_b - fighter B's frames (banks 6-7): own colours to pens 10-13.
-remap_b
-    ld a,#C6
+;; remap_a - fighter A's frames (banks 4-5): own colours to pens 6-9.
+remap_a
+    ld a,#C4
     call page
     ld a,(DIR_MOVES_N)
     ld (rb_moves),a
     ld hl,DIR_MOVES
     ld (rb_move),hl
 rb_move_next
-    ld a,#C6
+    ld a,#C4
     call page
     ld hl,(rb_move)             ; the move: frames, records
     ld a,(hl)
@@ -559,11 +564,11 @@ rb_frame
     jr z,rb_move_done
     dec a
     ld (rb_frames),a
-    ld a,#C6
+    ld a,#C4
     call page
     ld hl,(rb_rec)              ; the record: bank, w, off, spans
     ld a,(hl)
-    add a,#C6
+    add a,#C4
     inc hl
     inc hl
     inc hl

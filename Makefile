@@ -31,20 +31,22 @@ SHOTS ?= 0
 CPU ?= 0
 LEVEL ?= 1
 CACHE_SLOT := $(shell awk '$$1=="CACHE_SLOT"{print $$3}' src/config.asm)
-RASMFLAGS := -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEMO) -DSHOTS=$(SHOTS) \
-             -DCPU=$(CPU) -DLEVEL=$(LEVEL)
 BUILD  := build
 
 CHARS := trump putin kim xi musk zelensky
 CHAR_A ?= trump
 CHAR_B ?= putin
+roster_index = $(shell echo $(CHARS) | tr ' ' '\n' | grep -nx $(1) | awk -F: '{print $$1-1}')
+RASMFLAGS := -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEMO) -DSHOTS=$(SHOTS) \
+             -DCPU=$(CPU) -DLEVEL=$(LEVEL) \
+             -DCHAR_A_I=$(call roster_index,$(CHAR_A)) -DCHAR_B_I=$(call roster_index,$(CHAR_B))
 STAGES := whitehouse kremlin pyongyang beijing starbase kyiv
 STAGE ?= $(shell $(PYTHON) -c "import json; print(json.load(open('art/sprites/$(CHAR_B)_pfc.json'))['stage'])")
 stage_file = $(BUILD)/stages/$(shell $(PYTHON) -c "import json; print(json.load(open('art/stages/$(1).json'))['name'])").STG
 STG := $(foreach s,$(STAGES),$(call stage_file,$(s)))
 GEN := src/gen/$(CHAR_A)_a_bank0.asm src/gen/$(CHAR_A)_a_bank1.asm \
        src/gen/$(CHAR_B)_b_bank0.asm src/gen/$(CHAR_B)_b_bank1.asm src/gen/chars.asm \
-       src/gen/stage.asm src/gen/music.asm
+       src/gen/stage.asm src/gen/music.asm src/gen/diskmap.asm
 SRC := $(filter-out src/loader.asm,$(wildcard src/*.asm)) $(GEN)
 PFC := $(foreach c,$(CHARS),$(BUILD)/pfc/$(shell echo $(c) | tr a-z A-Z).PFC)
 
@@ -96,8 +98,8 @@ $(BUILD)/TITLE.SCR: tools/title_art.py tools/stage_pack.py tools/sprite_codegen.
         art/sprites/*.json $(wildcard art/sprites/*/*.png) | $(BUILD)
 	$(PYTHON) tools/title_art.py
 
-# Character files for the disc, made for fighter A's pens (the loader moves
-# fighter B's), and the list of them the select screen reads.
+# Character files for the disc, made for fighter B's pens (the loader moves
+# fighter A's), and the list of them the select screen reads.
 $(BUILD)/pfc/%.PFC: tools/sprite_codegen.py tools/cpc_palette.py src/config.asm \
         art/sprites/*.json art/stages/*.json $(wildcard art/sprites/*/*.png) | $(BUILD)
 	$(PYTHON) tools/sprite_codegen.py pfc $(shell echo $* | tr A-Z a-z) --slot $(CACHE_SLOT)
@@ -106,23 +108,22 @@ $(BUILD)/pfc/ROSTER.TXT: Makefile | $(BUILD)
 	mkdir -p $(BUILD)/pfc
 	printf '%s\r\n' $(shell echo $(CHARS) | tr a-z A-Z) > $@
 
+# Where the engine finds the character files and stages on the disc
+# (tools/make_dsk.py): they go first, so it doesn't depend on the engine.
+src/gen/diskmap.asm: tools/make_dsk.py $(PFC) $(STG) $(BUILD)/pfc/ROSTER.TXT
+	CHARS="$(CHARS)" $(PYTHON) tools/make_dsk.py map
+
 src/gen/remap.asm: tools/sprite_codegen.py tools/cpc_palette.py
 	$(PYTHON) tools/sprite_codegen.py remap
 
 $(BUILD)/PFLOAD.BIN: src/loader.asm src/gen/remap.asm | $(BUILD)
 	cd src && $(RASM) loader.asm -o ../$(BUILD)/pfload >/dev/null
 
-# One rasm pass writes the snapshot, the symbols and (via SAVE) the engine
-# on the disc; the loader, the BASIC and the characters go on after it.
+# One rasm pass writes the snapshot, the symbols and (via SAVE) the engine;
+# then the disc, an extended DSK with everything (tools/make_dsk.py).
 $(BUILD)/pfspike.sna: $(SRC) $(BUILD)/PFLOAD.BIN $(PFC) $(STG) $(BUILD)/TITLE.SCR $(BUILD)/pfc/ROSTER.TXT FORCE | $(BUILD)
-	rm -f $(BUILD)/pfspike.dsk
-	cd src && $(RASM) main.asm -oi ../$@ -s -sl -sq -os ../$(BUILD)/pfspike.sym -eo -v2 $(RASMFLAGS)
-	iDSK $(BUILD)/pfspike.dsk -i src/pfspike.bas -t 0 -f >/dev/null
-	iDSK $(BUILD)/pfspike.dsk -i $(BUILD)/PFLOAD.BIN -t 1 -c 8000 -e 8000 -f >/dev/null
-	iDSK $(BUILD)/pfspike.dsk -i $(BUILD)/pfc/ROSTER.TXT -t 0 -f >/dev/null
-	for f in $(PFC); do iDSK $(BUILD)/pfspike.dsk -i $$f -t 1 -c 4000 -f >/dev/null; done
-	for f in $(STG); do iDSK $(BUILD)/pfspike.dsk -i $$f -t 1 -c 2000 -f >/dev/null; done
-	iDSK $(BUILD)/pfspike.dsk -i $(BUILD)/TITLE.SCR -t 1 -c 9800 -f >/dev/null
+	cd src && $(RASM) main.asm -oi ../$@ -s -sl -sq -os ../$(BUILD)/pfspike.sym -v2 $(RASMFLAGS)
+	CHARS="$(CHARS)" $(PYTHON) tools/make_dsk.py write $(BUILD)/pfspike.dsk
 
 bench: $(BUILD)/pfspike.sna
 	$(PYTHON) tools/spike_bench.py

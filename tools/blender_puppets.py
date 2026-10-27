@@ -423,10 +423,13 @@ def build_character(s):
         ph = new_part(sc, "phone", "box", J["wrN"], (0.04, 0, -0.08), (0.015, 0.035, 0.06), "phone")
         J["phone"] = ph
     if s["name"] == "kim":
-        # the launch remote of his missile special: a box with a big red
-        # button, in the near hand; hidden unless posed
-        ph = new_part(sc, "phone", "box", J["wrN"], (0.05, 0, -0.08), (0.03, 0.045, 0.05), "phone")
-        new_part(sc, "phone_button", "sphere", ph, (0.0, 0, 1.0), (0.8, 0.8, 0.5), "button_red")
+        # the launch remote of his missile special: a black box, bigger than
+        # his fist so it reads against the grey suit, with a big red button
+        # on the face the camera sees (-y) and a stub antenna, in the near
+        # hand; hidden unless posed
+        ph = new_part(sc, "phone", "box", J["wrN"], (0.08, 0, -0.2), (0.12, 0.13, 0.17), "tshirt_black")
+        new_part(sc, "phone_button", "sphere", ph, (0.0, -0.95, -0.2), (0.6, 0.35, 0.5), "button_red")
+        new_part(sc, "phone_antenna", "cyl", ph, (0.0, 0.6, -1.5), (0.15, 0.15, 0.6), "tshirt_black")
         J["phone"] = ph
     if s["name"] == "musk":
         # the toy chainsaw: a red motor box in the near hand, a grey bar
@@ -623,8 +626,8 @@ KIM_MOVES = {
     # Surf's Up Missile: out comes the remote, thumb on the button, the
     # missile goes (the projectile is a separate sprite)
     "special": [
-        P(phone=True, shN=40, elN=130, torso=-6, shF=40, elF=100, head=-6),
-        P(phone=True, shN=70, elN=100, torso=-10, head=-12, shF=50, elF=90),
+        P(phone=True, shN=45, elN=45, torso=-6, shF=40, elF=100, head=-6),
+        P(phone=True, shN=75, elN=40, torso=-10, head=-12, shF=50, elF=90),
         P(phone=True, shN=95, elN=15, torso=16, twist=30, shF=30, elF=110, x=0.08),
         P(phone=True, shN=80, elN=40, torso=10, twist=15, shF=35, elF=105, x=0.04),
     ],

@@ -160,3 +160,18 @@ jump_arc                        ; rise and fall over 16 pictures, top at
 sway                            ; -6..6, a triangle over 32 steps
     defb 0,1,2,3,4,5,6,6,6,5,4,3,2,1,0,0
     defb 0,-1,-2,-3,-4,-5,-6,-6,-6,-5,-4,-3,-2,-1,0,0
+
+    IF SLACK
+;; slack_wait - the margin test: wait_render, then SLACK*100 us more
+;; (main_loop, before the rebuild). Destroys AF, BC, DE, HL, IY.
+slack_wait
+    call wait_render
+    ld b,SLACK
+sw_100
+    ld c,24
+sw_in
+    dec c
+    jr nz,sw_in
+    djnz sw_100
+    ret
+    ENDIF
