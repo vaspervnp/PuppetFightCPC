@@ -1,5 +1,5 @@
 {
-  "_comment": "Character file settings (tools/sprite_codegen.py). colours: firmware colours of personal pens 6-9, first one also the health bar; alt_colours: the same for the second fighter in a mirror match; merge: art pen -> art pen, for art colours that are neither shared nor personal; special: the special move's kind (strike, projectile: file, speed in bytes per picture, damage, hitstun; throw).",
+  "_comment": "Character file settings (tools/sprite_codegen.py). colours: firmware colours of personal pens 6-9, first one also the health bar; alt_colours: the same for the second fighter in a mirror match; merge: art pen -> art pen, for art colours that are neither shared nor personal; special: the special move's kind (strike, projectile: file, speed in bytes per picture, damage, hitstun; throw); stage: the home stage (art/stages), where fighter B's character fights.",
   "name": "PUTIN",
   "title": "Tsar of All the Puppets",
   "colours": [
@@ -17,5 +17,6 @@
   "merge": {},
   "special": {
     "kind": "throw"
-  }
+  },
+  "stage": "kremlin"
 }

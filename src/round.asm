@@ -191,9 +191,9 @@ dc_line
 digits                          ; 3 pixels a row (bit 2 left), 5 rows
     defb 7,5,5,5,7, 2,6,2,2,7, 7,1,7,4,7, 7,1,3,1,7, 5,5,7,1,1
     defb 7,4,7,1,7, 7,4,7,5,7, 7,1,1,2,2, 7,5,7,5,7, 7,5,7,1,7
-row_bytes                       ; the 3 pixels in pen 2 (white): two
-    defb #00,#00, #00,#08, #04,#00, #04,#08   ; Mode 0 bytes, the 4th pixel
-    defb #08,#00, #08,#08, #0C,#00, #0C,#08   ; blank
+row_bytes                       ; the 3 pixels in pen 2 (white) on pen 1
+    defb #C0,#C0, #C0,#48, #84,#C0, #84,#48   ; (black): two Mode 0 bytes,
+    defb #48,#C0, #48,#48, #0C,#C0, #0C,#48   ; the 4th pixel blank
 
 ;; win_marker - IX = fighter: the marker for its latest round win.
 win_marker
@@ -224,7 +224,7 @@ clear_wins
     ld l,85
 cw_x
     ld h,7
-    ld c,0
+    ld c,PB_1_1                 ; the HUD's black
 wm_draw
     ld b,3
     ld de,MARK_LINE

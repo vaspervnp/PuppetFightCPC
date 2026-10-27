@@ -286,7 +286,7 @@ health_bar
     ld (fr_w),a
     ld a,8
     ld (fr_h),a
-    xor a
+    ld a,PB_1_1                 ; the HUD's black
     ld (fr_b),a
     push ix
     pop hl

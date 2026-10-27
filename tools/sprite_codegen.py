@@ -462,6 +462,8 @@ def cmd_pfc(args):
         12  title, two lines of 12 characters, space padded
         36  hardware inks of the 4 own colours, then 4 for a mirror match
         44  defw bank 0 length, bank 1 length
+        48  the home stage's file name (art/stages/<stage>.json), 8
+            characters, space padded
     """
     import subprocess
     c = args.char
@@ -483,6 +485,8 @@ def cmd_pfc(args):
     hdr += title_lines(c, cfg["title"]).encode()
     hdr += bytes(HW_COLOURS[k][2] for k in cfg["colours"] + cfg["alt_colours"])
     hdr += len(banks[0]).to_bytes(2, "little") + len(banks[1]).to_bytes(2, "little")
+    with open(os.path.join(REPO, "art", "stages", cfg["stage"] + ".json")) as fh:
+        hdr += json.load(fh)["name"].ljust(8)[:8].encode()
     hdr += bytes(PFC_HEADER - len(hdr))
     with open(os.path.join(out, c.upper() + ".PFC"), "wb") as fh:
         fh.write(hdr + banks[0] + banks[1])

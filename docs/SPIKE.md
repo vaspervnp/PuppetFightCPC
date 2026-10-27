@@ -617,7 +617,7 @@ load image (#6240, #6A40, #7240, #7A40):
 
 Code there must never run with a character's bank paged in, so
 `move_frames` (which pages one) stays in main RAM. The move constants moved
-into `main.asm`. The payload now ends at &1211, 695 bytes below the caches
+into `main.asm`. The payload then ended at &1211, 695 bytes below the caches
 with the staging buffer.
 
 **Specials.** Directory version 4 adds the special's kind (strike,
@@ -684,6 +684,53 @@ Costs:
 Trump against Trump with `SLACK=15` catches lines, but it did so before
 this milestone too, line for line: that pairing simply has no 1.5 ms
 margin.
+
+## Milestone 6 step 1: stages
+
+Two stages replace the spike's sky and pillars. Each is a picture that
+`tools/stage_art.py` draws in code (192 × 272, `art/stages/<stage>.png`):
+- **The White House lawn:** sky and clouds, the North Portico with its flag,
+  trees, a mowed lawn, a black iron fence across the fighters' band, and a
+  podium with bunting and a seal as the raised floor.
+- **A Kremlin hall:** red damask walls between gold pilasters, arched
+  windows, a chandelier, a marble floor behind the fighters, and a carpeted
+  dais with a band of gold lozenges.
+
+A stage uses the shared pens 1-5 and three of its own: pens 0, 14 and 15.
+Pen 14 stays pastel blue for the tweet. The HUD (lines 0-23) is pen 1 on
+every stage. So the bars, the clock's background and the win markers now
+blank to pen 1, not pen 0.
+
+**Packing.** `tools/stage_pack.py` turns the picture into the screen's 32 KB
+as it is in memory, the unused tails as zeros. It packs that with a small
+LZ: literal runs, (length, offset word) matches, and an end byte. It checks
+the result with a Python copy of the unpacker. The White House packs to
+2,437 bytes, the Kremlin to 1,727 (room: 8 KB). A `.STG` file holds "ST",
+version, the hardware inks of pens 0, 14 and 15, the packed length, then the
+data.
+
+**Loading.**
+- A character's `_pfc.json` names its home stage, and the `.PFC` header
+  carries the stage's file name (offset 48).
+- After the characters, the select screen loads fighter B's home stage to
+  &2000. `PFSPIKE.BAS` now sets `MEMORY &1FFF`.
+- Boot blacks every ink and unpacks the stage into &8000-&FFFF before it
+  moves anything there. The 30-byte unpacker sits in the load image, not the
+  payload. Then it copies the payload and cold code, and the stage's inks
+  into the palette.
+- `start` draws only the bars over the stage, then copies the mirror as
+  before.
+- For the snapshot, `make STAGE=...` (fighter B's home stage by default)
+  puts the packed stage at &2000.
+
+The old stage drawing is gone, so the payload ends at &118E.
+
+| Test | Result |
+|---|---|
+| `bench-all`, `bench-fight`, `bench-play`, `SLACK=15` (Kremlin) | 2 frames between pictures, 0 caught, 0 late, 0 passes missed, 0 bytes wrong; fight ends A 36, B 32 |
+| `bench` Putin against Trump (White House) | the same |
+| disc: Trump against Putin | the Kremlin; all four banks match the snapshot |
+| disc: Trump against Trump | the White House, B in the second colours |
 
 ## Next (milestone 2 work this feeds)
 

@@ -12,7 +12,9 @@
 ;; 4-5 and fighter B's into banks 6-7, read a byte at a time so it can be
 ;; paged in a bank at a time. Fighter B's frames then have their own colours
 ;; moved from pens 6-9 to 10-13 (remap_tab), and in a mirror match its
-;; directory gets the character's second set of colours.
+;; directory gets the character's second set of colours. Last, fighter B's
+;; character's home stage (NAME.STG, tools/stage_pack.py) goes to STAGE_AT,
+;; where the engine's boot unpacks it into the screen.
 ;; ===========================================================================
 
 TXT_OUTPUT      EQU #BB5A
@@ -34,6 +36,10 @@ H_TITLE         EQU 12
 H_ALT_INKS      EQU 40
 H_LEN0          EQU 44
 H_LEN1          EQU 46
+H_STAGE         EQU 48
+STAGE_AT        EQU #2000       ; src/config.asm
+ST_LEN          EQU 6           ; a stage file: header, packed length
+ST_HEADER       EQU 8
 DIR_MOVES_N     EQU #4003       ; in bank 0 (src/main.asm DIR_*)
 DIR_INKS        EQU #4007
 DIR_MOVES       EQU #400E
@@ -93,6 +99,8 @@ ld_ink
     call z,alt_inks
     ld bc,#7FC0
     out (c),c
+    call load_stage
+    jp nc,disc_error
     scf
     ret
 
@@ -192,7 +200,31 @@ rh_fail
     or a
     ret
 
+;; load_stage - fighter B's character's home stage to STAGE_AT. CY if
+;; loaded.
+load_stage
+    ld a,(sel_b)
+    call header_addr
+    ld de,H_STAGE
+    add hl,de
+    ld de,f_stg
+    call open_file
+    ret nc
+    ld hl,STAGE_AT
+    ld b,ST_HEADER
+    call read_bytes
+    ret nc
+    ld de,(STAGE_AT+ST_LEN)
+    ld hl,STAGE_AT+ST_HEADER
+    call read_long
+    ret nc
+    call CAS_IN_CLOSE
+    scf
+    ret
+
 ;; open_char - A = character: open NAME.PFC. CY if opened.
+;; open_file - HL = a name (8 characters, space padded), DE = its
+;; extension (4 characters): open it. CY if opened.
 open_char
     ld l,a                      ; its name, then ".PFC"
     ld h,0
@@ -201,6 +233,9 @@ open_char
     add hl,hl
     ld de,roster
     add hl,de
+    ld de,f_ext
+open_file
+    push de
     ld de,f_name
     ld b,0
 oc_char
@@ -215,7 +250,7 @@ oc_char
     cp 8
     jr nz,oc_char
 oc_ext
-    ld hl,f_ext
+    pop hl
     ld c,4
 oc_ext_char
     ld a,(hl)
@@ -659,6 +694,8 @@ f_roster
 f_roster_end
 f_ext
     defb ".PFC"
+f_stg
+    defb ".STG"
 
     include "gen/remap.asm"     ; page aligned
 

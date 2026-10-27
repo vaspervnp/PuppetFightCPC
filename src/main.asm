@@ -25,6 +25,16 @@ boot
     ld sp,STACK_TOP
     ld bc,#7F8C                 ; mode 0, both ROMs off
     out (c),c
+    ld c,16                     ; every ink black, border too, while the
+bt_black                        ; stage goes into the screen
+    out (c),c
+    ld a,#54
+    out (c),a
+    dec c
+    jp p,bt_black
+    ld hl,STAGE_AT+ST_DATA      ; first, before anything lands on it
+    ld de,#8000
+    call unpack
     ld hl,payload_store
     ld de,PAYLOAD_ORG
     ld bc,payload_end-payload_start
@@ -53,7 +63,46 @@ boot
     ld de,GAP4_ORG
     ld bc,gap4_end-gap4_start
     ldir
+    ld hl,STAGE_AT+ST_INKS      ; and the stage's inks: pen 0, pens 14-15
+    ld de,palette_game
+    ldi
+    ld de,palette_game+14
+    ldi
+    ldi
     jp start
+
+;; unpack - HL = a packed stage (tools/stage_pack.py), DE = where it goes:
+;; n < #7F: n + 1 bytes as they are; n >= #80: n - #7D bytes from an
+;; offset word back; #7F: the end. Destroys AF, BC, DE, HL.
+unpack
+    ld a,(hl)
+    inc hl
+    cp #7F
+    ret z
+    jr nc,up_match
+    ld c,a
+    ld b,0
+    inc bc
+    ldir
+    jr unpack
+up_match
+    sub #7D
+    ld c,a
+    ld b,0
+    ld a,(hl)                   ; the offset
+    inc hl
+    push hl
+    ld h,(hl)
+    ld l,a
+    push de
+    ex de,hl
+    or a
+    sbc hl,de                   ; where it comes from
+    pop de
+    ldir
+    pop hl
+    inc hl
+    jr unpack
 payload_store
 
     ORG PAYLOAD_ORG,$
@@ -88,7 +137,7 @@ start
     ld (fighter_b+F_RLIST),a
     call set_black
     call build_line_tab
-    call draw_stage
+    call draw_hud               ; on the stage boot unpacked
     call clock_reset            ; and the round clock on it
     call copy_mirror
     call clear_lists
@@ -823,6 +872,7 @@ sc_ret
 line_tab        EQU LINE_TAB_AT
 
 payload_end
+    ASSERT payload_end<=STAGE_AT    ; boot unpacks the stage before the copy
 jit_stage       EQU payload_end     ; a frame on its way to another bank
 STAGE_SIZE      EQU 600             ; (sprite_codegen.py: largest stream 599)
     ASSERT jit_stage+STAGE_SIZE<=CACHE_AT   ; the compiled frame caches follow
@@ -961,3 +1011,10 @@ image_end       EQU gap4_store+gap4_end-gap4_start
 ;; screen loads (loader.asm).
 ;; ---------------------------------------------------------------------------
     include "gen/chars.asm"
+
+;; The stage, packed, where the select screen would have loaded it (make
+;; STAGE=..., fighter B's character's home stage by default).
+    BANKSET 0
+    ORG STAGE_AT
+    include "gen/stage.asm"
+    ASSERT $<=STAGE_AT+STAGE_ROOM

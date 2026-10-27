@@ -1,5 +1,5 @@
 ;; ===========================================================================
-;; video.asm - line table, the spike's stage, and the background mirror.
+;; video.asm - line table, the HUD's bars, and the background mirror.
 ;; ===========================================================================
 
 ;; build_line_tab - start address of each of the 272 scanlines.
@@ -51,56 +51,12 @@ line_addr
     ret
 
 ;; ---------------------------------------------------------------------------
-;; draw_stage - paint the whole screen: bands of sky and floor from
-;; stage_rows, then a few rectangles. The pillars and the rope sit inside the
-;; fighter band on purpose: a background that is not the same all the way
-;; across is what shows up a restore that copies from the wrong place.
-;; Destroys everything.
+;; draw_hud - the health bars, full, on the stage boot unpacked (its lines
+;; 0-23 are the HUD's black). Destroys everything.
 ;; ---------------------------------------------------------------------------
-draw_stage
-    ld hl,line_tab
-    ld ix,stage_rows
-    ld de,0                     ; scanline
-ds_line
-    ld a,e                      ; past this band's last line? next band
-    cp (ix+0)
-    ld a,d
-    sbc a,(ix+1)
-    jr c,ds_band_ok
-    ld bc,4
-    add ix,bc
-ds_band_ok
-    ld a,(ix+2)                 ; even line byte
-    bit 0,e
-    jr z,ds_even
-    ld a,(ix+3)                 ; odd line byte
-ds_even
-    push de
-    push hl
-    ld e,(hl)
-    inc hl
-    ld d,(hl)
-    ex de,hl                    ; HL = scanline start
-    ld (hl),a
-    ld d,h
-    ld e,l
-    inc de
-    ld bc,BYTES_PER_LINE-1
-    ldir
-    pop hl
-    inc hl
-    inc hl
-    pop de
-    inc de
-    ld a,e
-    cp DISPLAY_LINES AND #FF
-    jr nz,ds_line
-    ld a,d
-    cp DISPLAY_LINES>>8
-    jr nz,ds_line
-
-    ld ix,stage_rects
-ds_rect
+draw_hud
+    ld ix,hud_rects
+dh_rect
     ld a,(ix+0)
     cp #FF
     ret z
@@ -117,45 +73,14 @@ ds_rect
     call fill_rect
     ld bc,6
     add ix,bc
-    jr ds_rect
-
-;; Band ends (exclusive, words) with the byte for even and odd lines.
-stage_rows
-    defw HUD_LINES
-    defb #00,#00
-    defw 148
-    defb PB_14_14,PB_14_14      ; sky,
-    defw 160
-    defb PB_14_2,PB_2_14        ; hazy towards the horizon
-    defw 164
-    defb PB_5_5,PB_5_5          ; horizon
-    defw FLOOR_Y
-    defb PB_15_3,PB_3_15        ; distant grass behind the fighters
-    defw FLOOR_Y+2
-    defb PB_2_2,PB_2_2          ; the raised floor: white edge,
-    defw FLOOR_Y+18
-    defb PB_15_15,PB_15_15      ; green top,
-    defw FLOOR_Y+20
-    defb PB_5_5,PB_5_5          ; grey lip,
-    defw DISPLAY_LINES
-    defb PB_3_3,PB_3_3          ; navy front face
+    jr dh_rect
 
 ;; Rectangles: first line (word), lines, x, width, byte. #FF ends.
-stage_rects
+hud_rects
     defw 8
     defb 8,4,40,PB_6_6          ; fighter A's health bar, in its first colour
     defw 8
     defb 8,52,40,PB_10_10       ; fighter B's
-    defw 100
-    defb 64,2,4,PB_5_3          ; left pillar
-    defw 100
-    defb 64,90,4,PB_5_3         ; right pillar
-    defw 130
-    defb 2,0,96,PB_2_2          ; the rope, right across the band
-    defw FLOOR_Y+32
-    defb 2,0,96,PB_1_1          ; brick courses on the front face
-    defw FLOOR_Y+46
-    defb 2,0,96,PB_1_1
     defb #FF
 
 ;; fill_rect - HL = first scanline, (fr_h) lines, (fr_x) x, (fr_w) width,

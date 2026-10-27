@@ -36,6 +36,13 @@ BLANK_LINES     EQU (CRTC_R4+1)*(CRTC_R9+1)-DISPLAY_LINES
 ;; #4000-#7FFF  background mirror of the fighter band (see below)
 ;; #8000-#FFFF  overscan screen
 ;; Banks 4-7 (later): fighter data, paged in at #4000 only while drawing.
+;; At boot only: the stage, packed (tools/stage_pack.py), which the select
+;; screen loads to STAGE_AT and boot unpacks into the screen before it moves
+;; the payload down. The compiled frame caches have it later.
+STAGE_AT        EQU #2000
+STAGE_ROOM      EQU #2000
+ST_INKS         EQU 3           ; a stage file: hardware inks of pens 0, 14
+ST_DATA         EQU 8           ; and 15, then (after the length) the data
 PAYLOAD_ORG     EQU #0200
 LOAD_ORG        EQU #4000
 STACK_TOP       EQU #0200       ; grows down from just under the payload

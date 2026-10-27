@@ -265,11 +265,11 @@ past Trump/Putin, the palette gets split:
 
 | Pens | Use |
 |---|---|
-| 0 | transparent / background black |
+| 0 | transparent for fighters; a stage colour (milestone 6) |
 | 1-5 | shared fighter pens: outline black, white, navy, dark red, grey |
 | 6-9 | fighter A personal pens (skin, hair, outfit accent) |
 | 10-13 | fighter B personal pens |
-| 14-15 | stage pens (plus any shared pens the stage can reuse) |
+| 14-15 | stage pens (plus any shared pens the stage can reuse); 14 stays pastel blue, for projectiles |
 
 Each character file declares its personal colours. At load, the second
 fighter's pixels are remapped from pens 6-9 to 10-13 (cheap, because the
@@ -278,7 +278,10 @@ Built in milestone 4: the art keeps its old pens, and
 `art/sprites/<char>_pfc.json` lists the character's 4 colours, a second
 set for mirror matches, and merges for anything else. Trump's tie went
 from bright red to dark red to fit 4 own colours. Each fighter's health bar
-is its first colour. The stage pens are pastel blue and green.
+is its first colour. Since milestone 6 each stage has three colours of its
+own, pens 0, 14 and 15 (`art/stages/<stage>.json`); pen 14 stays pastel blue
+because projectiles use it. The HUD is drawn on pen 1, so it is black on
+every stage.
 
 The CPC has no true brown, which matters for several roster skin tones. The
 usable skin ramps are orange (FF8000) → dark red (800000), pink (FF8080) →
@@ -290,14 +293,17 @@ dark red, and pastel yellow (FFFF80) → olive (808000).
 |---|---|---|
 | &0038 | 3 | interrupt jump (both ROMs are off, so this is RAM) |
 | &0100-&01FF | 256 | stack |
-| &0200-&3FFF | 15.5K | engine (to &1211), the staging buffer, then the compiled frame cache: 6 slots of 1,744 bytes from &1720, split between the fighters at start so both have about as many with their bank 1 slots |
+| &0200-&3FFF | 15.5K | engine (to &118E), the staging buffer, then the compiled frame cache: 6 slots of 1,744 bytes from &1720, split between the fighters at start so both have about as many with their bank 1 slots |
 | &4000-&7FFF | 16K | background mirror of the fighter band, lines 88-211 (~12K used). The 512-byte gaps at &x240-&x43F hold cold logic from milestone 5 (&6240, &6A40, &7240, &7A40: `fighter.asm`, `moves.asm`, `input.asm` + `shotvis.asm`, `special.asm`); the 4 gaps below &6000 are under the load image and still free |
 | &8000-&FFFF | 32K | overscan screen (26K used). The unused 800-byte tails of page 3 hold `line_tab` (&C4E0), the cache slot tables (&C700), four restore lists (&CCE0/&DCE0, &E4E0/&F4E0), `flip_tab`/`mask_tab` built at boot (&CE00) and the compiler's (s, n) tables (&D4E0, &ECE0, &FCE0) |
 | Bank 4-5 | 32K | fighter A's character: directory, all 48 frames (escaped span streams), and compiled frame cache slots at the top of bank 1 |
 | Bank 6-7 | 32K | fighter B's character |
 
 The load image starts at &4000, where AMSDOS hands over. It moves itself
-down to &0200 before the mirror is built.
+down to &0200 before the mirror is built. Before that, boot unpacks the
+stage (milestone 6), which the select screen loaded to &2000-&3FFF (8K at
+most, packed), straight into the screen: the frame caches only fill that
+area later.
 
 **Characters live in the banks** (milestone 2). `tools/sprite_codegen.py
 character` writes each character as two bank images. Bank 0 starts with a
@@ -344,6 +350,7 @@ over the machine. The size cap is 32K so a character fits two banks.
 Built in milestone 4 (`tools/sprite_codegen.py pfc`): a 64-byte header
 ("PFC", version 1, name, title as two lines of 12, 4 inks, 4 mirror-match
 inks, the two bank lengths), then bank 0 and bank 1 as they go in memory.
+Milestone 6 added the home stage's file name to the header (offset 48).
 Milestone 5 made the directory version 4: the special's kind (strike,
 projectile, throw) and a projectile record follow the inks.
 The move data, hit boxes and compiled frames live in the banks' directory

@@ -1,0 +1,5 @@
+{
+  "_comment": "Stage settings (tools/stage_art.py, tools/stage_pack.py): name on the disc (8 characters), firmware colours of pens 0, 14 and 15.",
+  "name": "KREMLIN",
+  "inks": [6, 14, 24]
+}
