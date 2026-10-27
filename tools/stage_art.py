@@ -361,7 +361,96 @@ def pyongyang():
     return c
 
 
-STAGES = {"whitehouse": whitehouse, "kremlin": kremlin, "pyongyang": pyongyang}
+def roof(c, x0, x1, y, h, p, edge):
+    """A golden roof, its bottom (the eaves) on line y and h lines tall,
+    curving in towards the ridge, with upturned corners."""
+    width = x1 - x0
+    for i in range(h):
+        t = i / (h - 1)
+        inset = int(width * 0.32 * t ** 0.7)
+        yy = y - i
+        c.hline(x0 + inset, x1 - inset, yy, p)
+        if i % 3 == 1:                               # rows of tiles
+            for x in range(x0 + inset + 1, x1 - inset, 2):
+                c.put(x, yy, edge)
+    for i in range(5):                               # upturned corners
+        c.hline(x0 - 7 + i, x0 - 4 + i, y - i, p)
+        c.hline(x1 + 4 - i, x1 + 7 - i, y - i, p)
+    c.hline(x0 - 3, x1 + 3, y + 1, K)                # shadow under the eaves
+    top = int(width * 0.32)
+    c.hline(x0 + top - 2, x1 - top + 2, y - h, edge)  # the ridge
+    c.hline(x0 + top - 2, x1 - top + 2, y - h - 1, edge)
+    c.rect(x0 + top - 4, y - h - 3, x0 + top - 2, y - h, edge)
+    c.rect(x1 - top + 2, y - h - 3, x1 - top + 4, y - h, edge)
+
+
+def beijing():
+    """Tiananmen: the gate tower with two golden roofs on a long red wall
+    with arched doorways, lanterns, white marble balustrades behind the
+    fighters and a marble terrace as the floor."""
+    c = Canvas(P0)
+    c.rect(0, 0, W - 1, HUD - 1, K)
+    cloud(c, 24, 40, 6)
+    cloud(c, 170, 50, 5)
+    # The gate tower: a red hall between two golden roofs.
+    hx0, hx1 = 36, 155
+    roof(c, hx0, hx1, 60, 18, P15, DR)
+    c.rect(hx0 + 6, 62, hx1 - 6, 92, DR)
+    for x in range(hx0 + 8, hx1 - 6, 10):            # columns and lattice
+        c.rect(x, 64, x + 1, 92, K)
+    for x in range(hx0 + 12, hx1 - 10, 10):
+        c.checker(x, 70, x + 5, 86, P15, DR)
+    roof(c, hx0 - 10, hx1 + 10, 100, 8, P15, DR)
+    # The long wall below: red, with a cornice and five arched doorways.
+    c.rect(0, 102, W - 1, 168, DR)
+    c.hline(0, W - 1, 102, P15)
+    c.hline(0, W - 1, 103, K)
+    for i, dx in enumerate((24, 58, 96, 134, 168)):
+        w = 14 if i != 2 else 20
+        top = 132 if i != 2 else 124
+        for y in range(top - w // 2, 169):
+            for x in range(dx - w // 2, dx + w // 2):
+                if y < top and ((x - dx + 0.5) / (w / 2)) ** 2 + ((y - top) / (w / 2)) ** 2 > 1:
+                    continue
+                c.put(x, y, NV)
+    # Red lanterns hanging along the cornice.
+    for lx in (42, 74, 118, 150):
+        c.vline(lx, 104, 109, K)
+        c.ellipse(lx, 114, 3, 5, P15, DR)
+        c.hline(lx - 2, lx + 2, 109, K)
+        c.hline(lx - 2, lx + 2, 119, K)
+    # White marble balustrades behind the fighters.
+    c.rect(0, 169, W - 1, FLOOR - 1, GR)
+    c.hline(0, W - 1, 169, WH)
+    c.hline(0, W - 1, 172, WH)
+    c.hline(0, W - 1, 196, WH)
+    c.hline(0, W - 1, 197, K)
+    for x in range(0, W, 12):
+        c.rect(x, 170, x + 2, 196, WH)               # posts
+        c.vline(x + 3, 170, 196, K)
+        c.ellipse(x + 1, 169, 2, 2, WH)
+        for y in range(176, 194, 3):                 # carved panel
+            c.hline(x + 5, x + 10, y, WH if (y // 3) % 2 else GR)
+    c.checker(0, 198, W - 1, FLOOR - 1, WH, GR)
+    # The terrace: white edge, marble, a red front with golden clouds.
+    c.hline(0, W - 1, FLOOR, WH)
+    c.hline(0, W - 1, FLOOR + 1, WH)
+    c.rect(0, FLOOR + 2, W - 1, FLOOR + 13, WH)
+    c.checker(0, FLOOR + 10, W - 1, FLOOR + 13, WH, GR)
+    c.hline(0, W - 1, FLOOR + 14, K)
+    c.rect(0, FLOOR + 15, W - 1, H - 1, DR)
+    c.hline(0, W - 1, FLOOR + 17, P15)
+    c.hline(0, W - 1, FLOOR + 42, P15)
+    for sx in range(0, W, 24):                       # stylised clouds in gold
+        c.ellipse(sx + 8, FLOOR + 30, 6, 4, P15)
+        c.ellipse(sx + 14, FLOOR + 27, 5, 3, P15)
+        c.ellipse(sx + 8, FLOOR + 30, 3, 2, DR)
+    c.checker(0, FLOOR + 46, W - 1, FLOOR + 47, P15, DR)
+    return c
+
+
+STAGES = {"whitehouse": whitehouse, "kremlin": kremlin, "pyongyang": pyongyang,
+          "beijing": beijing}
 
 
 def main():

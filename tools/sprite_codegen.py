@@ -258,6 +258,7 @@ def padded_spans(label, width, rows):
 
 
 BANK_SIZE = 16384
+STAGE_SIZE = 600    # src/main.asm: a frame on its way to another bank
 BANK1_SLOTS = 6     # cache slots in bank 1 at most (src/config.asm)
 REC_SIZE = 16
 HIT_REACH = 2       # bytes a hit box reaches past the limb drawn: at the
@@ -323,6 +324,9 @@ def cmd_character(args):
                     drawn[0][0], drawn[-1][0]]
             recs[f] = dict(label=label, w=width, off=fr["offset_x"] // 2, size=sp_size,
                            hurt=hurt)
+            if sp_size > STAGE_SIZE:
+                sys.exit("%s: %s's span stream is %d bytes, more than the %d of the "
+                         "compiler's staging buffer" % (c, f, sp_size, STAGE_SIZE))
             need = runtime_size(rows)
             if need > args.slot:
                 sys.exit("%s: %s compiles to %d bytes, more than a %d-byte slot"

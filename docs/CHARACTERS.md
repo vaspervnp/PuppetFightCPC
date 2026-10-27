@@ -51,14 +51,19 @@ These are the official show billings from GZERO's "About the Show" page.
   Victory: applauds himself. Taunt: "MINE IS BIGGER." Home stage: Pyongyang
   (Kim Il Sung Square).
 
-### Xi Jinping 🎯 — "President Emperor of the People's Republic of China"
+### Xi Jinping ✅ — "President Emperor of the People's Republic of China"
 - **Show persona**: "the big daddy of China", known for a friendship
   "with(out) limits" (with Putin). Thinks about Taiwan. Sketches include a
   boy-band number with Putin and Trump, and a game show against Biden.
 - **Look**: broad smooth face, neat black side-parted hair, dark suit, red tie.
 - **Specials**: **Friendship Without Limits** (hug-throw that won't let go),
   **Belt and Road** (belt whip with long horizontal reach).
-- **Palette**: shares the suit and red-tie ramps with Trump. Skin is pastel yellow → olive.
+- **Palette**: shares the suit and red-tie ramps with Trump. Skin is pink,
+  like Kim's and Putin's: a pastel yellow skin was tried and read as a
+  racial stereotype.
+- **Built** (milestone 8): dark suit, red tie. Special **Belt and Road** ✅:
+  a long-reach belt strike. Victory: hands behind his back, a nod. Taunt:
+  "NO LIMITS, MY FRIEND." Home stage: Beijing (Tiananmen).
 
 ### Elon Musk 🎯 — "Tech Support"
 - **Show persona**: the richest man in the world and a big fan of chainsaws.

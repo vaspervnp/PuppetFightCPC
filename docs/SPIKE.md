@@ -1010,6 +1010,63 @@ The three to come need about 75 KB more.
 | the computer against itself, Kim against Putin, 300 pictures | 2 frames between pictures, 0 caught; Putin wins 6 rounds to 2 |
 | disc: player 2 chooses Kim | all four banks match the snapshot |
 
+## Milestone 8 step 2: Xi Jinping
+
+The fourth fighter (Blender scene `PF_xi`):
+- **Look.** A broad, smooth face; neat black hair parted and swept over; a
+  dark suit with a white shirt and red tie (Trump's suit ramps).
+- **Skin.** `CHARACTERS.md` planned pastel yellow with olive shading. It
+  read as the old "yellow skin" stereotype, so he is pink like Kim and
+  Putin (the material `skin_yellow` stays in the list, unused, so the other
+  material colours don't move).
+- **Victory.** An overhead wave went out of the top of the frame (it ends
+  just above the head), so it is hands clasped behind the back with a slow
+  nod.
+- **Props.** A pose can now show props by name (`show=(...)`, objects
+  `prop_*` hidden otherwise), not only Trump's phone.
+
+| | |
+|---|---|
+| Special | **Belt and Road**: a strike (special damage 10, a knockdown). The belt cracks out straight ahead in a wide frame (64 pixels); it lands from up to 20 bytes apart, against 13 for a punch |
+| Victory | hands behind his back, a nod |
+| Taunt | "NO LIMITS, MY FRIEND." |
+| Title | "President Emperor" |
+| Colours | bright blue (health bar), pink, bright red, unused (the shirt's pastel blue shadow merges into white, as Trump's does); mirror match: bright cyan, orange, bright magenta |
+| File | bank 0 15,716 bytes, bank 1 9,131 bytes, 4 cache slots; `XI.PFC` 24,911 bytes |
+
+**A bug the belt found.**
+- Before a frame from bank 0 is compiled into a bank 1 slot, its span stream
+  is copied to a 600-byte staging buffer in main RAM. The belt's first wide
+  frame had a 624-byte stream, and the copy ran into the first cache slot.
+  The game hung in a compile.
+- `sprite_codegen.py` never checked that limit; Trump's largest stream is
+  599. Now it refuses a frame whose stream is over `STAGE_SIZE`.
+- The belt is thinner and level in that frame now. A diagonal belt cost a
+  line of stream on every scanline it crossed. The frame is under 600.
+
+**His home stage, Beijing** (`stage_art.py beijing`, inks pastel cyan,
+pastel blue, bright yellow; packed to 1,854 bytes).
+- Tiananmen: the gate tower's golden roofs, curving in to the ridge with
+  upturned eaves (`roof()`), over a red hall.
+- A long red wall with five arched doorways and gold lanterns.
+- White marble balustrades behind the fighters, and a marble terrace with
+  a red front of golden clouds as the floor.
+
+**The computer** uses the special only at close range, as it does every
+strike or throw. Using the belt from 14-20 bytes would suit it better, but
+the AI's gap has 8 bytes left.
+
+**The disc**: four characters and four stages, 121 KB of 178. Musk and
+Zelensky need about 52 KB more.
+
+| Test | Result |
+|---|---|
+| `bench-all`, `bench-fight`, `bench-play`, `SLACK=15`, `bench-ai` | 2 frames between pictures, 0 caught, 0 late, 0 passes missed, 0 bytes wrong |
+| `bench-fight` keys, Trump against Xi | the same; the fight ends A 36, B 32 |
+| the belt, Xi as B and as A | lands from 10 to 20 bytes apart both ways; 10 damage and a knockdown |
+| the computer against itself, Xi against Putin, 300 pictures | 2 frames between pictures, 0 caught, 0 bytes wrong; Putin 7 rounds, Xi 3 |
+| disc: player 2 chooses Xi | all four banks match the snapshot |
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

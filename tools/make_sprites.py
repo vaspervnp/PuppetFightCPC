@@ -54,6 +54,8 @@ RAMPS = {
     "arm_skin_f":  (6, 6, 3),
     "hair_black":  (1, OUTLINE, OUTLINE),
     "button_red":  (4, 4, 3),
+    "skin_yellow": (7, 7, 8),
+    "belt":        (9, OUTLINE, OUTLINE),
 }
 
 WEIGHT = {"eye_white": 5, "pupil": 8, "mouth": 6, "brow": 3,
@@ -62,7 +64,8 @@ WEIGHT = {"eye_white": 5, "pupil": 8, "mouth": 6, "brow": 3,
 HIGHLIGHT = 0.90   # fraction of the frame's max light level
 SHADOW = 0.50
 # faces stay mostly mid-tone so dark features (mouth, eyes) stay readable
-THRESHOLDS = {"skin_orange": (0.97, 0.30), "skin_pink": (0.97, 0.30)}
+THRESHOLDS = {"skin_orange": (0.97, 0.30), "skin_pink": (0.97, 0.30),
+              "skin_yellow": (0.97, 0.30)}
 OPAQUE_MIN = 11    # of 32 hi-res pixels in a block needed to be opaque
 
 
@@ -224,5 +227,5 @@ def process(char):
 
 
 if __name__ == "__main__":
-    for c in sys.argv[1:] or ["trump", "putin", "kim"]:
+    for c in sys.argv[1:] or ["trump", "putin", "kim", "xi"]:
         print(c, process(c), "frames")
