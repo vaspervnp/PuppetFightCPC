@@ -482,13 +482,15 @@ PFC_HEADER = 64
 def cmd_pfc(args):
     """A character file for the disc (GAME_PLAN 3.5): build/pfc/CHAR.PFC,
     a PFC_HEADER-byte header, then bank 0, then bank 1, both made for
-    fighter A's pens (the loader moves fighter B's own colours to 10-13):
+    fighter A's pens (the loader moves fighter B's own colours to 10-13)
+    and each packed like a stage (tools/stage_pack.py), which the loader
+    unpacks straight into the bank:
 
-        0   "PFC", version 1
+        0   "PFC", version 2
         4   name, 8 characters, space padded
         12  title, two lines of 12 characters, space padded
         36  hardware inks of the 4 own colours, then 4 for a mirror match
-        44  defw bank 0 length, bank 1 length
+        44  defw bank 0 length, bank 1 length (unpacked)
         48  the home stage's file name (art/stages/<stage>.json), 8
             characters, space padded
     """
@@ -507,7 +509,7 @@ def cmd_pfc(args):
     subprocess.run([os.environ.get("RASM", "rasm"), c + ".asm", "-oi", c + ".sna", "-v2"],
                    cwd=out, check=True, stdout=subprocess.DEVNULL)
     banks = [open(os.path.join(out, "%s%d.bin" % (c, i)), "rb").read() for i in (0, 1)]
-    hdr = bytearray(b"PFC\x01")
+    hdr = bytearray(b"PFC\x02")
     hdr += cfg["name"].upper().ljust(8)[:8].encode()
     hdr += title_lines(c, cfg["title"]).encode()
     hdr += bytes(HW_COLOURS[k][2] for k in cfg["colours"] + cfg["alt_colours"])
@@ -515,8 +517,12 @@ def cmd_pfc(args):
     with open(os.path.join(REPO, "art", "stages", cfg["stage"] + ".json")) as fh:
         hdr += json.load(fh)["name"].ljust(8)[:8].encode()
     hdr += bytes(PFC_HEADER - len(hdr))
+    from stage_pack import pack, unpack
+    packed = [pack(b) for b in banks]
+    if any(unpack(p) != b for p, b in zip(packed, banks)):
+        sys.exit("%s: a packed bank does not unpack to the bank" % c)
     with open(os.path.join(out, c.upper() + ".PFC"), "wb") as fh:
-        fh.write(hdr + banks[0] + banks[1])
+        fh.write(hdr + packed[0] + packed[1])
 
 
 def title_lines(char, title):

@@ -1156,6 +1156,38 @@ each with a special (two projectiles, two strikes) and a home stage.
 Balance between them hasn't been tuned yet: the computer against itself
 favours Trump and Putin.
 
+## Packed character files
+
+The disc was at 171 KB of 178 with six characters, so the character files
+are packed now.
+- **Format.** `sprite_codegen.py pfc` packs each bank on its own with the
+  stages' LZ (`tools/stage_pack.py`), checks that it unpacks back, and
+  writes `.PFC` version 2: the same 64-byte header (the bank lengths are
+  still the unpacked ones), then the two packed banks.
+- **Loader.** `unpack_bank` reads the file a byte at a time and unpacks
+  straight into the bank paged in at &4000. A match copies from what is
+  already written in the same bank, so no buffer is needed. It adds about
+  60 bytes to the loader.
+
+| Character | Before | Packed |
+|---|---|---|
+| Trump | 27,284 | 14,314 |
+| Putin | 22,238 | 11,680 |
+| Kim | 20,973 | 10,783 |
+| Xi | 24,911 | 12,675 |
+| Musk | 23,346 | 11,460 |
+| Zelensky | 21,387 | 11,634 |
+
+The disc takes 106 KB of 178 now, room for about five more characters.
+Loading got faster too: half as many bytes come off the disc. In the
+emulator, from fire on the select screen to the fight takes 26-28 s
+instead of 46.
+
+| Test | Result |
+|---|---|
+| disc: Trump against Putin, Xi against Zelensky | all four banks match the snapshot byte for byte |
+| disc: Musk against Musk | the same, but B's 4 inks, which the loader sets to the mirror-match colours on purpose |
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

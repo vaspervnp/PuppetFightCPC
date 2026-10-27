@@ -355,6 +355,8 @@ over the machine. The size cap is 32K so a character fits two banks.
 Built in milestone 4 (`tools/sprite_codegen.py pfc`): a 64-byte header
 ("PFC", version 1, name, title as two lines of 12, 4 inks, 4 mirror-match
 inks, the two bank lengths), then bank 0 and bank 1 as they go in memory.
+Since milestone 8 the two banks are packed (version 2, the stages' LZ),
+and the loader unpacks them as it reads; files are about half the size.
 Milestone 6 added the home stage's file name to the header (offset 48),
 and made the directory version 5: a pointer to the victory lines ("NAME
 WINS!" and the taunt) follows the projectile record.

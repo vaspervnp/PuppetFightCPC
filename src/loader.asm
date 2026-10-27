@@ -8,14 +8,14 @@
 ;; while the roster and the headers are read, until a player presses fire.
 ;; ROSTER.TXT lists the characters on the disc, one name a line, and each
 ;; NAME.PFC holds one (tools/sprite_codegen.py pfc): a header with its name,
-;; title and colours, then its two banks. The select screen shows the names
+;; title and colours, then its two banks, packed. The select screen shows the names
 ;; and titles from the headers. Each player picks one with left and right
 ;; and fire, the same character twice too. C makes player 2 the computer,
 ;; at three levels (and C again a player): player 1 then chooses its
 ;; character as well, once ready. The engine finds that at SETTINGS_AT.
 ;; Then fighter A's goes into banks
-;; 4-5 and fighter B's into banks 6-7, read a byte at a time so it can be
-;; paged in a bank at a time. Fighter B's frames then have their own colours
+;; 4-5 and fighter B's into banks 6-7, unpacked as they are read a byte at
+;; a time (tools/stage_pack.py's format), one bank paged in at a time. Fighter B's frames then have their own colours
 ;; moved from pens 6-9 to 10-13 (remap_tab), and in a mirror match its
 ;; directory gets the character's second set of colours. Last, fighter B's
 ;; character's home stage (NAME.STG, tools/stage_pack.py) goes to STAGE_AT,
@@ -39,7 +39,7 @@ HDR_SIZE        EQU 64          ; tools/sprite_codegen.py PFC_HEADER
 H_NAME          EQU 4           ; header fields
 H_TITLE         EQU 12
 H_ALT_INKS      EQU 40
-H_LEN0          EQU 44
+H_LEN0          EQU 44          ; (unpacked: unused, the end mark ends one)
 H_LEN1          EQU 46
 H_STAGE         EQU 48
 STAGE_AT        EQU #2000       ; src/config.asm
@@ -458,20 +458,72 @@ load_char
     ld a,(lc_ram)               ; bank 0
     call page
     ld hl,#4000
-    ld de,(lc_header+H_LEN0)
-    call read_long
+    call unpack_bank
     ret nc
     ld a,(lc_ram)               ; bank 1
     inc a
     call page
     ld hl,#4000
-    ld de,(lc_header+H_LEN1)
-    call read_long
+    call unpack_bank
     ret nc
     ld bc,#7FC0
     out (c),c
     call CAS_IN_CLOSE
     scf
+    ret
+
+;; unpack_bank - the open file's next packed bank (tools/stage_pack.py)
+;; to HL, unpacked as it is read: n < #7F: n + 1 bytes as they are;
+;; n >= #80: n - #7D bytes from an offset word back (in the bank already
+;; written); #7F: the end. CY if it all came. Destroys everything.
+unpack_bank
+    call get_byte
+    ret nc
+    cp #7F
+    jr z,ub_end
+    jr nc,ub_match
+    ld e,a                      ; literal bytes
+    ld d,0
+    inc de
+    call read_long
+    ret nc
+    jr unpack_bank
+ub_match
+    sub #7D
+    ld c,a
+    ld b,0
+    call get_byte               ; the offset
+    ret nc
+    ld e,a
+    call get_byte
+    ret nc
+    ld d,a
+    push hl
+    or a
+    sbc hl,de                   ; where it comes from
+    pop de
+    ldir
+    ex de,hl
+    jr unpack_bank
+ub_end
+    scf
+    ret
+
+;; get_byte - A = the open file's next byte, CY if there was one (a #1A
+;; counts, as in read_long). Destroys F.
+get_byte
+    push hl
+    push de
+    push bc
+    call CAS_IN_CHAR
+    pop bc
+    pop de
+    pop hl
+    ret c
+    cp #1A
+    scf
+    ret z
+    or a
     ret
 
 ;; page - A = RAM configuration. Destroys BC.
