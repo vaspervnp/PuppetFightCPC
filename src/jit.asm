@@ -67,15 +67,18 @@ jg_miss
 ;; likely next frame (they take turns to go first). Destroys everything.
 ;; ---------------------------------------------------------------------------
 jit_work
+    call shot_pass              ; between compiles (main.asm)
     ld a,(jw_busy)
     or a
     jr z,jw_pick
+    call shot_pass
     call irqs_left              ; a chunk needs a whole period
     or a
     ret z
     call jw_resume
     ret nz                      ; out of time again
 jw_pick
+    call shot_pass
     call irqs_left
     or a
     ret z
@@ -635,10 +638,10 @@ rec_addr
     MACRO JC_BODY left,entry
 {entry}
 @first
-    ld a,(irq_count)            ; every line: in the last period before
-    cp TICK_IRQ-1               ; the tick? (a quick look first)
-    jr nz,@go
-    call jc_time
+    ld a,(jc_flag)              ; every line: anything to look at? (irq.asm)
+    or a
+    jr z,@go
+    call jc_look
     jp c,@stop
 @go
     ld (hl),#E1                 ; pop hl
@@ -797,6 +800,33 @@ jc_time
     ret nz                      ; NC
     call irqs_left
     cp 1                        ; CY if 0
+    ret
+
+;; jc_look - jc_flag is up: the projectiles' pass if it is due (and the
+;; beam allows), then CY if the compile must stop. Destroys AF, BC.
+jc_look
+    ld a,(shot_pending)
+    or a
+    call nz,jc_shot
+    ld a,(irq_count)            ; in the last period before the tick?
+    cp TICK_IRQ-1
+    jr z,jc_time
+    or a                        ; NC
+    ret
+
+;; jc_shot - shot_pass in the middle of a compile, which then goes on in
+;; its own bank. Destroys AF, BC.
+jc_shot
+    push hl
+    push de
+    push iy
+    call shot_pass
+    pop iy
+    pop de
+    pop hl
+    ld a,(jw_bank)
+    ld bc,#7F00
+    out (c),a
     ret
 
 ;; ---------------------------------------------------------------------------

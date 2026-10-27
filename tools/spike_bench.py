@@ -57,6 +57,7 @@ PHASES = {1: "restore A (right)", 2: "restore B (left)",
           6: "scheduler overhead", 5: "logic", 7: "prepare",
           8: "restore lists (both)", 9: "compile"}
 REBUILD_PHASES = (1, 2, 3, 4, 6)
+SHOT_PHASE = 10                             # main.asm shot_pass
 
 
 def load_syms():
@@ -116,8 +117,9 @@ class Bench:
         jump = self.S.get("SCN_JUMP", 0)
         if not self.S.get("SCN_DEMO", 0):
             return "play (controls)" + (": " + self.keys if self.keys else "")
-        return "%s%s" % ("toe to toe" if close else "apart",
-                         ", taking turns to jump then jumping together" if jump else "")
+        return "%s%s%s" % ("toe to toe" if close else "apart",
+                           ", taking turns to jump then jumping together" if jump else "",
+                           ", projectiles flying" if self.S.get("SCN_SHOTS", 0) else "")
 
     def peek(self, name, size=1):
         b = self.c.read_ram(self.S[name], size)
@@ -161,6 +163,7 @@ class Bench:
         self.pic_tick = self.peek("LAST_RENDER")
         self.waits = defaultdict(int)       # pictures each fighter waited for a frame
         self.trace = []                     # (time, beam, phase) for --trace
+        self.shots_missed = 0               # rebuilds that found the projectiles' pass not done
         last_beam = None
         state = None
         done = 0
@@ -181,8 +184,11 @@ class Bench:
                 if last_ph in (0, 5) and ph in REBUILD_PHASES:
                     epochs.append(self.band())      # nothing touched yet
                     self.epoch_t = self.t
+                    self.shots_missed += self.peek("SHOT_PENDING")
                     start_line.append(self.beam())
                     state = self.jump_state()
+                if ph == SHOT_PHASE:                # the projectiles' pass changes the
+                    epochs.append(self.band())      # band between rebuilds: an epoch too
                 if ph in (0, 5) and last_ph in REBUILD_PHASES and state:
                     if self.t - self.epoch_t > 2 * LINE_US * 16:   # not an empty window
                         self.windows[state].append(self.beam())
@@ -224,7 +230,8 @@ class Bench:
         return durations, start_line, caught, late, done, len(seen)
 
     def expected_band(self):
-        """The band rebuilt from the mirror plus both fighters' span data."""
+        """The band rebuilt from the mirror plus both fighters' span data and
+        their projectiles."""
         out = {}
         for L in range(self.band_top, self.band_end):
             a = self.line_addr[L]
@@ -262,6 +269,21 @@ class Bench:
                     else:
                         col = x + s + j
                     row[col] = (row[col] & mask_of(d)) | d
+        for f in ("FIGHTER_A", "FIGHTER_B"):    # projectiles go on top
+            if not self.field(f, "F_PDRAWN"):
+                continue
+            ram0 = self.field(f, "F_RAM0")
+            rec = int.from_bytes(self.bank_read(ram0, self.S["DIR_SHOT"], 2), "little")
+            w, h = self.bank_read(ram0, rec, 2)
+            x, y = self.field(f, "F_POX"), self.field(f, "F_POY")
+            flipped = self.field(f, "F_PODIR")
+            for i in range(h):
+                data = self.bank_read(ram0, rec + self.S["PR_SIZE"] + i * w, w)
+                if flipped:
+                    data = [flip_of(d) for d in reversed(data)]
+                row = out[y + i]
+                for j, d in enumerate(data):
+                    row[x + j] = (row[x + j] & mask_of(d)) | d
         return out
 
 
@@ -316,6 +338,7 @@ def main():
     print("Beam check (%d scanline passes over the band, judged per rebuild):" % nseen)
     print("  lines caught half drawn: %d (in %d line-frames)" % (len(caught), sum(caught.values())))
     print("  lines late (previous picture shown): %d (in %d line-frames)" % (len(late), sum(late.values())))
+    print("  projectile passes missed: %d" % b.shots_missed)
     if caught:
         print("  caught lines:", sorted(caught)[:20], "..." if len(caught) > 20 else "")
 

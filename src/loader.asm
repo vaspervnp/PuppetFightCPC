@@ -36,7 +36,7 @@ H_LEN0          EQU 44
 H_LEN1          EQU 46
 DIR_MOVES_N     EQU #4003       ; in bank 0 (src/main.asm DIR_*)
 DIR_INKS        EQU #4007
-DIR_MOVES       EQU #400B
+DIR_MOVES       EQU #400E
 REC_SIZE        EQU 16
 
 PS_LEFT         EQU 0           ; a player's controls this frame

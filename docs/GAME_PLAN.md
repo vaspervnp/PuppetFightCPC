@@ -62,10 +62,11 @@ everything), hitstun per move and blockstun, knockdown (sweep, uppercut,
 special and hits in the air: fall, lie, get up, untouchable while down),
 KO, and rounds (best of three, win markers under the bars, a 99-second
 clock: at time-out more health wins, level health is a draw). A 12-picture motion history gives
-the special (↓ ↘ → + either button, the `special` frames as a strong
-strike for now, until milestone 5 makes them a projectile and a throw) and
-the uppercut from ↓ then ↑ + punch (↓ + punch also works). No second
-special yet. Keys, alongside the joysticks:
+the special (↓ ↘ → + either button) and the uppercut from ↓ then ↑ + punch
+(↓ + punch also works). The special is what the character's file says
+(milestone 5, `src/special.asm`): Trump's Tweet Storm fires a tweet bird,
+Putin's Judo Throw throws an opponent within reach over to his other side.
+A character can also have a plain strike. No second special yet. Keys, alongside the joysticks:
 
 | | Up | Down | Left | Right | Punch | Kick |
 |---|---|---|---|---|---|---|
@@ -80,10 +81,12 @@ special yet. Keys, alongside the joysticks:
   blockstun, pushback and knockdown flag.
 - States: idle, walk, crouch, jump, attack, block, hitstun, knockdown, KO,
   victory.
-- Chip damage on blocked specials. A throw (Putin's judo, Xi's "friendship")
-  can't be blocked, only escaped by holding back on the first frame.
-- Projectiles are separate small sprites (≤ 16×16) owned by the fighter. At
-  most one per fighter on screen.
+- Chip damage on blocked projectiles (1 point, never the last). A throw
+  (Putin's judo, Xi's "friendship") can't be blocked, only escaped by
+  pressing back just as it lands (holding back is too late).
+- Projectiles are separate small sprites (≤ 8 bytes × 16 lines) owned by the
+  fighter, in the shared and stage pens. At most one per fighter on screen.
+  Two that meet cancel out.
 
 ## 3. Technical design
 
@@ -193,7 +196,7 @@ the standing fighters, plus the rest of each frame.
 |---|---|---|
 | Fighters apart | one fighter per window: restore + draw < 15.6 ms, or < 11.8 ms at the top of a jump | already met. 13.9 ms worst with the generic drawer |
 | Fighters overlapping | both fighters in one window, done before the beam reaches each line | **banded rebuild**, below |
-| Projectiles, hit sparks | small sprites (≤ 8 bytes × 16 lines) in the window of the fighter that owns them | span-drawn, ~0.5 ms each |
+| Projectiles | small sprites (≤ 8 bytes × 16 lines), drawn outside the rebuild where no fighter is, while the beam is clear of them | built (milestone 5): ~1 ms each, out of the compiler's time |
 | Logic, input, AI, HUD, music | after the rebuild in each frame. The music player goes on the third interrupt, off the frame tick | ≤ 4 ms per frame |
 
 **Banded rebuild** (`src/rebuild.asm`, built and measured). Restore A,
@@ -287,8 +290,8 @@ dark red, and pastel yellow (FFFF80) → olive (808000).
 |---|---|---|
 | &0038 | 3 | interrupt jump (both ROMs are off, so this is RAM) |
 | &0100-&01FF | 256 | stack |
-| &0200-&3FFF | 15.5K | engine (to &148F), the staging buffer, then the compiled frame cache: 6 slots of 1,744 bytes from &1720, split between the fighters at start so both have about as many with their bank 1 slots |
-| &4000-&7FFF | 16K | background mirror of the fighter band, lines 88-211 (~12K used, ~4K free in 512-byte gaps at &x240-&x43F) |
+| &0200-&3FFF | 15.5K | engine (to &1211), the staging buffer, then the compiled frame cache: 6 slots of 1,744 bytes from &1720, split between the fighters at start so both have about as many with their bank 1 slots |
+| &4000-&7FFF | 16K | background mirror of the fighter band, lines 88-211 (~12K used). The 512-byte gaps at &x240-&x43F hold cold logic from milestone 5 (&6240, &6A40, &7240, &7A40: `fighter.asm`, `moves.asm`, `input.asm` + `shotvis.asm`, `special.asm`); the 4 gaps below &6000 are under the load image and still free |
 | &8000-&FFFF | 32K | overscan screen (26K used). The unused 800-byte tails of page 3 hold `line_tab` (&C4E0), the cache slot tables (&C700), four restore lists (&CCE0/&DCE0, &E4E0/&F4E0), `flip_tab`/`mask_tab` built at boot (&CE00) and the compiler's (s, n) tables (&D4E0, &ECE0, &FCE0) |
 | Bank 4-5 | 32K | fighter A's character: directory, all 48 frames (escaped span streams), and compiled frame cache slots at the top of bank 1 |
 | Bank 6-7 | 32K | fighter B's character |
@@ -311,13 +314,16 @@ Paging rules:
   bank, or the bank its compiled code is in) and is paged in when it runs.
   Restores always run with #C0, because they read the mirror.
 - Nothing else in &4000-&7FFF is touched while a bank is in: the screen,
-  `line_tab`, the restore lists and the tables are all outside it.
+  `line_tab`, the restore lists and the tables are all outside it. The
+  logic in the mirror's gaps only runs with #C0; whatever pages a bank in
+  (`move_frames`, `boxes`, the compiler, the rebuild, the interrupt handler)
+  lives elsewhere.
 
 On the disc each character is one file (§3.5). `PFSPIKE.BAS` loads the
 select screen (`PFLOAD.BIN`, at &8000), which reads the files into the
 banks, then loads the engine. The snapshot build puts `CHAR_A` and `CHAR_B`
 straight into the banks instead. Stage graphics and music have to come from
-the gaps or be ZX0-packed and unpacked at round start.
+the remaining gaps or be ZX0-packed and unpacked at round start.
 
 ### 3.5 Character file format (`TRUMP.PFC` etc.)
 
@@ -328,7 +334,7 @@ move table  14+ moves: frame count, per-frame duration, hitbox/hurtbox,
 frames      span-encoded masked frames (pens 0-9): today's bank layout
             (directory + frame records, §3.4) is the start of this format
 hot frames  compiled routines, both facings where they fit
-projectile  small sprite + speed/behaviour id
+projectile  compiled draws (both facings) + speed, damage, hitstun
 text        victory taunt, select-screen title ("The Greatest American 2.0")
 ```
 
@@ -338,6 +344,8 @@ over the machine. The size cap is 32K so a character fits two banks.
 Built in milestone 4 (`tools/sprite_codegen.py pfc`): a 64-byte header
 ("PFC", version 1, name, title as two lines of 12, 4 inks, 4 mirror-match
 inks, the two bank lengths), then bank 0 and bank 1 as they go in memory.
+Milestone 5 made the directory version 4: the special's kind (strike,
+projectile, throw) and a projectile record follow the inks.
 The move data, hit boxes and compiled frames live in the banks' directory
 and records. Damage, stun and motions are still the engine's for now, and
 so is the special's input. `ROSTER.TXT` lists the files.
@@ -365,7 +373,7 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 | 2 | **Engine core** ✅ | game loop, joystick/keyboard for 2 players, fighter state machine, walking, jumping arcs, facing and flip, ground and walls. Banded overlap rebuild, cheaper restore, on-demand compiler. `make bench` overlap+jump scenario at 25 fps with 0 lines caught |
 | 3 | **Combat** ✅ | hit/hurt boxes from Aseprite slices, damage, block, hitstun, knockdown, KO, rounds, timer, health bars |
 | 4 | **Character loading** ✅ | `.PFC` format, loader, pen remap, select screen, two characters from disk |
-| 5 | **Specials + projectiles** | motion input, Tweet Storm (tweet-bird projectile), Judo Throw (throw state) |
+| 5 | **Specials + projectiles** ✅ | motion input, Tweet Storm (tweet-bird projectile), Judo Throw (throw state) |
 | 6 | **Presentation** | stages (White House lawn, Kremlin hall), title, music, SFX, victory screens with taunts |
 | 7 | **CPU opponent** | reactive AI with difficulty levels |
 | 8 | **Roster wave 1** | Kim Jong-Un, Xi Jinping, Elon Musk, Zelensky (see [CHARACTERS.md](CHARACTERS.md)) |

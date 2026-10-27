@@ -207,6 +207,7 @@ rb_done
 ;; band_end up to its fighter's first scanline + BAND.
 ;; ---------------------------------------------------------------------------
 prepare
+    call shot_vis               ; the projectiles' pass (special.asm)
     call rebuild_clear
     ld ix,fighter_a             ; decide both before either is set up
     ld iy,fighter_b
@@ -361,6 +362,14 @@ sf_record
     ld (ix+F_OSN),a
     ld a,(ix+F_SN+1)
     ld (ix+F_OSN+1),a
+    ld a,(ix+F_FB)              ; (its drawn box, for special.asm)
+    ld (ix+F_OFB),a
+    ld a,(ix+F_FB+1)
+    ld (ix+F_OFB+1),a
+    ld a,(ix+F_FB+2)
+    ld (ix+F_OFB+2),a
+    ld a,(ix+F_FB+3)
+    ld (ix+F_OFB+3),a
     ld (ix+F_DRAWN),1
     call prebuild               ; its list (unless it is the same as now)
     ld iy,(sf_draw)             ; the draw: compiled code, walking it

@@ -103,6 +103,7 @@ fighter_reset
     ld (ix+F_JX),0
     ld (ix+F_HEALTH),HEALTH_MAX
     ld (ix+F_STUN),0
+    ld (ix+F_PACT),0            ; no projectile left flying
     ld a,MV_IDLE
     call start_move
     call is_a                   ; and its bar full again

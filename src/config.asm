@@ -92,6 +92,15 @@ COLD_ORG        EQU (RESTORE_LIST_B)+256    ; #E5E0: cold code (combat.asm),
 COLD_ROOM       EQU #E800-COLD_ORG          ; past list B0 in slice 4's tail
 COLD2_ORG       EQU (RESTORE_LIST_B XOR #1000)+256  ; #F5E0: round.asm, past
     ASSERT COLD2_ORG+COLD_ROOM<=#F800               ; list B1 in slice 6
+;; The mirror leaves #x240-#x43F of each 2 KB slice free (above). Those
+;; gaps hold the logic, which only runs with main RAM at #4000: never code
+;; that pages a character's bank in, or that the rebuild or an interrupt
+;; runs. Boot copies it from the load image, so only gaps above the image.
+GAP_ROOM        EQU #200
+GAP1_ORG        EQU #6240
+GAP2_ORG        EQU #6A40
+GAP3_ORG        EQU #7240
+GAP4_ORG        EQU #7A40
 flip_tab        EQU #CE00       ; built at boot (make_tables), in the rest
 mask_tab        EQU #CF00       ; of slice 1's tail: page aligned
     ASSERT RESTORE_LIST_A+256<=flip_tab
@@ -169,9 +178,13 @@ PH_SCHED        EQU 6           ; the banded scheduler between jobs
 PH_PREPARE      EQU 7           ; job set-up for the next picture
 PH_PREBUILD     EQU 8           ; restore lists for the next set-up
 PH_COMPILE      EQU 9           ; the runtime compiler
+PH_SHOT         EQU 10          ; a projectile's restore or draw
 
     IFNDEF DEMO
 DEMO            EQU 0           ; -DDEMO=1: scripted fighters (the bench)
+    ENDIF
+    IFNDEF SHOTS
+SHOTS           EQU 0           ; -DSHOTS=1: projectiles sweep across too
     ENDIF
     IFNDEF SLACK
 SLACK           EQU 0           ; -DSLACK=n: margin test, rebuild n*100 us late
@@ -182,3 +195,4 @@ SLACK           EQU 0           ; -DSLACK=n: margin test, rebuild n*100 us late
 SCN_CLOSE_UP    EQU CLOSE_UP
 SCN_JUMP        EQU JUMP
 SCN_DEMO        EQU DEMO
+SCN_SHOTS       EQU SHOTS

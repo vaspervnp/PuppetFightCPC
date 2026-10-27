@@ -25,6 +25,13 @@ strike
     ld a,(ix+F_HITDONE)
     or a
     ret nz
+    ld a,(ix+F_MOVE)            ; a special that throws or fires instead:
+    cp MV_SPECIAL               ; special.asm
+    jr nz,sk_strike
+    ld a,(ix+F_SPKIND)
+    or a
+    jp nz,special_strike
+sk_strike
     ld a,(iy+F_MOVE)            ; on someone still standing
     cp MV_KO
     ret z
@@ -48,20 +55,15 @@ strike
     push iy
     pop ix
     pop iy                      ; IY = attacker
-    ld c,(ix+F_CTL)             ; blocked: holding back, and
-    call back_held
+    call guard                  ; blocked: crouching blocks anything,
+    or a                        ; standing all but the sweep, which is low
     jr z,sk_hit
-    ld a,(ix+F_MOVE)
-    cp MV_CROUCH                ; crouching blocks anything;
+    cp 2
     jr z,sk_crouch
-    cp MV_BLOCK                 ; standing (free or blocking) all but the
-    jr z,sk_stand               ; sweep, which is low
-    cp MV_WALK+1
-    jr nc,sk_hit
-sk_stand
     ld a,(iy+F_MOVE)
     cp MV_SWEEP
     jr z,sk_hit
+sk_block
     ld a,(ix+F_MOVE)
     cp MV_BLOCK
     ld a,MV_BLOCK
@@ -77,14 +79,17 @@ sk_hit
     ld d,0
     ld hl,damage
     add hl,de
-    ld de,hitstun-damage
-    push hl
-    add hl,de
-    ld a,(hl)
-    ld (ix+F_STUN),a
-    pop hl
+    ld d,(hl)
+    ld bc,hitstun-damage
+    add hl,bc
+    ld e,(hl)
+
+;; land_hit - IX = defender, IY = attacker, D = damage, E = hitstun (0: a
+;; knockdown).
+land_hit
+    ld (ix+F_STUN),e
     ld a,(ix+F_HEALTH)
-    sub (hl)
+    sub d
     jr nc,sk_alive
     xor a
 sk_alive
@@ -122,10 +127,33 @@ kb_left
     sub b
     jp set_x
 
+;; guard - IX = defender: A = 0 if it isn't guarding, 1 if it guards
+;; standing (holding back while free or blocking), 2 crouching (holding
+;; back). Destroys F, C.
+guard
+    ld c,(ix+F_CTL)
+    call back_held
+    ld a,0
+    ret z
+    ld a,(ix+F_MOVE)
+    cp MV_CROUCH
+    ld a,2
+    ret z
+    ld a,(ix+F_MOVE)
+    cp MV_BLOCK
+    ld a,1
+    ret z
+    ld a,(ix+F_MOVE)
+    cp MV_WALK+1
+    ld a,1
+    ret c
+    xor a
+    ret
+
 ;; Per attack, from MV_PUNCH: punch, kick, sweep, uppercut, back kick,
 ;; (block, hit, KO: not attacks), special.
 damage                          ; health points
-    defb 4,5,4,6,6,0,0,0,8
+    defb 4,5,4,6,6,0,0,0,10     ; (the special: a throw's)
 hitstun                         ; pictures in the hit reaction (its own
     defb 6,8,0,0,10,0,0,0,0     ; frames take 6), 0: a knockdown
 

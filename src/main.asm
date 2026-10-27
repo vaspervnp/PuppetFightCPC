@@ -37,6 +37,22 @@ boot
     ld de,COLD2_ORG
     ld bc,cold2_end-cold2_start
     ldir
+    ld hl,gap1_store            ; and the logic to the mirror's gaps
+    ld de,GAP1_ORG
+    ld bc,gap1_end-gap1_start
+    ldir
+    ld hl,gap2_store
+    ld de,GAP2_ORG
+    ld bc,gap2_end-gap2_start
+    ldir
+    ld hl,gap3_store
+    ld de,GAP3_ORG
+    ld bc,gap3_end-gap3_start
+    ldir
+    ld hl,gap4_store
+    ld de,GAP4_ORG
+    ld bc,gap4_end-gap4_start
+    ldir
     jp start
 payload_store
 
@@ -100,6 +116,10 @@ start
     ld ix,fighter_b
     ld de,palette_game+10
     call own_inks
+    ld ix,fighter_a             ; and specials
+    call load_special
+    ld ix,fighter_b
+    call load_special
     call setup_crtc
     ld hl,palette_game
     call set_palette
@@ -192,6 +212,27 @@ cs_left
     ld b,a
     ret
 
+;; load_special - IX = fighter: its special's kind and projectile record
+;; into F_SPKIND..F_PCODEL. Destroys AF, BC, DE, HL.
+load_special
+    call page_char
+    ld a,(DIR_SPECIAL)
+    ld (ix+F_SPKIND),a
+    ld hl,(DIR_SHOT)
+    ld a,h
+    or l
+    jr z,page_main
+    push ix
+    pop de
+    push hl
+    ld hl,F_PW
+    add hl,de
+    ex de,hl
+    pop hl
+    ld bc,PR_SIZE
+    ldir
+    jr page_main
+
 ;; char_slots - IX = fighter: A = its character's cache slots in bank 1.
 ;; own_inks - IX = fighter, DE = 4 palette entries: its character's inks
 ;; there. Destroy AF, BC (and DE, HL).
@@ -271,8 +312,9 @@ cl_one
     ret
 
 ;; wait_render - 25 pictures a second: return on a rebuild tick at least two
-;; ticks after the last picture started. Destroys AF, HL.
+;; ticks after the last picture started. Destroys AF, BC, DE, HL, IY.
 wait_render
+    call shot_pass              ; (the projectiles, when the beam allows)
     call wait_tick
     ld a,(last_render)
     ld l,a
@@ -330,12 +372,69 @@ F_HITDONE       EQU F_HEALTH+1              ; this attack has landed,
 F_WINS          EQU F_HITDONE+1             ; rounds won (round.asm),
 F_STUN          EQU F_WINS+1                ; hitstun or blockstun left,
 F_HIST          EQU F_STUN+1                ; motion history, newest first
-F_SIZE          EQU F_HIST+HIST_LEN
+F_SPKIND        EQU F_HIST+HIST_LEN         ; the special (special.asm):
+F_PW            EQU F_SPKIND+1              ; its kind, and the projectile's
+F_PH            EQU F_PW+1                  ; width, lines, speed, damage,
+F_PSPEED        EQU F_PH+1                  ; hitstun and compiled draws,
+F_PDMG          EQU F_PSPEED+1              ; copied from the directory
+F_PSTUN         EQU F_PDMG+1
+F_PCODE         EQU F_PSTUN+1
+F_PCODEL        EQU F_PCODE+2
+F_PACT          EQU F_PCODEL+2              ; the projectile: flying, where,
+F_PX            EQU F_PACT+1                ; which way (0 right, 1 left),
+F_PY            EQU F_PX+1
+F_PDIR          EQU F_PY+1
+F_PDRAWN        EQU F_PDIR+1                ; and what is on the screen
+F_POX           EQU F_PDRAWN+1
+F_POY           EQU F_POX+1
+F_PODIR         EQU F_POY+1
+F_PVIS          EQU F_PODIR+1               ; shown in the next pass
+F_FB            EQU F_PVIS+1                ; the frame's drawn box (x0, x1,
+F_OFB           EQU F_FB+4                  ; y0, y1 from its left edge and
+F_SIZE          EQU F_OFB+4                 ; top, facing), and the shown one
 
-MOVE_IDLE       EQU 0
+;; The moves and the rules they follow (fighter.asm).
+MV_IDLE         EQU 0
+MV_WALK         EQU 1
+MV_CROUCH       EQU 2
+MV_JUMP         EQU 3
+MV_PUNCH        EQU 4
+MV_KICK         EQU 5
+MV_SWEEP        EQU 6
+MV_UPPERCUT     EQU 7
+MV_BACKKICK     EQU 8
+MV_BLOCK        EQU 9
+MV_HIT          EQU 10
+MV_KO           EQU 11
+MV_SPECIAL      EQU 12
+MV_VICTORY      EQU 13
+
+FRAME_PICS      EQU 2           ; pictures per animation frame
+WALK_STEP       EQU 1           ; bytes per picture (2 mode 0 pixels)
+JUMP_STEP       EQU 1           ; bytes per picture across, in a jump
+JUMP_PICS       EQU 16          ; pictures in the air (jump_arc)
+X_MAX           EQU BYTES_PER_LINE-SPR_W
+MIN_SEP         EQU 10          ; closest two standing boxes may be (bytes)
+HEALTH_MAX      EQU 40          ; a full health bar, one byte a point
+HIT_PUSH        EQU 3           ; bytes a hit knocks the defender back,
+BLOCK_PUSH      EQU 1           ; and a block
+BLOCK_STUN      EQU 4           ; pictures a standing block holds at least
+KD_PICS         EQU 36          ; a knockdown: falling, lying, getting up
+HIST_LEN        EQU 12          ; pictures of motion history (0.48 s)
+DR_UP           EQU 1           ; the history: the stick turned to the
+DR_DOWN         EQU 2           ; fighter's facing
+DR_BACK         EQU 4           ; (facing right these are the CT_ bits)
+DR_FWD          EQU 8
+
 DIR_SLOTS       EQU #4004       ; in a character's bank 0: bank 1 cache
 DIR_INKS        EQU #4007       ; slots (count, first), the inks of its 4
-DIR_MOVES       EQU #400B       ; colours, then the moves
+DIR_SPECIAL     EQU #400B       ; colours, its special's kind and
+DIR_SHOT        EQU #400C       ; projectile record, then the moves
+DIR_MOVES       EQU #400E
+SP_STRIKE       EQU 0           ; special kinds
+SP_SHOT         EQU 1
+SP_THROW        EQU 2
+PR_SIZE         EQU 9           ; a projectile record: F_PW..F_PCODEL
 REC_SIZE        EQU 16
     ASSERT REC_SIZE==16             ; rec_addr shifts
 
@@ -372,6 +471,7 @@ lg_ctl
     ld iy,fighter_a
     call think
     call separate
+    call fly_shots              ; projectiles (special.asm), then attacks
     call combat
     call round_tick
     ld ix,fighter_a
@@ -447,10 +547,43 @@ lg_a_jumps
     ld (fighter_a+F_Y),a
 lg_frames
     ENDIF
+    IF SHOTS                    ; SHOTS=1: projectiles (of characters that
+    ld ix,fighter_a             ; have one) sweep across, A's to the right,
+    ld c,0                      ; B's to the left
+    call demo_shot
+    ld ix,fighter_b
+    ld c,1
+    call demo_shot
+    ENDIF
     ld ix,fighter_a
     call load_frame
     ld ix,fighter_b
     jp load_frame
+
+    IF SHOTS
+;; demo_shot - IX = fighter, C = direction: its projectile at hand height,
+;; 2 bytes on every picture over 32 pictures, then round again.
+demo_shot
+    ld a,(ix+F_SPKIND)
+    cp SP_SHOT
+    ret nz
+    ld (ix+F_PACT),1
+    ld (ix+F_PDIR),c
+    ld (ix+F_PY),FIGHTER_Y+27
+    ld a,(render_count)
+    and 31
+    add a,a
+    dec c
+    jr nz,ds_x
+    neg
+    add a,BYTES_PER_LINE-16
+    jr ds_set
+ds_x
+    add a,8
+ds_set
+    ld (ix+F_PX),a
+    ret
+    ENDIF
 
 jump_arc                        ; rise and fall over 16 pictures, top at
     defb 7,21,32,42,50,55,59,60,60,59,55,50,42,32,21,7  ; JUMP_MAX lines
@@ -461,7 +594,7 @@ sway                            ; -6..6, a triangle over 32 steps
     defb 0,-1,-2,-3,-4,-5,-6,-6,-6,-5,-4,-3,-2,-1,0,0
 
 ;; load_frame - IX = fighter: show its F_MOVE / F_FRAME in its F_FACE
-;; facing. The frame's compiled draw comes from the fighter's cache (jit.asm);
+;; facing (and F_FB, where it draws, for special.asm shot_vis). The frame's compiled draw comes from the fighter's cache (jit.asm);
 ;; if it isn't there, the fighter keeps the frame it shows and waits for
 ;; jit_work to compile it (F_HELD). Otherwise the frame's record fills in
 ;; F_FBANK..F_CDRAW and F_DFACE, the facing it is drawn in. Destroys
@@ -513,8 +646,166 @@ load_frame
     inc hl
     ld a,(hl)
     ld (ix+F_SPANS+1),a
+    inc hl                      ; (its size)
+    inc hl
+    inc hl                      ; the drawn box (its hurt box), turned to
+    ld a,(ix+F_FACE)            ; the facing
+    or a
+    jr nz,lf_left
+    ld a,(hl)
+    ld (ix+F_FB),a
+    inc hl
+    ld a,(hl)
+    ld (ix+F_FB+1),a
+    jr lf_y
+lf_left
+    ld a,(ix+F_W)               ; w - 1 - x, ends swapped
+    dec a
+    ld c,a
+    sub (hl)
+    ld (ix+F_FB+1),a
+    inc hl
+    ld a,c
+    sub (hl)
+    ld (ix+F_FB),a
+lf_y
+    inc hl
+    ld a,(hl)
+    ld (ix+F_FB+2),a
+    inc hl
+    ld a,(hl)
+    ld (ix+F_FB+3),a
     ld bc,#7FC0
     out (c),c
+    ret
+
+;; move_frames - F_NFR = the number of frames in F_MOVE, from the
+;; character's directory. Destroys AF, BC, DE, HL.
+move_frames
+    ld a,(ix+F_RAM0)
+    ld bc,#7F00
+    out (c),a
+    ld a,(ix+F_MOVE)
+    ld l,a
+    add a,a
+    add a,l
+    ld l,a
+    ld h,0
+    ld de,DIR_MOVES
+    add hl,de
+    ld a,(hl)
+    ld (ix+F_NFR),a
+    ld bc,#7FC0
+    out (c),c
+    ret
+
+;; ---------------------------------------------------------------------------
+;; shot_pass - the projectiles' restore and draw, outside the rebuild, once
+;; between pictures after prepare (shot_pending): each one shown is taken
+;; off, then each one shot_vis allowed is drawn where it is now. A
+;; projectile is never drawn where a fighter's frame is, on the screen or
+;; next (shot_vis), so this and the rebuild never touch the same bytes, and
+;; only the beam is in the way: projectiles are on lines SHOT_TOP to the
+;; floor, so the pass runs from the rebuild tick (interrupt TICK_IRQ) until
+;; interrupt 3 (line 118), and is done before the beam reaches SHOT_TOP.
+;; jit_work calls it between compiles, and wait_render while it waits.
+;; Destroys AF, BC, DE, HL, IY.
+;; ---------------------------------------------------------------------------
+shot_pass
+    ld a,(shot_pending)
+    or a
+    ret z
+    ld a,(irq_count)
+    cp 3
+    jr c,sp_go
+    cp TICK_IRQ
+    ret c
+sp_go
+    xor a
+    ld (shot_pending),a
+    ld (jc_flag),a              ; (not in period TICK_IRQ-1: see above)
+    push ix
+    ld a,(bench_phase)
+    push af
+    ld a,PH_SHOT
+    ld (bench_phase),a
+    ld ix,fighter_a             ; both off first: they may overlap
+    call sp_restore
+    ld ix,fighter_b
+    call sp_restore
+    ld ix,fighter_a
+    call sp_draw
+    ld ix,fighter_b
+    call sp_draw
+    pop af
+    ld (bench_phase),a
+    pop ix
+    ret
+
+sp_restore
+    ld a,(ix+F_PDRAWN)
+    or a
+    ret z
+    ld (ix+F_PDRAWN),0
+    ld a,(ix+F_PH)
+    ld (rr_count),a
+    ld e,(ix+F_POX)
+    ld d,(ix+F_PW)
+    ld a,(ix+F_POY)
+    ld hl,rect_restore
+    ld b,#C0
+    jr sp_call
+
+sp_draw
+    ld a,(ix+F_PVIS)
+    or a
+    ret z
+    ld (ix+F_PDRAWN),1
+    ld a,(ix+F_PX)
+    ld (ix+F_POX),a
+    ld e,a
+    ld d,0
+    ld l,(ix+F_PCODE)
+    ld h,(ix+F_PCODE+1)
+    ld a,(ix+F_PDIR)
+    ld (ix+F_PODIR),a
+    or a
+    jr z,sd_right
+    ld l,(ix+F_PCODEL)
+    ld h,(ix+F_PCODEL+1)
+sd_right
+    ld b,(ix+F_RAM0)
+    ld a,(ix+F_PY)
+    ld (ix+F_POY),a
+
+;; sp_call - A = top line, HL = routine, DE for it, B = the RAM it runs in:
+;; run a rebuild routine (SP walking line_tab from A, IXL = chunks, yield
+;; by JP (IY)) with interrupts off.
+sp_call
+    push ix
+    push hl
+    ld l,a
+    ld h,0
+    add hl,hl
+    ld a,b
+    ld bc,line_tab
+    add hl,bc
+    ld (sc_sp),hl
+    pop hl
+    ld bc,#7F00
+    di
+    out (c),a
+    ld (rebuild_sp),sp
+    ld ixl,255
+    ld sp,(sc_sp)
+    ld iy,sc_ret
+    jp (hl)
+sc_ret
+    ld sp,(rebuild_sp)
+    ld bc,#7FC0
+    out (c),c
+    ei
+    pop ix
     ret
 
     include "jit.asm"
@@ -523,8 +814,6 @@ load_frame
     include "video.asm"
     include "sprite.asm"
     include "rebuild.asm"
-    include "input.asm"
-    include "fighter.asm"
 
 ;; ---------------------------------------------------------------------------
 ;; Tables and sprite data
@@ -610,6 +899,9 @@ job_ra          defs J_SIZE     ; restore A, restore B, draw A, draw B
 job_rb          defs J_SIZE
 job_da          defs J_SIZE
 job_db          defs J_SIZE
+shot_pending    defb 0          ; special.asm: the projectiles' pass is due
+sc_sp           defw 0          ; shot_pass: SP for the routine it runs
+jc_flag         defb 0          ; irq.asm: the compiler should look up
 
 work_end
     ASSERT work_end<=WORK_AT+WORK_ROOM
@@ -629,8 +921,38 @@ cold2_start
 cold2_end
     ASSERT cold2_end<=COLD2_ORG+COLD_ROOM
 
+;; The logic: in gaps of the background mirror, which only runs with main
+;; RAM at #4000. Boot copies it there last, above the load image.
+gap1_store      EQU cold2_store+cold2_end-cold2_start
+    ORG GAP1_ORG,gap1_store
+gap1_start
+    include "fighter.asm"
+gap1_end
+    ASSERT gap1_end<=GAP1_ORG+GAP_ROOM
+gap2_store      EQU gap1_store+gap1_end-gap1_start
+    ORG GAP2_ORG,gap2_store
+gap2_start
+    include "moves.asm"
+gap2_end
+    ASSERT gap2_end<=GAP2_ORG+GAP_ROOM
+gap3_store      EQU gap2_store+gap2_end-gap2_start
+    ORG GAP3_ORG,gap3_store
+gap3_start
+    include "input.asm"
+    include "shotvis.asm"
+gap3_end
+    ASSERT gap3_end<=GAP3_ORG+GAP_ROOM
+gap4_store      EQU gap3_store+gap3_end-gap3_start
+    ORG GAP4_ORG,gap4_store
+gap4_start
+    include "special.asm"
+gap4_end
+    ASSERT gap4_end<=GAP4_ORG+GAP_ROOM
+image_end       EQU gap4_store+gap4_end-gap4_start
+    ASSERT image_end<=GAP1_ORG          ; the copies never overwrite their source
+
     RUN boot
-    SAVE 'PFSPIKE.BIN',boot,cold2_store-boot+cold2_end-cold2_start,DSK,'../build/pfspike.dsk'
+    SAVE 'PFSPIKE.BIN',boot,image_end-boot,DSK,'../build/pfspike.dsk'
 
 ;; ---------------------------------------------------------------------------
 ;; The characters, in the extra 64K, for the snapshot: fighter A in banks

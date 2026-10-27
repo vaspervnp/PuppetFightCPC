@@ -603,6 +603,88 @@ between 25 and 42 fighter-pictures of 192, depending on the pair.
 The payload ends at &148F, 57 bytes below the frame caches with the staging
 buffer, so new engine code from here needs room found first.
 
+## Milestone 5: specials and projectiles
+
+**Room first.** The payload was 57 bytes short of the frame caches. The
+background mirror only uses #x000-#x23F and #x440-#x7FF of each 2 KB slice
+of #4000-#7FFF, so the gaps #x240-#x43F (512 bytes each) are free whenever
+main RAM is at #4000. Boot copies the logic into the four gaps above the
+load image (#6240, #6A40, #7240, #7A40):
+- `fighter.asm` (`think`)
+- `moves.asm` (its helpers, split out of it)
+- `input.asm` and `shotvis.asm`
+- `special.asm`
+
+Code there must never run with a character's bank paged in, so
+`move_frames` (which pages one) stays in main RAM. The move constants moved
+into `main.asm`. The payload now ends at &1211, 695 bytes below the caches
+with the staging buffer.
+
+**Specials.** Directory version 4 adds the special's kind (strike,
+projectile, throw) and a projectile record. Settings live in
+`<char>_pfc.json` `special`:
+- **Trump: Tweet Storm.** Frame 2 of the special fires a tweet bird
+  (12×9 pixels: 6 bytes, 9 lines, pastel blue, white and navy) from the
+  front of the hit box. It flies 3 bytes a picture, does 6 damage and 10
+  hitstun, and can be blocked for 1 point of chip damage (never the last
+  point). It passes over a fighter who is down. It is gone at the screen
+  edge, on a hit, or when it meets the other fighter's tweet. Only one flies
+  per fighter.
+- **Putin: Judo Throw.** Frame 1 of the special grabs an opponent on the
+  ground within the hit box. The opponent lands behind Putin with a
+  knockdown and 10 damage. A throw can't be blocked. Pressing back just as
+  it lands breaks it and the two come apart: back has to be in the newest
+  picture of the motion history but missing from one of the two before it.
+  Holding back (a block) is too late.
+
+The projectile's code is compiled by `sprite_codegen.py` into bank 0, for
+both facings. It may only use the shared pens and the stage's, so the loader
+never has to remap it.
+
+**Drawing projectiles outside the rebuild.** The first version drew them
+with two jobs each in the banded rebuild. Each restore takes ~0.65 ms and
+each draw ~0.35 ms. In the hardest case (Trump against Trump, both jumping
+toe to toe) the rebuild already uses the whole window, and two projectiles
+caught 10-17 lines, however the jobs were ordered. Now:
+- `shot_vis` (at the start of `prepare`) shows a projectile in the next pass
+  only if it meets neither fighter's drawn box (the frame's hurt box, from
+  its record), on the screen or next.
+- `shot_pass` takes the shown ones off and draws the allowed ones, once
+  between pictures. It runs only while the beam is clear of the lines they
+  can be on (`SHOT_TOP` 160 to the floor), from interrupt 5 to interrupt 3.
+  `jit_work`, the compiler (once a line, through `jc_flag`, which the
+  interrupt handler raises) and `wait_render` call it.
+
+So a projectile and a fighter never share a byte, and the rebuild doesn't
+change at all. A projectile is out of sight while it overlaps a fighter: for
+the opponent that is the picture it hits, and at the throw it shows one
+picture after leaving the hand.
+
+The bench treats the pass as an epoch boundary like a rebuild. It counts
+passes not done by the next rebuild, and its correctness check includes
+the projectiles. `SHOTS=1` (with `DEMO=1`) sweeps both fighters'
+projectiles across the screen. `bench-all` now has the both-jumping
+scenario with two projectiles (Trump against Trump).
+
+| Bench | Result |
+|---|---|
+| `bench-all` (4 scenarios, incl. two projectiles over both jumping) | 2 frames between pictures, 0 caught, 0 late, 0 passes missed, 0 bytes wrong |
+| `SLACK=15`, both jumping | clean (latest line 150) |
+| `bench-fight`, `bench-play`; fight for every pair | clean; fight ends A 36, B 32 as before |
+| traces: tweet hits, tweets cancel, throw, escape, both sides and facings | as designed, 0 caught, 0 bytes wrong |
+| disc boot, Trump against Putin | all four banks match the snapshot byte for byte |
+
+Costs:
+- Rebuilds end 1-2 lines later, from the interrupt handler's few extra
+  instructions.
+- The compiler is 0.1 ms slower per frame.
+- Held frames in `bench-fight` are 23 + 21 against 21 + 19, from ~0.15 ms
+  more logic.
+
+Trump against Trump with `SLACK=15` catches lines, but it did so before
+this milestone too, line for line: that pairing simply has no 1.5 ms
+margin.
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

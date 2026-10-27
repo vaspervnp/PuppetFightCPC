@@ -44,6 +44,37 @@ rs_line
     jp (iy)
 
 ;; ---------------------------------------------------------------------------
+;; rect_restore - copy the mirror back over a rectangle: a projectile.
+;;   in:  SP = line_tab + 2*(its top line), E = x, D = width (bytes),
+;;        (rr_count) = lines, IY = yield
+;; About 24 us a line plus 6 per byte. Destroys AF, BC, DE, HL, IXH.
+;; ---------------------------------------------------------------------------
+rect_restore
+    ld a,e
+    ld (rr_x+1),a
+    ld a,d
+    ld (rr_w+1),a
+    ld a,(rr_count)
+    ld ixh,a
+rr_line
+    pop hl                      ; scanline
+rr_x
+    ld de,0                     ; + x (patched)
+    add hl,de
+    ld d,h                      ; DE = screen
+    ld e,l
+    ld a,h
+    and MIRROR_H_AND
+    or MIRROR_H_OR
+    ld h,a                      ; HL = mirror
+rr_w
+    ld bc,0                     ; width (patched)
+    ldir
+    dec ixh
+    jr nz,rr_line
+    jp (iy)
+
+;; ---------------------------------------------------------------------------
 ;; build_restore - make the restore list for a frame on the screen.
 ;;   in:  HL = the frame's (s, n) table, DE = list buffer, A = y,
 ;;        C = x (the frame's left edge), B = 0 facing right or 1 facing

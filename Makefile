@@ -10,6 +10,8 @@
 # scenarios use it.
 # CLOSE_UP=1 puts the fighters toe to toe, so both are rebuilt in one window.
 # JUMP=1 makes them take turns to jump, then jump together (top at line 144).
+# SHOTS=1 (with DEMO=1) sends projectiles across as well, for fighters
+# whose character has one (CHAR_B=trump for two).
 # SLACK=n starts every rebuild n*100 us late: the margin test (SLACK=15
 # must stay clean in the jump scenario).
 #
@@ -21,8 +23,9 @@ CLOSE_UP ?= 0
 JUMP ?= 0
 DEMO ?= 0
 SLACK ?= 0
+SHOTS ?= 0
 CACHE_SLOT := $(shell awk '$$1=="CACHE_SLOT"{print $$3}' src/config.asm)
-RASMFLAGS := -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEMO)
+RASMFLAGS := -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEMO) -DSHOTS=$(SHOTS)
 BUILD  := build
 
 CHARS := trump putin
@@ -95,6 +98,7 @@ bench-all:
 	$(MAKE) --no-print-directory bench DEMO=1
 	$(MAKE) --no-print-directory bench DEMO=1 CLOSE_UP=1
 	$(MAKE) --no-print-directory bench DEMO=1 CLOSE_UP=1 JUMP=1
+	$(MAKE) --no-print-directory bench DEMO=1 CLOSE_UP=1 JUMP=1 SHOTS=1 CHAR_B=trump
 
 run: $(BUILD)/pfspike.sna
 	caprice32 $(abspath $(BUILD)/pfspike.sna)

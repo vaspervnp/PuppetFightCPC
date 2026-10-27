@@ -66,6 +66,15 @@ irq_not_tick
     ld hl,frame_count
     inc (hl)
 irq_handler_done
+    ld a,(irq_count)            ; jc_flag for the compiler (jit.asm): up in
+    cp TICK_IRQ-1               ; the last period before the tick, and
+    jr z,irq_flag               ; while the projectiles' pass is due and
+    cp 3                        ; the beam allows it (main.asm shot_pass)
+    ld a,0
+    jr z,irq_flag
+    ld a,(shot_pending)
+irq_flag
+    ld (jc_flag),a
     pop hl
     pop bc
     pop af
