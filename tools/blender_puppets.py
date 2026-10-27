@@ -91,7 +91,21 @@ XI = dict(
     tie_len=0.42, skin="skin_pink", hair="hair_black", shoe="shoe",
 )
 
-SPECS = {"trump": TRUMP, "putin": PUTIN, "kim": KIM, "xi": XI}
+MUSK = dict(
+    name="musk",
+    scale=0.98,                        # tall, long-legged (but the frame
+    thigh=0.29, shin=0.29, leg_r=0.075, hip_w=0.12,   # ends above the head)
+    torso_h=0.48, torso_size=(0.23, 0.30, 0.29), belly=0.03,
+    shoulder_w=0.28, upper_arm=0.31, forearm=0.29, arm_r=0.075,
+    hand_r=0.058,
+    head_size=(0.31, 0.29, 0.32), neck=0.04,
+    # a black T-shirt (bare forearms) and jeans
+    suit="tshirt_black", arms="arm_black", forearms="arm_skin",
+    pants="suit_navy", shirt=None, tie=None, tie_len=0,
+    skin="skin_pink", hair="hair_black", shoe="shoe", tee=True,
+)
+
+SPECS = {"trump": TRUMP, "putin": PUTIN, "kim": KIM, "xi": XI, "musk": MUSK}
 
 MATERIALS = [
     "suit_navy", "suit_grey", "shirt", "tie_red", "tie_blue",
@@ -106,6 +120,8 @@ MATERIALS = [
     "hair_black", "button_red",
     # (unused: a pastel yellow skin read as a stereotype) and Xi's belt
     "skin_yellow", "belt",
+    # Musk's T-shirt and his toy chainsaw
+    "tshirt_black", "arm_black_n", "arm_black_f", "chainsaw",
 ]
 
 
@@ -266,7 +282,28 @@ def xi_head(sc, s, head):
     new_part(sc, "hair_sweep", "sphere", head, (hx * 0.45, -0.05, hz * 1.66), (hx * 0.55, hy * 0.78, hz * 0.22), hair, rot=(8, -10, 0))
 
 
-HEADS = {"trump": trump_head, "putin": putin_head, "kim": kim_head, "xi": xi_head}
+def musk_head(sc, s, head):
+    hx, hy, hz = s["head_size"]
+    sk = s["skin"]
+    hair = s["hair"]
+    # a long face with a square jaw and a big toothy grin
+    new_part(sc, "head", "sphere", head, (0, 0, hz), (hx, hy, hz), sk)
+    new_part(sc, "jaw", "box", head, (0.05, 0, hz * 0.5), (hx * 0.72, hy * 0.82, hz * 0.32), sk)
+    new_part(sc, "nose", "sphere", head, (hx * 0.98, 0, hz * 0.98), (0.05, 0.04, 0.065), sk)
+    for side, y in (("R", -1), ("L", 1)):
+        new_part(sc, "ear_" + side, "sphere", head, (-0.02, y * hy * 0.98, hz * 1.0), (0.05, 0.03, 0.08), sk)
+        new_part(sc, "eye_" + side, "sphere", head, (hx * 0.9, y * 0.11, hz * 1.16), (0.045, 0.07, 0.035), "eye_white")
+        new_part(sc, "pupil_" + side, "sphere", head, (hx * 0.98, y * 0.11, hz * 1.16), (0.032, 0.032, 0.032), "pupil")
+        new_part(sc, "brow_" + side, "box", head, (hx * 0.93, y * 0.11, hz * 1.3), (0.03, 0.075, 0.02), hair, rot=(y * 6, 0, 0))
+    new_part(sc, "mouth", "box", head, (hx * 0.95, 0, hz * 0.66), (0.05, 0.13, 0.05), "mouth")
+    new_part(sc, "teeth", "box", head, (hx * 1.02, 0, hz * 0.7), (0.03, 0.12, 0.035), "eye_white")
+    # dark hair, swept back
+    new_part(sc, "hair_top", "sphere", head, (-0.05, 0, hz * 1.5), (hx * 1.02, hy * 1.04, hz * 0.52), hair)
+    new_part(sc, "hair_front", "sphere", head, (hx * 0.45, 0, hz * 1.72), (hx * 0.5, hy * 0.8, hz * 0.22), hair, rot=(0, 12, 0))
+
+
+HEADS = {"trump": trump_head, "putin": putin_head, "kim": kim_head, "xi": xi_head,
+         "musk": musk_head}
 
 
 # --------------------------------------------------------------------------
@@ -303,7 +340,11 @@ def build_character(s):
     th = s["torso_h"]
     new_part(sc, "jacket", "sphere", torso, (s["belly"] * 0.5, 0, th * 0.5), (tx + s["belly"], ty, tz), s["suit"])
     front = tx + s["belly"] * 0.6
-    if s.get("mao"):
+    if s.get("tee"):
+        # a plain round-necked T-shirt
+        new_part(sc, "chest", "sphere", torso, (0, 0, th * 0.78), (tx * 0.92, ty * 1.0, tz * 0.5), s["suit"])
+        new_part(sc, "neckline", "sphere", torso, (front * 0.7, 0, th * 0.97), (0.06, 0.09, 0.05), s["skin"])
+    elif s.get("mao"):
         # buttoned up to a high stand-up collar, a row of buttons down the front
         new_part(sc, "chest", "sphere", torso, (0, 0, th * 0.78), (tx * 0.92, ty * 1.02, tz * 0.5), s["suit"])
         new_part(sc, "collar", "cyl", torso, (0.02, 0, th + 0.01), (0.1, 0.11, 0.035), s["suit"])
@@ -333,7 +374,8 @@ def build_character(s):
         arm = s.get("arms", s["suit"].replace("suit", "arm")) + "_" + side.lower()
         limb(sc, "upperarm" + side, sh, s["upper_arm"], s["arm_r"], arm)
         el = J["el" + side] = new_empty(sc, "elbow" + side, sh, (0, 0, -s["upper_arm"]))
-        limb(sc, "forearm" + side, el, s["forearm"], s["arm_r"] * 0.95, arm, end_cap=False)
+        fore = s["forearms"] + "_" + side.lower() if "forearms" in s else arm
+        limb(sc, "forearm" + side, el, s["forearm"], s["arm_r"] * 0.95, fore, end_cap=False)
         if s["shirt"]:
             new_part(sc, "cuff" + side, "cyl", el, (0, 0, -s["forearm"] + 0.01), (s["arm_r"] * 0.85,) * 2 + (0.02,), s["shirt"])
         wr = J["wr" + side] = new_empty(sc, "wrist" + side, el, (0, 0, -s["forearm"]))
@@ -350,6 +392,12 @@ def build_character(s):
         ph = new_part(sc, "phone", "box", J["wrN"], (0.05, 0, -0.08), (0.03, 0.045, 0.05), "phone")
         new_part(sc, "phone_button", "sphere", ph, (0.0, 0, 1.0), (0.8, 0.8, 0.5), "button_red")
         J["phone"] = ph
+    if s["name"] == "musk":
+        # the toy chainsaw: a red motor box in the near hand, a grey bar
+        # straight on along the arm, a white chain round its edge
+        cs = J["prop_saw"] = new_part(sc, "saw", "box", J["wrN"], (0.0, 0, -0.08), (0.06, 0.05, 0.06), "button_red")
+        new_part(sc, "saw_bar", "box", cs, (0, 0, -3.6), (0.45, 0.4, 2.9), "chainsaw")
+        new_part(sc, "saw_chain", "box", cs, (0.45, 0, -3.7), (0.12, 0.45, 2.9), "eye_white")
     if s["name"] == "xi":
         # Belt and Road: his belt, hanging from the near hand, or cracked out
         # straight along the arm (prop_*: shown only where a pose says)
@@ -566,8 +614,25 @@ XI_MOVES = {
     ],
 }
 
+MUSK_MOVES = {
+    # Chainsaw Rampage: a toy chainsaw, revved up high, then thrust ahead
+    "special": [
+        P(show=("saw",), shN=20, elN=90, shF=40, elF=100, torso=-6),
+        P(show=("saw",), shN=120, elN=60, shF=60, elF=90, torso=-14, head=-10),
+        P(show=("saw",), shN=88, elN=0, shF=70, elF=40, torso=14, twist=30,
+          hpN=30, knN=25, x=0.08),
+        P(show=("saw",), shN=60, elN=40, shF=50, elF=80, torso=6, twist=10, x=0.04),
+    ],
+    # a fist pump and a grin
+    "victory": [
+        P(shN=30, elN=150, shF=-10, elF=40, torso=-4, head=-10),
+        P(shN=60, elN=120, shF=-10, elF=40, torso=-8, head=-16, knN=10, knF=10),
+        P(shN=30, elN=150, shF=-10, elF=40, torso=-4, head=-10),
+    ],
+}
+
 CHAR_MOVES = {"trump": TRUMP_MOVES, "putin": PUTIN_MOVES, "kim": KIM_MOVES,
-              "xi": XI_MOVES}
+              "xi": XI_MOVES, "musk": MUSK_MOVES}
 
 MOVE_ORDER = ["idle", "walk", "crouch", "jump", "punch", "kick", "sweep",
               "uppercut", "backkick", "block", "hit", "ko", "special", "victory"]

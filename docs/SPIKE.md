@@ -1067,6 +1067,49 @@ Zelensky need about 52 KB more.
 | the computer against itself, Xi against Putin, 300 pictures | 2 frames between pictures, 0 caught, 0 bytes wrong; Putin 7 rounds, Xi 3 |
 | disc: player 2 chooses Xi | all four banks match the snapshot |
 
+## Milestone 8 step 3: Elon Musk
+
+The fifth fighter (Blender scene `PF_musk`):
+- **Look.** Long-legged in a black T-shirt (new materials `tshirt_black`,
+  `arm_black_n/f`; a spec can now give the forearms their own material, so
+  his are bare) and jeans (the navy suit ramps).
+- **Face.** A long face with a square jaw, a big grin with white teeth, and
+  dark hair swept back.
+- **Fit.** At first his head ran off the top of the frame. Shorter thighs
+  and torso and a scale of 0.98 fixed it; the frame ends just above every
+  fighter's head.
+
+| | |
+|---|---|
+| Special | **Chainsaw Rampage**: a strike (special damage 10, a knockdown) with a toy chainsaw (`prop_saw`: a red motor, a grey bar, a white chain), revved up high, then thrust ahead; it lands from up to 15 bytes apart |
+| Victory | a fist pump and a grin |
+| Taunt | "I'LL BUY THIS STAGE." |
+| Title | "Tech Support" |
+| Colours | bright cyan (health bar; nothing else uses it), pink, bright blue, bright red; mirror match: bright green, orange, sky blue, purple |
+| File | bank 0 15,624 bytes, bank 1 7,658 bytes, 5 cache slots; `MUSK.PFC` 23,346 bytes |
+
+**His home stage, Starbase** (`stage_art.py starbase`, inks orange, pastel
+blue, pastel yellow; packed to 1,883 bytes).
+- An orange sunset sky darkening upwards, a low sun over dark red desert
+  hills.
+- A slim steel rocket with flaps and black tiles on its mount, beside a
+  black lattice launch tower.
+- A concrete apron behind the fighters, and a steel pad with hazard stripes
+  as the floor.
+
+**The disc**: five characters and five stages, 146 KB of 178. With five
+headers to read behind the title, the loader takes longer before it takes
+fire. The boot test waits longer for that (on a real machine you just press
+fire again).
+
+| Test | Result |
+|---|---|
+| `bench-all`, `bench-fight`, `bench-play`, `SLACK=15`, `bench-ai` | 2 frames between pictures, 0 caught, 0 late, 0 passes missed, 0 bytes wrong |
+| `bench-fight` keys, Trump against Musk | the same; the fight ends A 36, B 32 |
+| the chainsaw, Musk as B | lands from 10 to 15 bytes apart; 10 damage and a knockdown |
+| the computer against itself, Musk against Xi, 300 pictures | 2 frames between pictures, 0 caught, 0 bytes wrong; Musk 5 rounds, Xi 3 |
+| disc: player 2 chooses Musk | all four banks match the snapshot |
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

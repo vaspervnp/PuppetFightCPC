@@ -1,0 +1,9 @@
+{
+  "_comment": "Hit boxes for attack moves: the frame that hits and its box in frame pixels (x0, y0, x1, y1 inclusive), facing right. Read by tools/sprite_codegen.py. The special's box is the chainsaw's bar.",
+  "punch":  {"frame": 1, "box": [22, 32, 29, 41]},
+  "kick":   {"frame": 1, "box": [15, 36, 23, 45]},
+  "sweep":  {"frame": 1, "box": [12, 48, 23, 60]},
+  "uppercut":{"frame": 2, "box": [14, 6, 23, 30]},
+  "backkick":{"frame": 2, "box": [16, 36, 24, 48]},
+  "special":{"frame": 2, "box": [24, 34, 31, 39]}
+}

@@ -65,12 +65,15 @@ These are the official show billings from GZERO's "About the Show" page.
   a long-reach belt strike. Victory: hands behind his back, a nod. Taunt:
   "NO LIMITS, MY FRIEND." Home stage: Beijing (Tiananmen).
 
-### Elon Musk 🎯 — "Tech Support"
+### Elon Musk ✅ — "Tech Support"
 - **Show persona**: the richest man in the world and a big fan of chainsaws.
 - **Look**: tall, black T-shirt, dark hair, big grin.
 - **Specials**: **Chainsaw Rampage** (a slapstick toy chainsaw, sparks only,
   no gore), **Rocket Uppercut** (anti-air that launches on a little rocket).
 - **Palette**: black T-shirt (outline + navy), pink skin. The chainsaw is grey with a red accent.
+- **Built** (milestone 8): black T-shirt, jeans, a big grin. Special
+  **Chainsaw Rampage** ✅: a toy chainsaw strike. Victory: a fist pump.
+  Taunt: "I'LL BUY THIS STAGE." Home stage: Starbase.
 
 ### Volodymyr Zelensky 🎯 — "Humble President of Ukraine"
 - **Show persona**: a freedom fighter who could always use more ammo, a

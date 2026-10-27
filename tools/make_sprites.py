@@ -56,6 +56,10 @@ RAMPS = {
     "button_red":  (4, 4, 3),
     "skin_yellow": (7, 7, 8),
     "belt":        (9, OUTLINE, OUTLINE),
+    "tshirt_black": (1, OUTLINE, OUTLINE),
+    "arm_black_n": (1, OUTLINE, OUTLINE),
+    "arm_black_f": (1, OUTLINE, OUTLINE),
+    "chainsaw":    (10, 9, 9),
 }
 
 WEIGHT = {"eye_white": 5, "pupil": 8, "mouth": 6, "brow": 3,
@@ -120,7 +124,7 @@ def add_separation(px, mat):
             return None
         if m.startswith("arm_"):
             return "near" if m.endswith("_n") else "far"
-        if m.startswith("suit_") or m.startswith("vest_"):
+        if m.startswith(("suit_", "vest_", "tshirt_")):
             return "body"
         return None
 
@@ -227,5 +231,5 @@ def process(char):
 
 
 if __name__ == "__main__":
-    for c in sys.argv[1:] or ["trump", "putin", "kim", "xi"]:
+    for c in sys.argv[1:] or ["trump", "putin", "kim", "xi", "musk"]:
         print(c, process(c), "frames")

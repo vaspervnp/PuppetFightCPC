@@ -449,8 +449,82 @@ def beijing():
     return c
 
 
+def starbase():
+    """A launch site at sunset: an orange sky with a low sun over desert
+    hills, a tall steel rocket beside its launch tower, a concrete apron
+    behind the fighters and a steel pad with hazard stripes as the floor."""
+    c = Canvas(P0)
+    c.rect(0, 0, W - 1, HUD - 1, K)
+    for y in range(HUD, HUD + 30, 3):                # the sky darkens upwards
+        c.checker(0, y, W - 1, y, DR, P0)
+    c.ellipse(150, 120, 14, 16, P15)                 # the sun, low
+    for y in range(110, 136, 4):
+        c.hline(136, 164, y, P0)
+    # Desert hills, dark red, dithered towards the top.
+    for x in range(W):
+        top = 128 + int(10 * math.sin(x / 23.0) + 6 * math.sin(x / 9.0 + 1))
+        for y in range(top, 170):
+            c.put(x, y, DR if y > top + 3 or (x + y) % 2 else P0)
+    # The launch tower: a black lattice with grey arms.
+    tx = 38
+    c.rect(tx, 34, tx + 9, 168, K)
+    for y in range(36, 166, 6):
+        for x in range(tx + 1, tx + 9):
+            if (x - tx + y) % 6 in (0, 1):
+                c.put(x, y, GR)
+            if (x - tx - y) % 6 in (0, 1):
+                c.put(x, y + 3, GR)
+    c.rect(tx + 10, 52, tx + 26, 55, GR)             # the arms
+    c.rect(tx + 10, 100, tx + 24, 102, GR)
+    c.hline(tx + 10, tx + 26, 56, K)
+    # The rocket: steel, shaded, with a band of black tiles and grid fins.
+    rx0, rx1 = 69, 83
+    for y in range(40, 160):
+        for x in range(rx0, rx1 + 1):
+            t = (x - rx0) / (rx1 - rx0)
+            p = WH if t < 0.55 else (GR if (x + y) % 2 or t > 0.8 else WH)
+            if t > 0.85:
+                p = GR
+            c.put(x, y, p)
+    for y in range(24, 40):                          # the nose cone
+        half = (y - 22) * (rx1 - rx0) // 36
+        c.hline(76 - half, 76 + half, y, WH)
+        c.put(76 + half, y, GR)
+    for y in range(62, 150, 22):                     # weld lines
+        c.hline(rx0, rx1, y, GR)
+    c.rect(rx0, 44, rx0 + 2, 60, K)                  # tiles up the windward side
+    c.rect(rx0 - 3, 48, rx0, 53, K)                  # forward flaps
+    c.rect(rx1, 48, rx1 + 3, 53, K)
+    c.rect(rx0 - 3, 132, rx0, 140, K)                # aft flaps
+    c.rect(rx1, 132, rx1 + 3, 140, K)
+    c.rect(rx0 - 4, 158, rx1 + 4, 168, GR)           # the launch mount
+    c.rect(rx0 + 2, 160, rx1 - 2, 168, K)
+    # The concrete apron behind the fighters.
+    c.rect(0, 169, W - 1, FLOOR - 1, GR)
+    c.hline(0, W - 1, 169, WH)
+    for y in range(176, FLOOR, 9):
+        c.checker(0, y, W - 1, y, GR, K)
+    for x in range(0, W, 32):
+        c.vline(x, 170, FLOOR - 1, K)
+    # The pad: a steel edge, a hazard-striped deck, riveted plates below.
+    c.hline(0, W - 1, FLOOR, WH)
+    c.hline(0, W - 1, FLOOR + 1, GR)
+    for y in range(FLOOR + 2, FLOOR + 14):
+        for x in range(W):
+            c.put(x, y, P15 if (x * 2 + y) // 8 % 2 else K)
+    c.hline(0, W - 1, FLOOR + 14, K)
+    c.rect(0, FLOOR + 15, W - 1, H - 1, GR)
+    for x in range(0, W, 24):
+        c.vline(x, FLOOR + 15, H - 1, K)
+        for y in range(FLOOR + 19, H - 2, 10):
+            c.put(x + 3, y, WH)
+            c.put(x + 20, y, WH)
+    c.hline(0, W - 1, FLOOR + 40, K)
+    return c
+
+
 STAGES = {"whitehouse": whitehouse, "kremlin": kremlin, "pyongyang": pyongyang,
-          "beijing": beijing}
+          "beijing": beijing, "starbase": starbase}
 
 
 def main():
