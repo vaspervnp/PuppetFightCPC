@@ -7,7 +7,7 @@
 ;; is to measure all three against the beam - see tools/spike_bench.py and
 ;; docs/SPIKE.md.
 ;;
-;; Build: make (build/pfspike.sna, build/pfspike.dsk - RUN"PFSPIKE)
+;; Build: make (build/pfspike.sna, build/puppetfight.dsk - RUN"PUPPET)
 ;; ===========================================================================
 
     include "config.asm"
@@ -776,7 +776,7 @@ image_end       EQU gap8_store+gap8_end-gap8_start
     ASSERT GAP_SCRATCH+image_end-gap1_store<=SETTINGS_AT
 
     RUN boot
-    SAVE '../build/PFSPIKE.BIN',boot,image_end-boot   ; (tools/make_dsk.py)
+    SAVE '../build/PUPPET.BIN',boot,image_end-boot   ; (tools/make_dsk.py)
 
 ;; ---------------------------------------------------------------------------
 ;; The characters, in the extra 64K, for the snapshot: fighter A in banks

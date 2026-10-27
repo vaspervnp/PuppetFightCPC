@@ -1,7 +1,7 @@
 # Puppet Fight CPC - build
 #
-#   make          build/pfspike.sna (Trump against Putin) and build/pfspike.dsk
-#                 (RUN"PFSPIKE: the select screen, then the characters chosen
+#   make          build/pfspike.sna (Trump against Putin) and build/puppetfight.dsk
+#                 (RUN"PUPPET: the select screen, then the characters chosen
 #                 are loaded from their .PFC files)
 #   make bench    run the spike on the headless 6128 and measure it
 #   make run      open the snapshot in Caprice32
@@ -14,6 +14,8 @@
 # whose character has one (CHAR_B=trump for two).
 # SLACK=n starts every rebuild n*100 us late: the margin test (SLACK=15
 # must stay clean in the jump scenario).
+# QUICKWIN=1 makes player 1 win every match at once (a test disc: the
+# ladder runs by itself).
 # CPU=n puts the computer in charge of fighter A (1), B (2) or both (3), at
 # LEVEL=0 (easy), 1 (normal) or 2 (hard); on the disc the select screen
 # chooses.
@@ -30,6 +32,7 @@ SLACK ?= 0
 SHOTS ?= 0
 CPU ?= 0
 LEVEL ?= 1
+QUICKWIN ?= 0
 CACHE_SLOT := $(shell awk '$$1=="CACHE_SLOT"{print $$3}' src/config.asm)
 BUILD  := build
 
@@ -39,7 +42,7 @@ CHAR_A ?= trump
 CHAR_B ?= putin
 roster_index = $(shell echo $(CHARS) $(BOSS) | tr ' ' '\n' | grep -nx $(1) | awk -F: '{print $$1-1}')
 RASMFLAGS := -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEMO) -DSHOTS=$(SHOTS) \
-             -DCPU=$(CPU) -DLEVEL=$(LEVEL) \
+             -DCPU=$(CPU) -DLEVEL=$(LEVEL) -DQUICKWIN=$(QUICKWIN) \
              -DCHAR_A_I=$(call roster_index,$(CHAR_A)) -DCHAR_B_I=$(call roster_index,$(CHAR_B))
 STAGES := whitehouse kremlin pyongyang beijing starbase kyiv theatre
 STAGE ?= $(shell $(PYTHON) -c "import json; print(json.load(open('art/sprites/$(CHAR_B)_pfc.json'))['stage'])")
@@ -125,7 +128,7 @@ $(BUILD)/PFLOAD.BIN: src/loader.asm src/gen/remap.asm | $(BUILD)
 # then the disc, an extended DSK with everything (tools/make_dsk.py).
 $(BUILD)/pfspike.sna: $(SRC) $(BUILD)/PFLOAD.BIN $(PFC) $(STG) $(BUILD)/TITLE.SCR $(BUILD)/SELECT.SCR $(BUILD)/FIGHTERS.BIN $(BUILD)/pfc/ROSTER.TXT FORCE | $(BUILD)
 	cd src && $(RASM) main.asm -oi ../$@ -s -sl -sq -os ../$(BUILD)/pfspike.sym -v2 $(RASMFLAGS)
-	CHARS="$(CHARS)" BOSS="$(BOSS)" $(PYTHON) tools/make_dsk.py write $(BUILD)/pfspike.dsk
+	CHARS="$(CHARS)" BOSS="$(BOSS)" $(PYTHON) tools/make_dsk.py write $(BUILD)/puppetfight.dsk
 
 bench: $(BUILD)/pfspike.sna
 	$(PYTHON) tools/spike_bench.py
@@ -148,11 +151,21 @@ manual: manual.pdf manual_gr.pdf
 manual.pdf manual_gr.pdf: %.pdf: %.md tools/mkmanual.py $(wildcard docs/img/*.png)
 	$(PYTHON) tools/mkmanual.py $< $@
 
+# The release: the disc and the manuals in build/PuppetFight.zip.
+release: $(BUILD)/pfspike.sna manual.pdf manual_gr.pdf
+	rm -rf $(BUILD)/release $(BUILD)/PuppetFight.zip
+	mkdir -p $(BUILD)/release
+	cp $(BUILD)/puppetfight.dsk $(BUILD)/release/PuppetFight.dsk
+	cp manual.pdf $(BUILD)/release/PuppetFight-manual.pdf
+	cp manual_gr.pdf $(BUILD)/release/PuppetFight-manual-gr.pdf
+	cd $(BUILD)/release && zip -q ../PuppetFight.zip *
+	@echo "$(BUILD)/PuppetFight.zip"
+
 clean:
 	rm -rf $(BUILD)
 
 FORCE:
-.PHONY: all bench bench-all bench-play bench-fight run clean manual FORCE
+.PHONY: all bench bench-all bench-play bench-fight run clean manual release FORCE
 
 # The game with scripted controls: walk in, jump over, attacks. Close combat
 # needs the runtime compiler (only idle frames have compiled draws), so this

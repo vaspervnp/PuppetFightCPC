@@ -216,6 +216,9 @@ CPU             EQU 0           ; -DCPU=n: the computer plays A (1), B (2),
     IFNDEF LEVEL
 LEVEL           EQU 1
     ENDIF
+    IFNDEF QUICKWIN
+QUICKWIN        EQU 0
+    ENDIF
     IFNDEF DEMO
 DEMO            EQU 0           ; -DDEMO=1: scripted fighters (the bench)
     ENDIF

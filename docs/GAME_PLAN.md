@@ -332,7 +332,7 @@ Paging rules:
   (`move_frames`, `boxes`, the compiler, the rebuild), or may run while one
   is in (the interrupt handler and the sound player), lives elsewhere.
 
-On the disc each character is one file (§3.5). `PFSPIKE.BAS` loads the
+On the disc each character is one file (§3.5). `PUPPET.BAS` (`PFSPIKE.BAS` until milestone 9) loads the
 select screen (`PFLOAD.BIN`, at &8000), which reads the files into the
 banks, then loads the engine. Mid-game, the engine reads the next
 opponent's file and stage itself, with no firmware (milestone 9,
@@ -405,7 +405,7 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 | 6 | **Presentation** ✅ | stages (White House lawn, Kremlin hall), title, music, SFX, victory screens with taunts |
 | 7 | **CPU opponent** ✅ | reactive AI with difficulty levels |
 | 8 | **Roster wave 1** ✅ | Kim Jong-Un, Xi Jinping, Elon Musk, Zelensky (see [CHARACTERS.md](CHARACTERS.md)) |
-| 9 | **Release 1.0** | arcade ladder + Puppet Master boss, two-sided disk, real-hardware test, `.dsk` release |
+| 9 | **Release 1.0** (in progress) | arcade ladder ✅ + Puppet Master boss ✅, menu and controls screens ✅, manuals ✅, `.dsk` release (`make release`) ✅; real-hardware test to do. One side is enough (139 of 180 blocks) |
 
 ### Milestone 9 plan: memory first
 

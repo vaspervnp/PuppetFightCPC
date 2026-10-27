@@ -18,7 +18,7 @@ Master himself.
 
 Insert the disc in drive A and type
 
-    RUN"PFSPIKE
+    RUN"PUPPET
 
 The title screen appears while the fighters are read from the disc. Press
 **fire** (or **SPACE**) to go on to the select screen.

@@ -1393,6 +1393,33 @@ the result. It keeps IX now.
 `make manual` (`tools/mkmanual.py`, from BuildDangerousCPC). They use
 screenshots from the disc in the emulator (`docs/img`).
 
+## Milestone 9 step 4: the release
+
+- **The disc's name.** It is `RUN"PUPPET` now (`PUPPET.BAS`,
+  `PUPPET.BIN`), not the spike's `PFSPIKE`. The image is
+  `build/puppetfight.dsk`. The test snapshot keeps its name.
+- **`make release`** puts the disc and both manuals in
+  `build/PuppetFight.zip`.
+- **`QUICKWIN=1`** builds a test disc where player 1 wins every match at
+  once, so the ladder runs by itself.
+- **Caprice32** (`tools/cap32_smoke.py`) is a second emulator with its
+  own µPD765 emulation. The script runs its snap with SDL's dummy drivers
+  and no speed limit, types into the menu (player 2's S and D: the
+  autotype's cursor keys don't work there), and takes a screenshot every
+  few seconds. On a `QUICKWIN=1` disc the ladder loaded about 20
+  opponents in a row: Kim, Xi, Musk, Zelensky, the boss in the theatre,
+  Putin, round and round. No fault, no red border, and no hang.
+  - The first try failed for two reasons. The window version's autotype
+    crawled. Another session's Caprice32 also wrote its screenshots into
+    the same folder (they are named by the second), so the script now
+    only takes the new ones.
+  - The same test found that `QUICKWIN` didn't set `rnd_winner`, which
+    gave rematches instead of the ladder (only the test flag was wrong).
+
+Still to do for 1.0: a real 6128, with a 3" drive and with a Gotek/HxC,
+and RetroVirtualMachine or WinAPE. Those are the driver's and the
+overscan's real tests.
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

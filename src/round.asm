@@ -22,6 +22,11 @@ round_tick
     ld a,(rnd_state)
     or a
     jr nz,rt_over
+    IF QUICKWIN                 ; QUICKWIN=1 (a test disc): player 1 wins
+    ld ix,fighter_a             ; every match at once, so the ladder runs
+    ld (rnd_winner),ix          ; by itself
+    jp victory
+    ENDIF
     ld ix,fighter_b             ; fighting: whoever isn't down after a KO
     ld hl,fighter_a
     call rt_out

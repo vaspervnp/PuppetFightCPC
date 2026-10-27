@@ -1,52 +1,67 @@
 # Puppet Fight CPC
 
 A one-on-one fighting game for the **Amstrad CPC 6128**, written in Z80
-assembly. World leaders and celebrities, as felt caricature puppets inspired
-by GZERO Media's satire series *Puppet Regime*, fight with large pre-rendered
-sprites in Mode 0 overscan. Two fighters load from disk per match. The first
-bout is **Trump vs Putin**.
+assembly. World leaders, as felt caricature puppets inspired by GZERO
+Media's satire series *Puppet Regime*, fight with large pre-rendered
+sprites on a full overscan screen at a locked 25 frames a second.
 
 ![Trump vs Putin preview](docs/preview_versus.gif)
 
-> Status: **pre-alpha**. The art pipeline and the first two fighters are
-> done. The engine hasn't been started. See the [game plan](docs/GAME_PLAN.md)
-> for milestones.
+> Status: **release candidate** (milestone 9). Six fighters, a boss, a
+> ladder against the computer and two-player matches all work in the
+> emulator. Not yet tested on a real 6128.
 
-## Features (planned)
+## Playing
 
-- Big puppet sprites: 32×64 Mode 0 pixels per frame, 64×64 for falls and
-  knockdowns, in a full overscan display
-- 14 moves per fighter: idle, walk, crouch, jump, punch, kick, sweep,
-  uppercut, back kick, block, hit, KO, special and victory, each at least
-  3 frames
-- Character-specific specials from each puppet's on-show persona, e.g.
-  Trump's **Tweet Storm** and Putin's **Judo Throw**
-- 1P vs CPU, 2P versus, and an arcade ladder with a secret boss
-- Characters stored as separate disk files, so the roster can keep growing
+Build the disc (`make`, or `make release` for a zip with the manuals), put
+`build/puppetfight.dsk` in drive A of a 6128 or an emulator, and type
+
+    RUN"PUPPET
+
+The manual is in English ([manual.md](manual.md), [PDF](manual.pdf)) and
+Greek ([manual_gr.md](manual_gr.md), [PDF](manual_gr.pdf)).
+
+- 192 × 272 Mode 0 overscan, 32 × 64 pixel fighters (64 × 64 for falls),
+  14 moves each, with combinations for the sweep, uppercut, back kick and
+  special
+- 1P against the computer (three levels) or 2P versus
+- The ladder: win against the computer and the next opponent loads from
+  the disc with its home stage, until the secret boss, the Puppet Master
+- Characters are separate disc files, packed, so the roster can grow
 
 ## Fighters
 
-| Fighter | Billing | Status |
+| Fighter | Billing | Special |
 |---|---|---|
-| Donald Trump | "The Greatest American 2.0" | ✅ sprites done |
-| Vladimir Putin | "Meddler-in-Chief" | ✅ sprites done |
-| Kim Jong-Un | "The Supremest Leader" | 🎯 next wave |
-| Xi Jinping | "President Emperor of the PRC" | 🎯 next wave |
-| Elon Musk | "Tech Support" | 🎯 next wave |
-| Volodymyr Zelensky | "Humble President of Ukraine" | 🎯 next wave |
-| Modi, MBS, Biden, Macron, Merkel, Bolsonaro, Lula, Zuckerberg, Ian Bremmer (boss) | | 📋 later |
+| Donald Trump | "The Greatest American 2.0" | Tweet Storm (projectile) |
+| Vladimir Putin | "Tsar of All the Puppets" | Judo Throw |
+| Kim Jong-Un | "Supremest Leader" | Surf's Up Missile (projectile) |
+| Xi Jinping | "President Emperor" | Belt and Road (strike) |
+| Elon Musk | "Tech Support" | Chainsaw Rampage (strike) |
+| Volodymyr Zelensky | "Humble President" | More Ammo! (projectile) |
+| Ian Bremmer (boss) | "The Puppet Master" | G-Zero World (projectile) |
 
-Full profiles, special-move ideas and palette notes: [docs/CHARACTERS.md](docs/CHARACTERS.md).
+Profiles and ideas for more: [docs/CHARACTERS.md](docs/CHARACTERS.md).
+
+## Building
+
+Needs rasm, Python 3 with Pillow, and for the manuals `markdown` and
+`fpdf2`. `make` builds the disc and a test snapshot (`build/pfspike.sna`);
+`make bench-all` measures the 25 fps rule on the headless emulator
+(see the Makefile for the bench options); `make manual` builds the PDFs.
+The engine's design, measurements and history: [docs/SPIKE.md](docs/SPIKE.md).
 
 ## Repository layout
 
 ```
-art/blender/      puppets.blend: puppet scenes (PF_trump, PF_putin), poses keyframed
+art/blender/      puppets.blend: puppet scenes (PF_<name>), poses keyframed
 art/render/       Blender renders (material-ID + lit passes per frame)
-art/sprites/      quantised sprite PNGs, sheets, previews, editable .aseprite files
-data/sprites/     CPC data: masked Mode 0 frames (.asm/.bin), palette
-docs/             game plan, character roster, pipeline notes, preview GIFs
-tools/            pipeline scripts (Blender, Python, Aseprite Lua)
+art/sprites/      quantised sprite PNGs, character and hit box settings
+art/stages/       the stages (stage_art.py) and their colours
+src/              the engine (main.asm), the loader and select screen (loader.asm)
+src/gen/          generated: banks, disc map, tables, music
+docs/             game plan, roster, pipeline, engine notes, manual screenshots
+tools/            pipeline, disc and bench scripts (Blender, Python, Aseprite Lua)
 ```
 
 ## Rebuilding the sprites
