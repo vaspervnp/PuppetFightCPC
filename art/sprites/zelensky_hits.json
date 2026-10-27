@@ -1,0 +1,9 @@
+{
+  "_comment": "Hit boxes for attack moves: the frame that hits and its box in frame pixels (x0, y0, x1, y1 inclusive), facing right. Read by tools/sprite_codegen.py. The special's box is where the crate leaves his hands.",
+  "punch":  {"frame": 1, "box": [21, 32, 28, 41]},
+  "kick":   {"frame": 1, "box": [14, 36, 22, 45]},
+  "sweep":  {"frame": 1, "box": [11, 48, 22, 60]},
+  "uppercut":{"frame": 2, "box": [13, 6, 22, 30]},
+  "backkick":{"frame": 2, "box": [15, 36, 23, 48]},
+  "special":{"frame": 2, "box": [23, 32, 29, 37]}
+}

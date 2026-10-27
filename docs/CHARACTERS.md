@@ -75,7 +75,7 @@ These are the official show billings from GZERO's "About the Show" page.
   **Chainsaw Rampage** ✅: a toy chainsaw strike. Victory: a fist pump.
   Taunt: "I'LL BUY THIS STAGE." Home stage: Starbase.
 
-### Volodymyr Zelensky 🎯 — "Humble President of Ukraine"
+### Volodymyr Zelensky ✅ — "Humble President of Ukraine"
 - **Show persona**: a freedom fighter who could always use more ammo, a
   running joke in the show.
 - **Look**: olive-green military T-shirt or fleece, short beard, close-cropped hair.
@@ -85,6 +85,10 @@ These are the official show billings from GZERO's "About the Show" page.
 - **Palette**: olive (808000) outfit ramp. Pink skin with dark red beard shading.
 - **Tone note**: keep it to the show's gags (supplies, determination). No
   war imagery.
+- **Built** (milestone 8): olive T-shirt, short beard. Special **More
+  Ammo!** ✅ as a supply crate heaved across (a projectile). Victory: a
+  comedian's bow. Taunt: "I NEED AMMO, NOT A RIDE." Home stage: Kyiv (St
+  Michael's Golden-Domed Monastery).
 
 ### Narendra Modi 📋 — "Saffron Minister of India"
 - **Show persona**: an aspiring nationalist strongman who is also a

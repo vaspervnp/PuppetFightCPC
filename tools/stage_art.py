@@ -523,8 +523,90 @@ def starbase():
     return c
 
 
+def dome(c, cx, base, rx, ry, p):
+    """An onion dome: a golden bulb sitting on line base, ry lines tall
+    from the narrow neck to its widest, pinched to a point at the top, with
+    a spire."""
+    top = int(base - ry * 2.3)
+    for y in range(top, base + 1):
+        t = (base - y) / ry                          # 0 at the neck
+        if t <= 1:
+            half = rx * math.sqrt(max(0.0, 1 - (1 - t) ** 2)) * (0.55 + 0.45 * t)
+        else:
+            u = (t - 1) / 1.3                        # 0 at the widest, 1 at the tip
+            half = rx * max(0.0, 1 - u ** 1.5) ** 1.6
+        half = int(round(half))
+        if half > 0:
+            c.hline(cx - half, cx + half, y, p)
+            if y % 2:
+                c.put(cx + half, y, DR)              # shade the right side
+    c.vline(cx, top - 4, top, p)
+
+
+def kyiv():
+    """St Michael's Golden-Domed Monastery: a pale blue church with white
+    trim and golden domes, a bell tower, a cobbled square behind the
+    fighters and a stone platform as the floor."""
+    c = Canvas(P0)
+    c.rect(0, 0, W - 1, HUD - 1, K)
+    cloud(c, 160, 40, 6)
+    cloud(c, 22, 56, 5)
+    # The bell tower on the left.
+    c.rect(10, 70, 34, 168, P14)
+    for y in (70, 104, 136):
+        c.rect(8, y - 3, 36, y, WH)
+    for wy in (78, 110, 142):
+        c.rect(18, wy, 25, wy + 16, NV)
+        c.ellipse(21.5, wy, 4, 3, NV)
+    dome(c, 22, 66, 9, 10, P15)
+    # The church: a wide pale blue front with white pilasters.
+    x0, x1 = 50, 183
+    c.rect(x0, 92, x1, 168, P14)
+    c.rect(x0 - 2, 88, x1 + 2, 92, WH)
+    for x in range(x0, x1 + 1, 19):
+        c.rect(x, 92, x + 2, 168, WH)
+    for wx in range(x0 + 7, x1 - 8, 19):              # arched windows
+        c.rect(wx, 112, wx + 7, 140, NV)
+        c.ellipse(wx + 3.5, 112, 4, 4, NV)
+        c.hline(wx - 1, wx + 8, 141, WH)
+    c.rect(108, 128, 125, 168, NV)                    # the great door
+    c.ellipse(116.5, 128, 9, 8, NV)
+    c.ellipse(116.5, 128, 6, 5, P15)
+    # Drums and golden domes over the church.
+    c.rect(106, 66, 127, 88, P14)
+    for x in range(108, 127, 5):
+        c.rect(x, 70, x + 1, 84, NV)
+    c.rect(104, 64, 129, 66, WH)
+    dome(c, 116, 63, 13, 13, P15)
+    for cx in (66, 166):
+        c.rect(cx - 7, 74, cx + 7, 88, P14)
+        c.rect(cx - 8, 72, cx + 8, 74, WH)
+        dome(c, cx, 71, 8, 10, P15)
+    # The cobbled square behind the fighters.
+    c.rect(0, 169, W - 1, FLOOR - 1, GR)
+    c.hline(0, W - 1, 169, WH)
+    for y in range(171, FLOOR, 4):
+        for x in range((y // 4) % 2 * 3, W, 6):
+            c.hline(x, x + 3, y, WH)
+            c.put(x + 4, y + 1, K)
+    # The platform: a white edge, grey stone, a pale blue front with gold.
+    c.hline(0, W - 1, FLOOR, WH)
+    c.hline(0, W - 1, FLOOR + 1, WH)
+    c.rect(0, FLOOR + 2, W - 1, FLOOR + 13, GR)
+    c.checker(0, FLOOR + 10, W - 1, FLOOR + 13, GR, K)
+    c.hline(0, W - 1, FLOOR + 14, K)
+    c.rect(0, FLOOR + 15, W - 1, H - 1, P14)
+    c.hline(0, W - 1, FLOOR + 17, P15)
+    c.hline(0, W - 1, FLOOR + 42, P15)
+    for sx in range(0, W, 24):                        # gold rosettes
+        c.ellipse(sx + 12, FLOOR + 29, 5, 6, P15)
+        c.ellipse(sx + 12, FLOOR + 29, 2, 3, WH)
+    c.checker(0, FLOOR + 46, W - 1, FLOOR + 47, P15, NV)
+    return c
+
+
 STAGES = {"whitehouse": whitehouse, "kremlin": kremlin, "pyongyang": pyongyang,
-          "beijing": beijing, "starbase": starbase}
+          "beijing": beijing, "starbase": starbase, "kyiv": kyiv}
 
 
 def main():

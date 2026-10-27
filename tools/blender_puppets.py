@@ -105,7 +105,22 @@ MUSK = dict(
     skin="skin_pink", hair="hair_black", shoe="shoe", tee=True,
 )
 
-SPECS = {"trump": TRUMP, "putin": PUTIN, "kim": KIM, "xi": XI, "musk": MUSK}
+ZELENSKY = dict(
+    name="zelensky",
+    scale=0.94,
+    thigh=0.27, shin=0.27, leg_r=0.075, hip_w=0.12,
+    torso_h=0.48, torso_size=(0.24, 0.30, 0.29), belly=0.0,
+    shoulder_w=0.29, upper_arm=0.29, forearm=0.27, arm_r=0.08,
+    hand_r=0.06,
+    head_size=(0.31, 0.30, 0.32), neck=0.05,
+    # an olive T-shirt (bare forearms) and dark green trousers
+    suit="tshirt_olive", arms="arm_olive", forearms="arm_skin",
+    pants="pants_green", shirt=None, tie=None, tie_len=0,
+    skin="skin_pink", hair="hair_black", shoe="shoe", tee=True,
+)
+
+SPECS = {"trump": TRUMP, "putin": PUTIN, "kim": KIM, "xi": XI, "musk": MUSK,
+         "zelensky": ZELENSKY}
 
 MATERIALS = [
     "suit_navy", "suit_grey", "shirt", "tie_red", "tie_blue",
@@ -122,6 +137,8 @@ MATERIALS = [
     "skin_yellow", "belt",
     # Musk's T-shirt and his toy chainsaw
     "tshirt_black", "arm_black_n", "arm_black_f", "chainsaw",
+    # Zelensky's olive T-shirt, trousers, beard and supply crate
+    "tshirt_olive", "arm_olive_n", "arm_olive_f", "pants_green", "beard", "crate",
 ]
 
 
@@ -302,8 +319,27 @@ def musk_head(sc, s, head):
     new_part(sc, "hair_front", "sphere", head, (hx * 0.45, 0, hz * 1.72), (hx * 0.5, hy * 0.8, hz * 0.22), hair, rot=(0, 12, 0))
 
 
+def zelensky_head(sc, s, head):
+    hx, hy, hz = s["head_size"]
+    sk = s["skin"]
+    hair = s["hair"]
+    new_part(sc, "head", "sphere", head, (0, 0, hz), (hx, hy, hz), sk)
+    new_part(sc, "nose", "sphere", head, (hx * 0.98, 0, hz * 0.95), (0.055, 0.045, 0.065), sk)
+    for side, y in (("R", -1), ("L", 1)):
+        new_part(sc, "ear_" + side, "sphere", head, (-0.02, y * hy * 0.98, hz * 1.0), (0.05, 0.035, 0.08), sk)
+        # tired but determined eyes under straight dark brows
+        new_part(sc, "eye_" + side, "sphere", head, (hx * 0.9, y * 0.11, hz * 1.14), (0.042, 0.07, 0.03), "eye_white")
+        new_part(sc, "pupil_" + side, "sphere", head, (hx * 0.98, y * 0.11, hz * 1.14), (0.032, 0.032, 0.03), "pupil")
+        new_part(sc, "brow_" + side, "box", head, (hx * 0.93, y * 0.11, hz * 1.28), (0.03, 0.08, 0.02), hair)
+    # a short dark beard round the jaw, the mouth set in it
+    new_part(sc, "beard", "sphere", head, (0.06, 0, hz * 0.55), (hx * 0.88, hy * 0.96, hz * 0.45), "beard")
+    new_part(sc, "mouth", "box", head, (hx * 0.94, 0, hz * 0.68), (0.04, 0.08, 0.02), "mouth")
+    # close-cropped dark hair
+    new_part(sc, "hair_top", "sphere", head, (-0.04, 0, hz * 1.35), (hx * 1.0, hy * 1.03, hz * 0.62), hair)
+
+
 HEADS = {"trump": trump_head, "putin": putin_head, "kim": kim_head, "xi": xi_head,
-         "musk": musk_head}
+         "musk": musk_head, "zelensky": zelensky_head}
 
 
 # --------------------------------------------------------------------------
@@ -398,6 +434,11 @@ def build_character(s):
         cs = J["prop_saw"] = new_part(sc, "saw", "box", J["wrN"], (0.0, 0, -0.08), (0.06, 0.05, 0.06), "button_red")
         new_part(sc, "saw_bar", "box", cs, (0, 0, -3.6), (0.45, 0.4, 2.9), "chainsaw")
         new_part(sc, "saw_chain", "box", cs, (0.45, 0, -3.7), (0.12, 0.45, 2.9), "eye_white")
+    if s["name"] == "zelensky":
+        # the supply crate of More Ammo!, held in front in both hands
+        cr = J["prop_crate"] = new_part(sc, "crate", "box", J["wrN"], (0.16, 0.14, -0.12), (0.17, 0.17, 0.15), "crate")
+        for i, z in enumerate((-0.7, 0.7)):
+            new_part(sc, "crate_band%d" % i, "box", cr, (0, 0, z), (1.03, 1.03, 0.12), "shoe")
     if s["name"] == "xi":
         # Belt and Road: his belt, hanging from the near hand, or cracked out
         # straight along the arm (prop_*: shown only where a pose says)
@@ -631,8 +672,25 @@ MUSK_MOVES = {
     ],
 }
 
+ZELENSKY_MOVES = {
+    # More Ammo!: a supply crate, picked up, lifted and heaved across (the
+    # crate in flight is a separate sprite)
+    "special": [
+        P(show=("crate",), shN=20, elN=60, shF=25, elF=60, torso=20, hpN=30, knN=40, hpF=10, knF=30),
+        P(show=("crate",), shN=60, elN=110, shF=60, elF=110, torso=-6, head=-6),
+        P(shN=95, elN=10, shF=90, elF=15, torso=18, twist=20, x=0.08),
+        P(shN=70, elN=40, shF=60, elF=50, torso=10, twist=10, x=0.04),
+    ],
+    # a comedian's bow
+    "victory": [
+        P(shN=-10, elN=80, shF=-40, elF=20, torso=10, head=4),
+        P(shN=-10, elN=80, shF=-50, elF=20, torso=38, head=18, hpN=25, knN=10),
+        P(shN=-10, elN=80, shF=-40, elF=20, torso=10, head=4),
+    ],
+}
+
 CHAR_MOVES = {"trump": TRUMP_MOVES, "putin": PUTIN_MOVES, "kim": KIM_MOVES,
-              "xi": XI_MOVES, "musk": MUSK_MOVES}
+              "xi": XI_MOVES, "musk": MUSK_MOVES, "zelensky": ZELENSKY_MOVES}
 
 MOVE_ORDER = ["idle", "walk", "crouch", "jump", "punch", "kick", "sweep",
               "uppercut", "backkick", "block", "hit", "ko", "special", "victory"]

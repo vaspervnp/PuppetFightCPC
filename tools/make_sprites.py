@@ -60,6 +60,12 @@ RAMPS = {
     "arm_black_n": (1, OUTLINE, OUTLINE),
     "arm_black_f": (1, OUTLINE, OUTLINE),
     "chainsaw":    (10, 9, 9),
+    "tshirt_olive": (8, 8, 14),
+    "arm_olive_n": (8, 8, 14),
+    "arm_olive_f": (8, 14, 14),
+    "pants_green": (8, 14, OUTLINE),
+    "beard":       (3, 3, OUTLINE),
+    "crate":       (3, 3, OUTLINE),
 }
 
 WEIGHT = {"eye_white": 5, "pupil": 8, "mouth": 6, "brow": 3,
@@ -231,5 +237,5 @@ def process(char):
 
 
 if __name__ == "__main__":
-    for c in sys.argv[1:] or ["trump", "putin", "kim", "xi", "musk"]:
+    for c in sys.argv[1:] or ["trump", "putin", "kim", "xi", "musk", "zelensky"]:
         print(c, process(c), "frames")

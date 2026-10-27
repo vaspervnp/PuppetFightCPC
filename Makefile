@@ -35,10 +35,10 @@ RASMFLAGS := -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEM
              -DCPU=$(CPU) -DLEVEL=$(LEVEL)
 BUILD  := build
 
-CHARS := trump putin kim xi musk
+CHARS := trump putin kim xi musk zelensky
 CHAR_A ?= trump
 CHAR_B ?= putin
-STAGES := whitehouse kremlin pyongyang beijing starbase
+STAGES := whitehouse kremlin pyongyang beijing starbase kyiv
 STAGE ?= $(shell $(PYTHON) -c "import json; print(json.load(open('art/sprites/$(CHAR_B)_pfc.json'))['stage'])")
 stage_file = $(BUILD)/stages/$(shell $(PYTHON) -c "import json; print(json.load(open('art/stages/$(1).json'))['name'])").STG
 STG := $(foreach s,$(STAGES),$(call stage_file,$(s)))

@@ -390,7 +390,7 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 | 5 | **Specials + projectiles** ✅ | motion input, Tweet Storm (tweet-bird projectile), Judo Throw (throw state) |
 | 6 | **Presentation** ✅ | stages (White House lawn, Kremlin hall), title, music, SFX, victory screens with taunts |
 | 7 | **CPU opponent** ✅ | reactive AI with difficulty levels |
-| 8 | **Roster wave 1** | Kim Jong-Un, Xi Jinping, Elon Musk, Zelensky (see [CHARACTERS.md](CHARACTERS.md)) |
+| 8 | **Roster wave 1** ✅ | Kim Jong-Un, Xi Jinping, Elon Musk, Zelensky (see [CHARACTERS.md](CHARACTERS.md)) |
 | 9 | **Release 1.0** | arcade ladder + Puppet Master boss, two-sided disk, real-hardware test, `.dsk` release |
 
 ## 5. Risks

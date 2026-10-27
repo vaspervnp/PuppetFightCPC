@@ -1110,6 +1110,52 @@ fire again).
 | the computer against itself, Musk against Xi, 300 pictures | 2 frames between pictures, 0 caught, 0 bytes wrong; Musk 5 rounds, Xi 3 |
 | disc: player 2 chooses Musk | all four banks match the snapshot |
 
+## Milestone 8 step 4: Volodymyr Zelensky
+
+The sixth fighter (Blender scene `PF_zelensky`), kept to the show's gags
+(supplies, determination), with no war imagery:
+- **Look.** An olive T-shirt with bare forearms over dark green trousers
+  (`tshirt_olive`, `arm_olive_n/f`, `pants_green`), close-cropped dark hair
+  and a short beard (`beard`, dark red over black).
+- **Crate.** The supply crate in his hands (`prop_crate`, with grey bands)
+  first came out too small to see; it is larger now.
+
+| | |
+|---|---|
+| Special | **More Ammo!**: a supply crate heaved across, a projectile (`crate.png`, 12 × 10, dark red with grey bands and a white diamond), slower and heavier than the tweet: speed 2, damage 7, hitstun 12 |
+| Victory | a comedian's bow (a nod to his comedy career) |
+| Taunt | "I NEED AMMO, NOT A RIDE." |
+| Title | "Humble President" |
+| Colours | olive (health bar), pink, green, unused; mirror match: pastel yellow, orange, bright green |
+| File | bank 0 15,407 bytes, bank 1 5,916 bytes, 6 cache slots; `ZELENSKY.PFC` 21,387 bytes |
+
+**His home stage, Kyiv** (`stage_art.py kyiv`, inks pastel cyan, pastel
+blue, bright yellow; packed to 1,953 bytes).
+- St Michael's Golden-Domed Monastery. The pale blue walls use pen 14,
+  which stays pastel blue on every stage anyway; white pilasters and
+  arched windows.
+- Golden onion domes (`dome()`: a bulb from a narrow neck, pinched to a
+  spire), on drums over the church and on the bell tower.
+- A cobbled square behind the fighters, and a stone platform with a pale
+  blue front and gold rosettes as the floor.
+
+**The disc** is nearly full: six characters, six stages, the engine, the
+loader and the title take 171 KB of 178. A seventh character needs the
+character files packed (or the second side of the disc).
+
+| Test | Result |
+|---|---|
+| `bench-all`, `bench-fight`, `bench-play`, `SLACK=15`, `bench-ai` | 2 frames between pictures, 0 caught, 0 late, 0 passes missed, 0 bytes wrong |
+| `bench-fight` keys, Trump against Zelensky | the same; the fight ends A 36, B 32 |
+| the crate, Zelensky as B | flies across and hits Trump for 7; 0 passes missed |
+| the computer against itself, Zelensky against Trump, 300 pictures | 2 frames between pictures, 0 caught, 0 bytes wrong; Trump 6 rounds, Zelensky 3 |
+| disc: player 2 chooses Zelensky (six on the select screen) | all four banks match the snapshot |
+
+**Milestone 8 is done**: Kim, Xi, Musk and Zelensky join Trump and Putin,
+each with a special (two projectiles, two strikes) and a home stage.
+Balance between them hasn't been tuned yet: the computer against itself
+favours Trump and Putin.
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the
