@@ -4,6 +4,8 @@
 ;; Runs under the firmware, before the engine takes the machine over:
 ;; PF.BAS loads it at #8000 and calls it, then loads and starts the engine.
 ;;
+;; First the title screen (TITLE.SCR, tools/title_art.py), which stays up
+;; while the roster and the headers are read, until a player presses fire.
 ;; ROSTER.TXT lists the characters on the disc, one name a line, and each
 ;; NAME.PFC holds one (tools/sprite_codegen.py pfc): a header with its name,
 ;; title and colours, then its two banks. The select screen shows the names
@@ -40,9 +42,14 @@ H_STAGE         EQU 48
 STAGE_AT        EQU #2000       ; src/config.asm
 ST_LEN          EQU 6           ; a stage file: header, packed length
 ST_HEADER       EQU 8
+TITLE_AT        EQU #9800       ; the packed title, up to the firmware's
+TITLE_ROOM      EQU #B000-TITLE_AT  ; memory
+TL_INKS         EQU 3           ; its file: 16 firmware colours, then (after
+TL_LEN          EQU 19          ; the length) the data
+TL_DATA         EQU 21
 DIR_MOVES_N     EQU #4003       ; in bank 0 (src/main.asm DIR_*)
 DIR_INKS        EQU #4007
-DIR_MOVES       EQU #400E
+DIR_MOVES       EQU #4010
 REC_SIZE        EQU 16
 
 PS_LEFT         EQU 0           ; a player's controls this frame
@@ -61,25 +68,13 @@ ld_zero
     call SCR_SET_MODE           ; mode 0: 20 columns, the game's look
     ld bc,0
     call SCR_SET_BORDER
-    ld hl,inks
-    xor a
-ld_ink
-    ld b,(hl)
-    ld c,b
-    push af
-    push hl
-    call SCR_SET_INK
-    pop hl
-    pop af
-    inc hl
-    inc a
-    cp 4
-    jr nz,ld_ink
-
+    call text_inks
+    call show_title             ; (none on the disc: straight on)
     call read_roster
     jp nc,disc_error
     call read_headers
     jp nc,disc_error
+    call title_wait
     call select
 
     ld hl,s_loading
@@ -111,6 +106,125 @@ disc_error
     call say
 de_wait
     jr de_wait
+
+;; ---------------------------------------------------------------------------
+;; show_title - TITLE.SCR into the screen, in its colours: title_up = 1.
+;; Nothing if it isn't there. Destroys everything.
+;; title_wait - if the title is up: wait for fire (either player, pressed
+;; after this is called), then back to the text screen.
+;; ---------------------------------------------------------------------------
+show_title
+    ld hl,f_title
+    ld b,f_title_end-f_title
+    ld de,cas_buffer
+    call CAS_IN_OPEN
+    ret nc
+    ld hl,TITLE_AT
+    ld b,TL_DATA
+    call read_bytes
+    ret nc
+    ld de,(TITLE_AT+TL_LEN)
+    ld hl,TITLE_AT+TL_DATA
+    call read_long
+    ret nc
+    call CAS_IN_CLOSE
+    ld hl,TITLE_AT+TL_DATA      ; (the firmware's screen is at #C000 after
+    ld de,#C000                 ; SCR SET MODE)
+    call unpack
+    ld hl,TITLE_AT+TL_INKS
+    xor a
+sti_ink
+    ld b,(hl)
+    ld c,b
+    push af
+    push hl
+    call SCR_SET_INK
+    pop hl
+    pop af
+    inc hl
+    inc a
+    cp 16
+    jr nz,sti_ink
+    ld a,1
+    ld (title_up),a
+    ret
+
+title_wait
+    ld a,(title_up)
+    or a
+    ret z
+tw_up                           ; fire let go first,
+    call tw_fire
+    jr nz,tw_up
+tw_down                         ; then pressed
+    call tw_fire
+    jr z,tw_down
+    xor a
+    call SCR_SET_MODE
+    jp text_inks
+
+;; text_inks - the text screen's 4 inks. Destroys everything.
+text_inks
+    ld hl,inks
+    xor a
+ld_ink
+    ld b,(hl)
+    ld c,b
+    push af
+    push hl
+    call SCR_SET_INK
+    pop hl
+    pop af
+    inc hl
+    inc a
+    cp 4
+    jr nz,ld_ink
+    ret
+
+;; tw_fire - NZ if either player holds fire. Destroys everything.
+tw_fire
+    call MC_WAIT_FLYBACK
+    ld hl,keys_a
+    call controls
+    push af
+    ld hl,keys_b
+    call controls
+    pop bc
+    or b
+    and 1<<PS_FIRE
+    ret
+
+;; unpack - HL = packed (tools/stage_pack.py), DE = where it goes. As in
+;; src/main.asm. Destroys AF, BC, DE, HL.
+unpack
+    ld a,(hl)
+    inc hl
+    cp #7F
+    ret z
+    jr nc,up_match
+    ld c,a
+    ld b,0
+    inc bc
+    ldir
+    jr unpack
+up_match
+    sub #7D
+    ld c,a
+    ld b,0
+    ld a,(hl)
+    inc hl
+    push hl
+    ld h,(hl)
+    ld l,a
+    push de
+    ex de,hl
+    or a
+    sbc hl,de
+    pop de
+    ldir
+    pop hl
+    inc hl
+    jr unpack
 
 ;; ---------------------------------------------------------------------------
 ;; read_roster - roster: MAX_CHARS names of 8 characters (space padded),
@@ -696,6 +810,9 @@ f_ext
     defb ".PFC"
 f_stg
     defb ".STG"
+f_title
+    defb "TITLE.SCR"
+f_title_end
 
     include "gen/remap.asm"     ; page aligned
 
@@ -709,7 +826,8 @@ rdy_b           EQU rdy_a+2
 ps_a            EQU rdy_b+2
 ps_b            EQU ps_a+1
 ch_ready        EQU ps_b+1
-lc_ram          EQU ch_ready+2
+title_up        EQU ch_ready+2  ; (ch_ready is a word)
+lc_ram          EQU title_up+1
 rb_moves        EQU lc_ram+1
 rb_frames       EQU rb_moves+1
 rb_move         EQU rb_frames+1

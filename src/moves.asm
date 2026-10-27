@@ -11,9 +11,13 @@
 ;; Helpers. All take IX = fighter (and IY = opponent where it matters).
 ;; ---------------------------------------------------------------------------
 
-;; start_move - A = move: begin it at frame 0. Destroys AF, BC, DE, HL.
+;; start_move - A = move: begin it at frame 0 (an attack with a swish).
+;; Destroys AF, BC, DE, HL.
 start_move
     ld (ix+F_MOVE),a
+    call attacking
+    ld a,SFX_SWING
+    call c,sfx_play
     ld (ix+F_FRAME),0
     ld (ix+F_TIMER),0
     ld (ix+F_HITDONE),0

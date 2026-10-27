@@ -66,7 +66,8 @@ fi_x
 fi_y
     ld (ix+F_PY),a
     ld (ix+F_PACT),1
-    ret
+    ld a,SFX_TWEET
+    jp sfx_play
 
 special_throw
     ld a,(iy+F_MOVE)            ; someone on the ground, and not down
@@ -104,6 +105,8 @@ st_free
     ld b,HIT_PUSH
     jp z,knock_back
 st_land
+    ld a,SFX_THROW
+    call sfx_play
     ld a,(iy+F_FACE)            ; over the shoulder: to the thrower's back
     or a
     ld a,(iy+F_X)

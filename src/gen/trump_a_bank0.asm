@@ -2,10 +2,11 @@
 ;; trump, bank 0 of 2: directory, frames
     ORG #4000
 trump_dir
-    defb "P","F",4,14
+    defb "P","F",5,14
     defb 3 : defw #6B90        ; cache slots in bank 1
     defb #4A,#4E,#55,#5E        ; inks
     defb 1 : defw trump_shot        ; special: projectile
+    defw trump_taunt
     defb 4 : defw trump_m_idle
     defb 4 : defw trump_m_walk
     defb 3 : defw trump_m_crouch
@@ -83,6 +84,9 @@ trump_m_victory
     defb 0,16,0 : defw trump_victory_1_spans,558 : defb 2,11,0,62,0,0,0,0 : defs 1
     defb 0,16,0 : defw trump_victory_2_spans,559 : defb 2,11,0,62,0,0,0,0 : defs 1
 
+trump_taunt
+    defb 11,84,82,85,77,80,32,87,73,78,83,33,18,89,79,85,39,82,69,32,70,73,82,69,68
+    defb 33,32,83,65,68,33,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 trump_shot
     defb 6,9,3,6,10
     defw trump_shot_draw,trump_shot_drawl

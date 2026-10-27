@@ -1,0 +1,4 @@
+{
+  "_comment": "Title screen settings (tools/title_art.py): firmware colours of pens 14 and 15 (the rest are the shared pens and Trump's and Putin's own colours).",
+  "inks": [14, 3]
+}

@@ -29,10 +29,12 @@ CT_KICK         EQU 5
 
 ;; ---------------------------------------------------------------------------
 ;; read_controls - scan the matrix and set p1_ctl / p2_ctl (1 = held).
-;; About 100 us. No music yet, so the PSG port can be an input with
-;; interrupts on. Destroys AF, BC, E, HL.
+;; About 100 us, with interrupts off while port A is turned round: the
+;; sound's interrupt writes to the PSG through it (sound.asm). Destroys
+;; AF, BC, E, HL.
 ;; ---------------------------------------------------------------------------
 read_controls
+    di
     ld bc,#F40E                 ; PPI port A = PSG register 14, the matrix
     out (c),c
     ld bc,#F6C0                 ; port C: select that register
@@ -56,6 +58,7 @@ rc_line
     jr nz,rc_line
     ld bc,#F782                 ; port A back to output
     out (c),c
+    ei
 
     ld c,0                      ; player 1: joystick 0, or the cursor
     KEY 9,#01,CT_UP             ; keys with Space (punch) and Copy (kick)

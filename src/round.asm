@@ -4,7 +4,8 @@
 ;; more health wins (the same health: a draw, nobody's round). The winner
 ;; holds its victory pose for ROUND_END_PICS pictures, gets a win marker
 ;; under its bar, and both fighters start again. WINS_NEEDED round wins
-;; take the match, and the next one starts from nothing. Cold code
+;; take the match: the victory screen (victory.asm), then the next match
+;; starts from nothing. Cold code
 ;; (COLD2_ORG).
 ;; ===========================================================================
 
@@ -64,6 +65,8 @@ rt_end
     ld (rnd_state),a
     ret
 rt_over
+    cp 2                        ; the match is over: victory.asm
+    jp z,victory_tick
     ld hl,rnd_timer
     dec (hl)
     ret nz
@@ -77,12 +80,10 @@ rt_over
     call win_marker
     ld a,(ix+F_WINS)
     cp WINS_NEEDED
-    jr c,rt_next
-    ld ix,fighter_a             ; and the match: start again from nothing
-    call clear_wins
-    ld ix,fighter_b
-    call clear_wins
+    jp nc,victory               ; and the match (victory.asm)
 rt_next
+    ld a,SFX_BELL               ; the next round
+    call sfx_play
     xor a
     ld (rnd_state),a
     call clock_reset

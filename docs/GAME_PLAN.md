@@ -197,7 +197,8 @@ the standing fighters, plus the rest of each frame.
 | Fighters apart | one fighter per window: restore + draw < 15.6 ms, or < 11.8 ms at the top of a jump | already met. 13.9 ms worst with the generic drawer |
 | Fighters overlapping | both fighters in one window, done before the beam reaches each line | **banded rebuild**, below |
 | Projectiles | small sprites (≤ 8 bytes × 16 lines), drawn outside the rebuild where no fighter is, while the beam is clear of them | built (milestone 5): ~1 ms each, out of the compiler's time |
-| Logic, input, AI, HUD, music | after the rebuild in each frame. The music player goes on the third interrupt, off the frame tick | ≤ 4 ms per frame |
+| Logic, input, AI, HUD | after the rebuild in each frame | ≤ 4 ms per frame |
+| Music and sound effects | built (milestone 6): our own player in the handler of interrupt 4 (line ~168), away from the rebuild, 50 times a second | ~0.5 ms a call, 1.5 ms at worst |
 
 **Banded rebuild** (`src/rebuild.asm`, built and measured). Restore A,
 restore B, draw A and draw B are jobs. The scheduler walks the screen in
@@ -293,8 +294,8 @@ dark red, and pastel yellow (FFFF80) → olive (808000).
 |---|---|---|
 | &0038 | 3 | interrupt jump (both ROMs are off, so this is RAM) |
 | &0100-&01FF | 256 | stack |
-| &0200-&3FFF | 15.5K | engine (to &118E), the staging buffer, then the compiled frame cache: 6 slots of 1,744 bytes from &1720, split between the fighters at start so both have about as many with their bank 1 slots |
-| &4000-&7FFF | 16K | background mirror of the fighter band, lines 88-211 (~12K used). The 512-byte gaps at &x240-&x43F hold cold logic from milestone 5 (&6240, &6A40, &7240, &7A40: `fighter.asm`, `moves.asm`, `input.asm` + `shotvis.asm`, `special.asm`); the 4 gaps below &6000 are under the load image and still free |
+| &0200-&3FFF | 15.5K | engine and the sound player with its music (to &14AB), the staging buffer, then the compiled frame cache: 6 slots of 1,744 bytes from &1720, split between the fighters at start so both have about as many with their bank 1 slots |
+| &4000-&7FFF | 16K | background mirror of the fighter band, lines 88-211 (~12K used). The 512-byte gaps at &x240-&x43F hold cold logic from milestone 5 (&6240, &6A40, &7240, &7A40: `fighter.asm`, `moves.asm`, `input.asm` + `shotvis.asm`, `special.asm`) and from milestone 6 &5240 (`victory.asm`), &4240 (`logic.asm`, `boot.asm`) and &4A40 (`start.asm`, `soundctl.asm`), copied last since they are inside the load image; &5A40 is still free |
 | &8000-&FFFF | 32K | overscan screen (26K used). The unused 800-byte tails of page 3 hold `line_tab` (&C4E0), the cache slot tables (&C700), four restore lists (&CCE0/&DCE0, &E4E0/&F4E0), `flip_tab`/`mask_tab` built at boot (&CE00) and the compiler's (s, n) tables (&D4E0, &ECE0, &FCE0) |
 | Bank 4-5 | 32K | fighter A's character: directory, all 48 frames (escaped span streams), and compiled frame cache slots at the top of bank 1 |
 | Bank 6-7 | 32K | fighter B's character |
@@ -322,14 +323,17 @@ Paging rules:
 - Nothing else in &4000-&7FFF is touched while a bank is in: the screen,
   `line_tab`, the restore lists and the tables are all outside it. The
   logic in the mirror's gaps only runs with #C0; whatever pages a bank in
-  (`move_frames`, `boxes`, the compiler, the rebuild, the interrupt handler)
-  lives elsewhere.
+  (`move_frames`, `boxes`, the compiler, the rebuild), or may run while one
+  is in (the interrupt handler and the sound player), lives elsewhere.
 
 On the disc each character is one file (§3.5). `PFSPIKE.BAS` loads the
 select screen (`PFLOAD.BIN`, at &8000), which reads the files into the
 banks, then loads the engine. The snapshot build puts `CHAR_A` and `CHAR_B`
-straight into the banks instead. Stage graphics and music have to come from
-the remaining gaps or be ZX0-packed and unpacked at round start.
+straight into the banks instead. The stage comes packed with the select
+screen and is unpacked at boot (milestone 6). The music and its player sit in
+the payload, because the interrupt may come with a bank paged in. The load
+image ends at &61FC, close to its limit (&6240, where the first gap the boot
+copies to begins).
 
 ### 3.5 Character file format (`TRUMP.PFC` etc.)
 
@@ -350,7 +354,9 @@ over the machine. The size cap is 32K so a character fits two banks.
 Built in milestone 4 (`tools/sprite_codegen.py pfc`): a 64-byte header
 ("PFC", version 1, name, title as two lines of 12, 4 inks, 4 mirror-match
 inks, the two bank lengths), then bank 0 and bank 1 as they go in memory.
-Milestone 6 added the home stage's file name to the header (offset 48).
+Milestone 6 added the home stage's file name to the header (offset 48),
+and made the directory version 5: a pointer to the victory lines ("NAME
+WINS!" and the taunt) follows the projectile record.
 Milestone 5 made the directory version 4: the special's kind (strike,
 projectile, throw) and a projectile record follow the inks.
 The move data, hit boxes and compiled frames live in the banks' directory
@@ -365,7 +371,7 @@ so is the special's input. `ROSTER.TXT` lists the files.
 | Aseprite 1.3 + MCP | pixel touch-ups, tags, hitbox slices |
 | Python 3 + Pillow | quantise, export, compiled-sprite generator |
 | RASM | assembler (bank support, writes `.dsk` directly) |
-| Arkos Tracker 2 | music + SFX, AKG/AKY player |
+| `tools/music.py` | music + SFX for our own player (`src/sound.asm`), written as text. Arkos Tracker 2 was the plan, but its player and data don't fit |
 | ACE-DL / WinAPE / CPCEC | emulators (ACE-DL has a good debugger) |
 | Real 6128 + M4/HxC | hardware testing |
 
@@ -381,7 +387,7 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 | 3 | **Combat** ✅ | hit/hurt boxes from Aseprite slices, damage, block, hitstun, knockdown, KO, rounds, timer, health bars |
 | 4 | **Character loading** ✅ | `.PFC` format, loader, pen remap, select screen, two characters from disk |
 | 5 | **Specials + projectiles** ✅ | motion input, Tweet Storm (tweet-bird projectile), Judo Throw (throw state) |
-| 6 | **Presentation** | stages (White House lawn, Kremlin hall), title, music, SFX, victory screens with taunts |
+| 6 | **Presentation** ✅ | stages (White House lawn, Kremlin hall), title, music, SFX, victory screens with taunts |
 | 7 | **CPU opponent** | reactive AI with difficulty levels |
 | 8 | **Roster wave 1** | Kim Jong-Un, Xi Jinping, Elon Musk, Zelensky (see [CHARACTERS.md](CHARACTERS.md)) |
 | 9 | **Release 1.0** | arcade ladder + Puppet Master boss, two-sided disk, real-hardware test, `.dsk` release |

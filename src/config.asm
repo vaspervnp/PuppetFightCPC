@@ -102,12 +102,17 @@ COLD2_ORG       EQU (RESTORE_LIST_B XOR #1000)+256  ; #F5E0: round.asm, past
 ;; The mirror leaves #x240-#x43F of each 2 KB slice free (above). Those
 ;; gaps hold the logic, which only runs with main RAM at #4000: never code
 ;; that pages a character's bank in, or that the rebuild or an interrupt
-;; runs. Boot copies it from the load image, so only gaps above the image.
+;; runs. Boot copies it from the load image: the gaps above the image, and
+;; last GAP5 to GAP7, inside the image but below everything copied from
+;; them.
 GAP_ROOM        EQU #200
 GAP1_ORG        EQU #6240
 GAP2_ORG        EQU #6A40
 GAP3_ORG        EQU #7240
 GAP4_ORG        EQU #7A40
+GAP5_ORG        EQU #5240
+GAP6_ORG        EQU #4240
+GAP7_ORG        EQU #4A40
 flip_tab        EQU #CE00       ; built at boot (make_tables), in the rest
 mask_tab        EQU #CF00       ; of slice 1's tail: page aligned
     ASSERT RESTORE_LIST_A+256<=flip_tab

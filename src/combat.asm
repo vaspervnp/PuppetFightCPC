@@ -70,6 +70,8 @@ sk_block
     call nz,start_move
     ld (ix+F_STUN),BLOCK_STUN
 sk_crouch
+    ld a,SFX_BLOCK
+    call sfx_play
     ld b,BLOCK_PUSH
     jr knock_back
 sk_hit
@@ -87,6 +89,8 @@ sk_hit
 ;; land_hit - IX = defender, IY = attacker, D = damage, E = hitstun (0: a
 ;; knockdown).
 land_hit
+    ld a,SFX_HIT
+    call sfx_play
     ld (ix+F_STUN),e
     ld a,(ix+F_HEALTH)
     sub d
@@ -98,8 +102,12 @@ sk_alive
     call health_bar
     pop af
     or a
-    ld a,MV_KO                  ; no health: KO
-    jr z,sk_react
+    jr nz,sk_hurt
+    ld a,SFX_KO                 ; no health: KO
+    call sfx_play
+    ld a,MV_KO
+    jr sk_react
+sk_hurt
     ld a,(ix+F_Y)               ; hit in the air: knocked down
     cp FIGHTER_Y
     jr nz,sk_down

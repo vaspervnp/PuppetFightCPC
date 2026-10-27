@@ -2,10 +2,11 @@
 ;; putin, bank 0 of 2: directory, frames
     ORG #4000
 putin_b_dir
-    defb "P","F",4,14
+    defb "P","F",5,14
     defb 6 : defw #5720        ; cache slots in bank 1
     defb #47,#5E,#5F,#54        ; inks
     defb 2 : defw 0        ; special: throw
+    defw putin_b_taunt
     defb 4 : defw putin_b_m_idle
     defb 4 : defw putin_b_m_walk
     defb 3 : defw putin_b_m_crouch
@@ -83,6 +84,9 @@ putin_b_m_victory
     defb 0,16,0 : defw putin_b_victory_1_spans,454 : defb 3,10,6,62,0,0,0,0 : defs 1
     defb 0,16,0 : defw putin_b_victory_2_spans,426 : defb 3,9,6,61,0,0,0,0 : defs 1
 
+putin_b_taunt
+    defb 11,80,85,84,73,78,32,87,73,78,83,33,22,68,65,46,32,84,79,79,32,69,65,83,89
+    defb 44,32,67,79,77,82,65,68,69,46,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 
 putin_b_jump_1_spans  ; 16 bytes wide
     defb 11,56,51

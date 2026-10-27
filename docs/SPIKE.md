@@ -732,6 +732,135 @@ The old stage drawing is gone, so the payload ends at &118E.
 | disc: Trump against Putin | the Kremlin; all four banks match the snapshot |
 | disc: Trump against Trump | the White House, B in the second colours |
 
+## Milestone 6 step 2: victory screen and title screen
+
+**Victory screen** (`src/victory.asm`, in a fifth mirror gap at &5240).
+1. When a round win takes the match, the HUD is cleared to black.
+2. Two lines take its place: "TRUMP WINS!" in the winner's first colour,
+   then its taunt in white.
+3. The winner holds its victory pose for 8 s (`VICTORY_PICS` 200).
+4. The HUD comes back (bars, clock, no markers) and the next match starts.
+
+Details:
+- `rnd_state` 2 is the victory, and nobody moves during it.
+- Text is a 3 × 5 font like the clock's: 59 characters from space to Z,
+  2 bytes each. It is drawn 2 lines a pixel row, centred, at lines 2 and 13.
+- The lines come from the character file. Directory version 5 adds a
+  pointer to them, written by `sprite_codegen.py` from `name` and `taunt` in
+  `_pfc.json` (24 characters at most, checked against the font). `start`
+  copies both fighters' lines into the workspace.
+  - Trump: "YOU'RE FIRED! SAD!"
+  - Putin: "DA. TOO EASY, COMRADE."
+- Boot copies the fifth gap last. It lies inside the load image, but below
+  everything copied from it.
+- Choosing other characters still means starting again from the disc,
+  because the firmware is gone once the engine runs.
+
+**Title screen** (`tools/title_art.py`, `TITLE.SCR`).
+- A firmware Mode 0 screen: "PUPPET FIGHT" in a 5 × 7 font, Trump and
+  Putin facing each other with "VS", and "PRESS FIRE".
+- It uses the game's pens with both fighters' own colours. Packed like a
+  stage, it is 2,192 bytes, with its 16 firmware colours in front.
+- The loader reads it to &9800 and unpacks it into &C000 first. It stays up
+  while the roster and the headers are read, and either player's fire moves
+  on to the select screen. Without the file the loader goes straight on.
+
+| Test | Result |
+|---|---|
+| match to the end (Putin's health set to 1, two tweets) | round, round, victory screen at picture 226, the next match at 426 with the HUD back; 0 caught, 0 bytes wrong |
+| the same for Putin (two throws) | "PUTIN WINS!" in his pink and his taunt |
+| disc: title, fire, select, load | as designed; all four banks match the snapshot |
+| `bench-all`, `bench-fight`, `bench-play`, `SLACK=15` | 2 frames between pictures, 0 caught, 0 late, 0 bytes wrong; fight ends A 36, B 32 |
+
+## Milestone 6 step 3: music and sound effects
+
+**Where it runs.** The player (`src/sound.asm`) runs in the handler of
+interrupt 4 (`SOUND_IRQ`, line ~168), 50 times a second. That interrupt never
+meets the rebuild, which ends by line 151 at the latest (`SLACK=15`). In the
+frame before a picture's tick, the compiler has already stopped by then, so
+there the time is free. In the other frame it comes out of the compiler's
+time. A character's bank may be paged in at &4000 when the interrupt
+arrives, so the player and all its data are in the payload. `read_controls`
+keeps interrupts off (~100 µs) while the PSG's port A is turned round to
+read the keys. The player only writes registers 0-10, and its mixer keeps
+port A an input.
+
+**The player** is our own, not Arkos. An AKG player plus its data would not
+fit beside the engine, and its time per call varies too much.
+- Three channels, each an order list of patterns: notes (C1-B6), rests,
+  durations in rows, instrument changes. Rows come every `song_speed`
+  interrupts.
+- An instrument is a noise period, then one step per interrupt: volume,
+  noise on, tone off, an octave up. Its last step holds.
+- Sound effects play on channel C over the drums: a tone period that sweeps,
+  a volume that decays, optional noise, and an optional restart (two chirps
+  for the tweet). A higher number wins over a lower one. The game asks for
+  one with `sfx_play`, a one-byte request the interrupt picks up.
+- The register values are built in a buffer, and only the ones that changed
+  are written, each followed in the buffer by what was last written.
+- 762 bytes of code (the hot parts are unrolled per channel and per
+  register), 670 bytes of data. `sound_init`, `music_play`, `music_stop` and
+  `sfx_play` run from the game's logic, so they live in a mirror gap
+  (`soundctl.asm`).
+
+**The music** (`tools/music.py` → `src/gen/music.asm`). The songs are
+written in the script as text, a pattern per string, and the script checks
+that the three channels' order lists are the same length row for row.
+- The fight: an original tune in D minor at 150 bpm. Two bars of drums and
+  bass, then sixteen bars round and round (i–VI–VII–V twice, then
+  iv–i–VI–V). Lead, octave-bouncing bass, and kick/snare/hat drums.
+- The victory: a two-bar fanfare in D, then quiet.
+
+**Sound effects**, and where they come from:
+
+| Sound | When |
+|---|---|
+| swing | an attack starts (`start_move`) |
+| block | an attack is blocked, standing or crouching |
+| tweet | Trump's tweet flies |
+| hit | an attack lands (`land_hit`), the tweet and the throw too |
+| throw | Putin's throw lands |
+| bell | the first round, and every round after it |
+| KO | a hit takes the last of the health |
+
+At the end of a match the music changes to the fanfare, and back to the
+fight's music for the rematch.
+
+**Making room.** The payload needs ~1.4 KB for the player and its data:
+- `logic` and the boot-only routines that don't page a bank in (`irq_init`,
+  `wait_vsync`, `build_line_tab`, `copy_mirror`) went to mirror gap &4240
+  (`logic.asm`, `boot.asm`).
+- `start`, `cache_split`, `make_tables`, `clear_lists` and the sound calls
+  went to gap &4A40 (`start.asm`, `soundctl.asm`). Boot copies both gaps
+  last, like &5240.
+- `jit_init` stays in the payload: it pages a bank in itself.
+- The payload ends at &14AB (room to &14C8), the load image at &61FC (room
+  to &6240), the workspace at &DFDE.
+- One mirror gap is left, &5A40.
+
+**Hearing it.** The headless 6128 (`~/repos/CPCTools/cpcemu`) now keeps the
+AY's output on request (`audio_capture`, `audio_take`, `psg_reg`).
+`tools/sound_check.py` plays the snapshot with a key script and pokes,
+writes `build/sound.wav`, and first times `sound_tick` from the program
+counter:
+
+| `sound_tick` | Time |
+|---|---|
+| a row of music due in all three channels (the worst) | 1.24-1.54 ms |
+| mean over three seconds | ~0.5 ms |
+| music off, nothing playing | 40 µs |
+
+The worst case ends long before the tick at line 222.
+
+| Test | Result |
+|---|---|
+| `bench-all`, `bench-play`, `SLACK=15` (latest line 151) | 2 frames between pictures, 0 caught, 0 late, 0 passes missed, 0 bytes wrong |
+| `bench-fight` | the same; the fight ends A 36, B 32 |
+| pictures with a held frame, sound on against off | fight 24 / 24 against 22 / 21, play 20 / 22 against 18 / 19 |
+| the AY's notes, decoded from its registers | the lead, bass and drums as written |
+| a fight to the end (`sound_check.py`) | bell, swing, hit, block, tweet, throw, KO, the fanfare on the victory screen, and the bell and fight music again on the rematch |
+| disc: title, select, load | all four banks match the snapshot; the music plays |
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

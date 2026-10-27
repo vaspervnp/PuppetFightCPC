@@ -7,6 +7,9 @@
 ;; rather than counting, so every frame's work starts at the same raster
 ;; position. Counting stays as a fallback (OverscanCPC src/irq.asm).
 ;;
+;; The sound plays from interrupt SOUND_IRQ, away from the rebuild
+;; (sound.asm). irq_init, which runs once, is in boot.asm.
+;;
 ;; The rebuild tick is a different interrupt: the TICK_IRQ'th after VSYNC
 ;; (line 222, just below the fighters - see config.asm), counted in
 ;; tick_count. The rebuild runs across the next VSYNC, so it must never keep
@@ -19,23 +22,6 @@
 ;; ===========================================================================
 
 IRQS_PER_FRAME  EQU 6
-
-;; irq_init - install the handler at #0038 and enable interrupts.
-;; ROMs are off, so #0038 is plain RAM and must hold the jump before EI.
-;; Destroys AF, BC, HL.
-irq_init
-    di
-    im 1
-    ld a,#C3                    ; JP nn
-    ld (#0038),a
-    ld hl,irq_handler
-    ld (#0039),hl
-    call wait_vsync
-    xor a
-    ld (irq_count),a
-    ld (frame_count),a
-    ei
-    ret
 
 irq_handler
     push af
@@ -60,6 +46,11 @@ irq_handler_mid
     inc (hl)
     jr irq_handler_done
 irq_not_tick
+    cp SOUND_IRQ
+    jr nz,irq_not_sound
+    call sound_tick             ; the music and sound effects (sound.asm)
+    jr irq_handler_done
+irq_not_sound
     cp IRQS_PER_FRAME
     jr c,irq_handler_done
     ld (hl),0                   ; VSYNC was over before we got here: count
@@ -79,19 +70,6 @@ irq_flag
     pop bc
     pop af
     ei
-    ret
-
-;; wait_vsync - return at the leading edge of VSYNC. Destroys AF, BC.
-wait_vsync
-    ld b,#F5
-wait_vsync_off
-    in a,(c)
-    rra
-    jr c,wait_vsync_off
-wait_vsync_on
-    in a,(c)
-    rra
-    jr nc,wait_vsync_on
     ret
 
 ;; wait_tick - return on the next rebuild tick (line 222). Destroys AF, HL.
