@@ -31,7 +31,13 @@ nm_stage
     ld de,COLD2_ORG
     ld bc,COLD_ROOM
     ldir
+    ld a,(nm_sel+1)             ; the boss plays its hardest
+    cp DM_CHARS
     ld a,(nm_mode)
+    jr nz,ns_mode
+    and 255-(3<<GM_LEVEL)
+    or 2<<GM_LEVEL
+ns_mode
     ld (SETTINGS_AT),a
     ld hl,(nm_sel)
     ld (SETTINGS_AT+1),hl

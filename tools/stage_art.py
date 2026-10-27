@@ -605,8 +605,71 @@ def kyiv():
     return c
 
 
+def theatre():
+    """The Puppet Master's puppet theatre: red curtains drawn back from a
+    painted backdrop of the world (G-Zero: nobody in charge), marionette
+    controls hanging over it, a board stage and an apron with footlights."""
+    c = Canvas(P0)
+    c.rect(0, 0, W - 1, HUD - 1, K)
+    # The backdrop: a world map, pastel blue continents on a sky blue sea,
+    # under a white grid of meridians and parallels.
+    for cx, cy, rx, ry in ((52, 92, 20, 16), (44, 118, 10, 18), (62, 136, 7, 14),
+                           (104, 88, 14, 10), (110, 112, 10, 22), (140, 90, 26, 14),
+                           (150, 110, 12, 10), (160, 146, 11, 8)):
+        c.ellipse(cx, cy, rx, ry, P14)
+    for x in range(28, 168, 16):
+        for y in range(56, 168, 2):
+            c.put(x, y, WH)
+    for y in range(64, 168, 24):
+        for x in range(26, 168, 2):
+            c.put(x, y, WH)
+    # Marionette controls hanging from the flies over it.
+    for cx, top, n in ((60, 40, 30), (132, 40, 22)):
+        c.rect(cx - 9, top + n, cx + 9, top + n + 1, DR)
+        c.rect(cx - 1, top + n - 4, cx, top + n + 5, DR)
+        c.vline(cx, 24, top + n - 4, K)
+        for dx in (-8, 8):
+            c.vline(cx + dx, top + n + 2, top + n + 26, NV)
+    # The valance and the curtains, drawn back each side, in red folds.
+    def folds(x0, x1, y0, y1):
+        c.rect(x0, y0, x1, y1, P15)
+        for x in range(x0 + 2, x1 + 1, 5):
+            c.vline(x, y0, y1, DR)
+    c.rect(0, HUD, W - 1, 48, P15)
+    for x in range(0, W, 12):
+        c.ellipse(x + 6, 48, 6, 4, P15)
+        c.vline(x, HUD, 50, DR)
+    c.hline(0, W - 1, HUD + 2, WH)
+    for x in range(0, W, 4):
+        c.put(x, HUD + 4, WH)
+    folds(0, 20, 48, FLOOR - 1)
+    folds(W - 21, W - 1, 48, FLOOR - 1)
+    for y in range(48, 100):                          # swept back to the ties
+        w = int(12 * (1 - (y - 48) / 52) ** 2)
+        c.hline(21, 21 + w, y, P15)
+        c.hline(W - 22 - w, W - 22, y, P15)
+    for x0 in (4, W - 18):                            # the tie-backs
+        c.rect(x0, 128, x0 + 13, 131, WH)
+    # The boards behind the fighters.
+    c.rect(21, 169, W - 22, FLOOR - 1, DR)
+    c.hline(21, W - 22, 169, K)
+    for y in range(172, FLOOR, 6):
+        c.hline(21, W - 22, y, K)
+        for x in range(21 + (y // 6) % 2 * 13, W - 22, 26):
+            c.vline(x, y + 1, min(y + 5, FLOOR - 1), K)
+    # The apron: a white edge, black, a row of footlights, a red skirt.
+    c.hline(0, W - 1, FLOOR, WH)
+    c.rect(0, FLOOR + 1, W - 1, FLOOR + 15, K)
+    for x in range(8, W, 16):
+        c.ellipse(x, FLOOR + 9, 5, 4, GR)
+        c.ellipse(x, FLOOR + 8, 3, 2, WH)
+    c.hline(0, W - 1, FLOOR + 16, DR)
+    folds(0, W - 1, FLOOR + 17, H - 1)
+    return c
+
+
 STAGES = {"whitehouse": whitehouse, "kremlin": kremlin, "pyongyang": pyongyang,
-          "beijing": beijing, "starbase": starbase, "kyiv": kyiv}
+          "beijing": beijing, "starbase": starbase, "kyiv": kyiv, "theatre": theatre}
 
 
 def main():

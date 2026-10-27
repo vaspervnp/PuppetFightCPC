@@ -87,6 +87,7 @@ fdc_seek        defb 3,#0F,0,0  ; seek: drive A, the track
 fdc_read        defb 9,#46,0,0,0,0,2,0,#2A,#FF  ; read data: track, head,
                                 ; sector, 512 bytes, the last, gap, length
 nm_sel          defw 0          ; ladder.asm: the player's character, the
-nm_mode         defb 0          ; opponent's, and game_mode, through the load
+nm_mode         defb 0          ; opponent's, and game_mode, through the load;
+nm_wins         defb 0          ; pick.asm: matches won on the way to the boss
 
     include "gen/diskmap.asm"

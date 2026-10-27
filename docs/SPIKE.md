@@ -1313,8 +1313,55 @@ The emulator doesn't time the disc's turning. On a real drive a track
 takes two turns (the interleave), so a load should be ~4-5 s with the
 motor's second. Not yet tried on a real 6128.
 
-Free memory now: payload 87, low RAM 37, workspace 22, COLD/COLD2 27/60
+Free memory then: payload 87, low RAM 37, workspace 22, COLD/COLD2 27/60
 bytes. Gaps 1-8: 7, 12, 4, 17, 24, 73 (45 in the SHOTS build), 3, 8.
+
+## Milestone 9 step 2: the Puppet Master
+
+The ladder's boss is Ian Bremmer, the show's very first puppet (Blender
+scene `PF_bremmer`):
+- **Look.** A black suit (`suit_black`: navy over black), white shirt and
+  blue tie, short dark hair combed back, arched brows and a knowing grin.
+- **Not on the select screen.** `BOSS` in the Makefile puts his file on
+  the disc and last in the disc map (index `DM_CHARS`), but not in
+  `ROSTER.TXT`.
+
+| | |
+|---|---|
+| Special | **G-Zero World**: a globe bowled across (a projectile, `globe.png`, 12 × 12: navy seas, pastel blue land, a white glint), speed 3, damage 8, hitstun 12 |
+| Victory | works a marionette control over his head, its strings hanging |
+| Taunt | "EVERYONE HAS STRINGS." |
+| Title | "The Puppet Master" |
+| Colours | bright magenta (health bar), pink, bright blue (tie, globe in hand), green (its land) |
+| File | bank 0 15,785 bytes, bank 1 7,346 bytes, 5 cache slots; `BREMMER.PFC` 11,517 bytes |
+
+**His stage, the puppet theatre** (`stage_art.py theatre`, inks sky blue,
+pastel blue, bright red; packed to 2,433 bytes):
+- red curtains drawn back from a painted world map (pastel blue
+  continents under a white grid);
+- two marionette controls hanging from the flies;
+- board stage behind the fighters, and an apron with a row of footlights.
+
+**The ladder** (`pick.asm`, in the payload: the gaps are full in the SHOTS
+bench build):
+- Each win counts. Once the player has beaten `DM_CHARS - 1` opponents
+  (all five others), the boss comes on.
+- He plays at the computer's hardest level, whatever was chosen
+  (`nmstage.asm` sets `SETTINGS_AT`).
+- Beat him and the ladder starts again from the roster, at the level
+  chosen. Lose, and he comes again, like any opponent.
+
+| Test | Result |
+|---|---|
+| Disc: Trump against the computer, the matches won by a poke, 8 times | Kim, Xi, Musk, Zelensky, then the boss at level 2, then Putin, Kim, Xi at level 0. Every load byte-exact |
+| `SHOTS=1`, Bremmer as B: globes flying, both jumping | 0 caught, 0 late, 0 passes missed, 0 bytes wrong |
+| `bench-fight` keys, Trump against Bremmer | 0 caught; held frames 26/25; the fight ends A 36, B 32 |
+| the computer against itself, Trump against Bremmer | 0 caught, 0 bytes wrong |
+
+The disc now holds 123 of its 180 blocks.
+
+Free memory now: payload 36, low RAM 32, workspace 22, COLD/COLD2 27/60
+bytes. Gaps 1-8: 7, 12, 24, 6, 24, 73 (45 in the SHOTS build), 3, 8.
 
 ## Next (milestone 2 work this feeds)
 

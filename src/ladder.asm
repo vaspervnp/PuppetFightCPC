@@ -1,7 +1,7 @@
 ;; ===========================================================================
 ;; ladder.asm - the player against the computer: when the player wins a
-;; match, the next opponent, the roster's next character but the player's,
-;; comes off the disc with its home stage (fdc.asm, discread.asm, and
+;; match, the next opponent (nm_pick: the roster's next character but the
+;; player's, then the boss) comes off the disc with its home stage (fdc.asm, discread.asm, and
 ;; tools/make_dsk.py's map of the disc), and the match starts as the first
 ;; did.
 ;;
@@ -26,20 +26,7 @@ next_match
     di
     call set_black
     call sound_init
-    ld hl,(sel_a)               ; L = the player's, H = the opponent's
-    ld a,h
-nm_next
-    inc a
-    cp DM_CHARS
-    jr c,nm_in
-    xor a
-nm_in
-    cp l
-    jr z,nm_next
-    ld h,a
-    ld (nm_sel),hl
-    ld a,(game_mode)
-    ld (nm_mode),a
+    call nm_pick
 nm_load                         ; (disc_fail: again from here)
     ld sp,STACK_TOP
     call disc_on

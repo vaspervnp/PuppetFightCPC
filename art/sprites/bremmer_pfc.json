@@ -1,0 +1,29 @@
+{
+  "_comment": "Character file settings (tools/sprite_codegen.py). colours: firmware colours of personal pens 6-9, first one also the health bar; alt_colours: the same for the second fighter in a mirror match; merge: art pen -> art pen, for art colours that are neither shared nor personal; special: the special move's kind (strike, projectile: file, speed in bytes per picture, damage, hitstun; throw); stage: the home stage (art/stages), where fighter B's character fights; taunt: the victory line under \"NAME WINS!\" (24 characters at most: A-Z, 0-9, space and !?.,'-:).",
+  "name": "BREMMER",
+  "title": "The Puppet Master",
+  "colours": [
+    8,
+    16,
+    2,
+    9
+  ],
+  "alt_colours": [
+    17,
+    15,
+    14,
+    21
+  ],
+  "merge": {
+    "11": 10
+  },
+  "special": {
+    "kind": "projectile",
+    "file": "globe",
+    "speed": 3,
+    "damage": 8,
+    "hitstun": 12
+  },
+  "stage": "theatre",
+  "taunt": "EVERYONE HAS STRINGS."
+}

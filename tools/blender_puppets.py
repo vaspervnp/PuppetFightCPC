@@ -119,8 +119,21 @@ ZELENSKY = dict(
     skin="skin_pink", hair="hair_black", shoe="shoe", tee=True,
 )
 
+BREMMER = dict(
+    name="bremmer",
+    scale=0.97,
+    thigh=0.28, shin=0.28, leg_r=0.074, hip_w=0.12,
+    torso_h=0.49, torso_size=(0.23, 0.30, 0.29), belly=0.02,
+    shoulder_w=0.28, upper_arm=0.30, forearm=0.28, arm_r=0.074,
+    hand_r=0.06,
+    head_size=(0.31, 0.29, 0.34), neck=0.05,
+    # the Puppet Master: a black suit, white shirt and blue tie
+    suit="suit_black", arms="arm_black", pants="suit_black", shirt="shirt",
+    tie="tie_blue", tie_len=0.44, skin="skin_pink", hair="hair_black", shoe="shoe",
+)
+
 SPECS = {"trump": TRUMP, "putin": PUTIN, "kim": KIM, "xi": XI, "musk": MUSK,
-         "zelensky": ZELENSKY}
+         "zelensky": ZELENSKY, "bremmer": BREMMER}
 
 MATERIALS = [
     "suit_navy", "suit_grey", "shirt", "tie_red", "tie_blue",
@@ -139,6 +152,8 @@ MATERIALS = [
     "tshirt_black", "arm_black_n", "arm_black_f", "chainsaw",
     # Zelensky's olive T-shirt, trousers, beard and supply crate
     "tshirt_olive", "arm_olive_n", "arm_olive_f", "pants_green", "beard", "crate",
+    # the Puppet Master's black suit, his globe and his marionette control
+    "suit_black", "globe_sea", "globe_land", "control", "strings",
 ]
 
 
@@ -338,7 +353,27 @@ def zelensky_head(sc, s, head):
     new_part(sc, "hair_top", "sphere", head, (-0.04, 0, hz * 1.35), (hx * 1.0, hy * 1.03, hz * 0.62), hair)
 
 
-HEADS = {"trump": trump_head, "putin": putin_head, "kim": kim_head, "xi": xi_head,
+def bremmer_head(sc, s, head):
+    hx, hy, hz = s["head_size"]
+    sk = s["skin"]
+    hair = s["hair"]
+    # a long oval face with a knowing grin
+    new_part(sc, "head", "sphere", head, (0, 0, hz), (hx, hy, hz), sk)
+    new_part(sc, "chin", "sphere", head, (0.06, 0, hz * 0.5), (hx * 0.75, hy * 0.8, hz * 0.42), sk)
+    new_part(sc, "nose", "sphere", head, (hx * 0.98, 0, hz * 0.98), (0.06, 0.04, 0.075), sk)
+    for side, y in (("R", -1), ("L", 1)):
+        new_part(sc, "ear_" + side, "sphere", head, (-0.02, y * hy * 0.98, hz * 1.0), (0.05, 0.03, 0.08), sk)
+        new_part(sc, "eye_" + side, "sphere", head, (hx * 0.9, y * 0.11, hz * 1.16), (0.045, 0.07, 0.035), "eye_white")
+        new_part(sc, "pupil_" + side, "sphere", head, (hx * 0.98, y * 0.11, hz * 1.16), (0.033, 0.033, 0.03), "pupil")
+        # arched brows: the puppet master is amused
+        new_part(sc, "brow_" + side, "box", head, (hx * 0.93, y * 0.11, hz * 1.32), (0.03, 0.085, 0.02), hair, rot=(y * 14, 0, 0))
+    new_part(sc, "mouth", "box", head, (hx * 0.96, 0, hz * 0.66), (0.04, 0.1, 0.022), "mouth", rot=(0, 0, 0))
+    # short dark hair, parted and combed back, a little receding
+    new_part(sc, "hair_top", "sphere", head, (-0.06, 0, hz * 1.42), (hx * 0.96, hy * 1.04, hz * 0.6), hair)
+    new_part(sc, "hair_back", "sphere", head, (-hx * 0.5, 0, hz * 1.05), (hx * 0.6, hy * 1.03, hz * 0.68), hair)
+
+
+HEADS = {"bremmer": bremmer_head, "trump": trump_head, "putin": putin_head, "kim": kim_head, "xi": xi_head,
          "musk": musk_head, "zelensky": zelensky_head}
 
 
@@ -442,6 +477,16 @@ def build_character(s):
         cr = J["prop_crate"] = new_part(sc, "crate", "box", J["wrN"], (0.16, 0.14, -0.12), (0.17, 0.17, 0.15), "crate")
         for i, z in enumerate((-0.7, 0.7)):
             new_part(sc, "crate_band%d" % i, "box", cr, (0, 0, z), (1.03, 1.03, 0.12), "shoe")
+    if s["name"] == "bremmer":
+        # G-Zero World: a globe in the near hand (the one in flight is a
+        # separate sprite); and the marionette control he works in victory
+        gl = J["prop_globe"] = new_part(sc, "globe", "sphere", J["wrN"], (0.1, 0, -0.16), (0.15, 0.15, 0.15), "globe_sea")
+        for i, (a, b) in enumerate(((0.5, 0.6), (-0.4, 0.2), (0.1, -0.6))):
+            new_part(sc, "globe_land%d" % i, "sphere", gl, (0.55, a, b), (0.5, 0.45, 0.4), "globe_land")
+        cb = J["prop_control"] = new_part(sc, "control", "box", J["wrN"], (0.02, 0, -0.1), (0.03, 0.2, 0.03), "control")
+        new_part(sc, "control_x", "box", cb, (0, 0, 0), (5.0, 0.15, 1.0), "control")
+        for i, (cx, cy) in enumerate(((0, -0.9), (0, 0.9), (4.6, 0), (-4.6, 0))):
+            new_part(sc, "string%d" % i, "box", cb, (cx, cy, -9.0), (0.25, 0.08, 9.0), "strings")
     if s["name"] == "xi":
         # Belt and Road: his belt, hanging from the near hand, or cracked out
         # straight along the arm (prop_*: shown only where a pose says)
@@ -692,8 +737,26 @@ ZELENSKY_MOVES = {
     ],
 }
 
+BREMMER_MOVES = {
+    # G-Zero World: the globe, wound back over the shoulder and bowled
+    # across (the globe in flight is a separate sprite)
+    "special": [
+        P(show=("globe",), shN=30, elN=80, shF=30, elF=90, torso=4),
+        P(show=("globe",), shN=150, elN=50, shF=40, elF=80, torso=-14, head=-8),
+        P(shN=95, elN=5, shF=50, elF=60, torso=16, twist=25, x=0.06),
+        P(shN=70, elN=35, shF=45, elF=80, torso=8, twist=10, x=0.03),
+    ],
+    # working the strings: the marionette control raised, rocked
+    "victory": [
+        P(show=("control",), shN=150, elN=20, shF=60, elF=110, torso=-4, head=-10),
+        P(show=("control",), shN=160, elN=30, shF=70, elF=120, torso=-6, head=-14, twist=-8),
+        P(show=("control",), shN=145, elN=15, shF=55, elF=100, torso=-2, head=-8, twist=8),
+    ],
+}
+
 CHAR_MOVES = {"trump": TRUMP_MOVES, "putin": PUTIN_MOVES, "kim": KIM_MOVES,
-              "xi": XI_MOVES, "musk": MUSK_MOVES, "zelensky": ZELENSKY_MOVES}
+              "xi": XI_MOVES, "musk": MUSK_MOVES, "zelensky": ZELENSKY_MOVES,
+              "bremmer": BREMMER_MOVES}
 
 MOVE_ORDER = ["idle", "walk", "crouch", "jump", "punch", "kick", "sweep",
               "uppercut", "backkick", "block", "hit", "ko", "special", "victory"]

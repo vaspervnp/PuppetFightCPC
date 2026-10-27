@@ -142,11 +142,17 @@ Puppet Regime".
 - **Specials**: **Metaverse Glitch** (teleport), **Data Harvest** (grab that
   drains a little health back to him). Victory: robotic sunscreen-faced surf.
 
-### Ian Bremmer 📋 — "The Puppet Master" (secret boss)
+### Ian Bremmer ✅ — "The Puppet Master" (secret boss)
 - The show's very first puppet: GZERO founder Ian Bremmer's puppet started
   as a gag gift. A fitting final boss for the arcade ladder.
-- **Specials**: **G-Zero World** (screen-wide "no leader in charge" stun),
-  **Puppet Strings** (pulls the opponent across the screen).
+- **Built (milestone 9):** a black suit, white shirt and blue tie, and short
+  dark hair combed back. He is not on the select screen: the ladder brings
+  him on once every other character is beaten.
+- **Special**: **G-Zero World**, a globe bowled across (a projectile).
+- **Victory**: works a marionette control over his head.
+- **Ideas for later**: a screen-wide "no leader in charge" stun, and
+  **Puppet Strings** (pulls the opponent across the screen). Both need new
+  special kinds in the engine.
 
 ### Boris Johnson ❓
 - GZERO's 2021 recap mentions UK-France squabbling, but we couldn't confirm a

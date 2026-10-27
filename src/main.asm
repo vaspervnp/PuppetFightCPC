@@ -570,6 +570,7 @@ sc_ret
     include "sprite.asm"
     include "rebuild.asm"
     include "prepare.asm"
+    include "pick.asm"
 
 ;; ---------------------------------------------------------------------------
 ;; Tables and sprite data

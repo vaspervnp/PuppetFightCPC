@@ -34,13 +34,14 @@ CACHE_SLOT := $(shell awk '$$1=="CACHE_SLOT"{print $$3}' src/config.asm)
 BUILD  := build
 
 CHARS := trump putin kim xi musk zelensky
+BOSS := bremmer
 CHAR_A ?= trump
 CHAR_B ?= putin
-roster_index = $(shell echo $(CHARS) | tr ' ' '\n' | grep -nx $(1) | awk -F: '{print $$1-1}')
+roster_index = $(shell echo $(CHARS) $(BOSS) | tr ' ' '\n' | grep -nx $(1) | awk -F: '{print $$1-1}')
 RASMFLAGS := -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEMO) -DSHOTS=$(SHOTS) \
              -DCPU=$(CPU) -DLEVEL=$(LEVEL) \
              -DCHAR_A_I=$(call roster_index,$(CHAR_A)) -DCHAR_B_I=$(call roster_index,$(CHAR_B))
-STAGES := whitehouse kremlin pyongyang beijing starbase kyiv
+STAGES := whitehouse kremlin pyongyang beijing starbase kyiv theatre
 STAGE ?= $(shell $(PYTHON) -c "import json; print(json.load(open('art/sprites/$(CHAR_B)_pfc.json'))['stage'])")
 stage_file = $(BUILD)/stages/$(shell $(PYTHON) -c "import json; print(json.load(open('art/stages/$(1).json'))['name'])").STG
 STG := $(foreach s,$(STAGES),$(call stage_file,$(s)))
@@ -48,7 +49,7 @@ GEN := src/gen/$(CHAR_A)_a_bank0.asm src/gen/$(CHAR_A)_a_bank1.asm \
        src/gen/$(CHAR_B)_b_bank0.asm src/gen/$(CHAR_B)_b_bank1.asm src/gen/chars.asm \
        src/gen/stage.asm src/gen/music.asm src/gen/diskmap.asm
 SRC := $(filter-out src/loader.asm,$(wildcard src/*.asm)) $(GEN)
-PFC := $(foreach c,$(CHARS),$(BUILD)/pfc/$(shell echo $(c) | tr a-z A-Z).PFC)
+PFC := $(foreach c,$(CHARS) $(BOSS),$(BUILD)/pfc/$(shell echo $(c) | tr a-z A-Z).PFC)
 
 all: $(BUILD)/pfspike.sna
 
@@ -111,7 +112,7 @@ $(BUILD)/pfc/ROSTER.TXT: Makefile | $(BUILD)
 # Where the engine finds the character files and stages on the disc
 # (tools/make_dsk.py): they go first, so it doesn't depend on the engine.
 src/gen/diskmap.asm: tools/make_dsk.py $(PFC) $(STG) $(BUILD)/pfc/ROSTER.TXT
-	CHARS="$(CHARS)" $(PYTHON) tools/make_dsk.py map
+	CHARS="$(CHARS)" BOSS="$(BOSS)" $(PYTHON) tools/make_dsk.py map
 
 src/gen/remap.asm: tools/sprite_codegen.py tools/cpc_palette.py
 	$(PYTHON) tools/sprite_codegen.py remap
@@ -123,7 +124,7 @@ $(BUILD)/PFLOAD.BIN: src/loader.asm src/gen/remap.asm | $(BUILD)
 # then the disc, an extended DSK with everything (tools/make_dsk.py).
 $(BUILD)/pfspike.sna: $(SRC) $(BUILD)/PFLOAD.BIN $(PFC) $(STG) $(BUILD)/TITLE.SCR $(BUILD)/pfc/ROSTER.TXT FORCE | $(BUILD)
 	cd src && $(RASM) main.asm -oi ../$@ -s -sl -sq -os ../$(BUILD)/pfspike.sym -v2 $(RASMFLAGS)
-	CHARS="$(CHARS)" $(PYTHON) tools/make_dsk.py write $(BUILD)/pfspike.dsk
+	CHARS="$(CHARS)" BOSS="$(BOSS)" $(PYTHON) tools/make_dsk.py write $(BUILD)/pfspike.dsk
 
 bench: $(BUILD)/pfspike.sna
 	$(PYTHON) tools/spike_bench.py
