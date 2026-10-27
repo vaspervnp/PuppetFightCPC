@@ -10,11 +10,21 @@
 ;; combat - each fighter's attack against the other. Destroys everything.
 ;; ---------------------------------------------------------------------------
 combat
+    ld a,(render_count)         ; A first, then B first: when both land at
+    rra                         ; once, neither side always wins the trade
+    jr c,cb_b
     ld ix,fighter_a
     ld iy,fighter_b
     call strike
     ld ix,fighter_b
     ld iy,fighter_a
+    jr strike
+cb_b
+    ld ix,fighter_b
+    ld iy,fighter_a
+    call strike
+    ld ix,fighter_a
+    ld iy,fighter_b
     ; fall into strike
 
 ;; strike - IX = attacker, IY = defender: does IX's attack land now?

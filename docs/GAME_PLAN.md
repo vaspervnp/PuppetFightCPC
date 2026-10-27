@@ -294,17 +294,18 @@ dark red, and pastel yellow (FFFF80) → olive (808000).
 |---|---|---|
 | &0038 | 3 | interrupt jump (both ROMs are off, so this is RAM) |
 | &0100-&01FF | 256 | stack |
-| &0200-&3FFF | 15.5K | engine and the sound player with its music (to &14AB), the staging buffer, then the compiled frame cache: 6 slots of 1,744 bytes from &1720, split between the fighters at start so both have about as many with their bank 1 slots |
-| &4000-&7FFF | 16K | background mirror of the fighter band, lines 88-211 (~12K used). The 512-byte gaps at &x240-&x43F hold cold logic from milestone 5 (&6240, &6A40, &7240, &7A40: `fighter.asm`, `moves.asm`, `input.asm` + `shotvis.asm`, `special.asm`) and from milestone 6 &5240 (`victory.asm`), &4240 (`logic.asm`, `boot.asm`) and &4A40 (`start.asm`, `soundctl.asm`), copied last since they are inside the load image; &5A40 is still free |
+| &0200-&3FFF | 15.5K | engine and the sound player with its music (to &14B2), the staging buffer, then the compiled frame cache: 6 slots of 1,744 bytes from &1720, split between the fighters at start so both have about as many with their bank 1 slots |
+| &4000-&7FFF | 16K | background mirror of the fighter band, lines 88-211 (~12K used). The 512-byte gaps at &x240-&x43F hold cold logic from milestone 5 (&6240, &6A40, &7240, &7A40: `fighter.asm`, `moves.asm`, `input.asm` + `shotvis.asm`, `special.asm`) and from milestone 6 &5240 (`victory.asm`), &4240 (`logic.asm`, `boot.asm`) and &4A40 (`start.asm`, `soundctl.asm`), and from milestone 7 &5A40 (`ai.asm`). All eight are in use. Boot copies all the gaps' code to &2000 first, then to the gaps |
 | &8000-&FFFF | 32K | overscan screen (26K used). The unused 800-byte tails of page 3 hold `line_tab` (&C4E0), the cache slot tables (&C700), four restore lists (&CCE0/&DCE0, &E4E0/&F4E0), `flip_tab`/`mask_tab` built at boot (&CE00) and the compiler's (s, n) tables (&D4E0, &ECE0, &FCE0) |
 | Bank 4-5 | 32K | fighter A's character: directory, all 48 frames (escaped span streams), and compiled frame cache slots at the top of bank 1 |
 | Bank 6-7 | 32K | fighter B's character |
 
 The load image starts at &4000, where AMSDOS hands over. It moves itself
 down to &0200 before the mirror is built. Before that, boot unpacks the
-stage (milestone 6), which the select screen loaded to &2000-&3FFF (8K at
-most, packed), straight into the screen: the frame caches only fill that
-area later.
+stage (milestone 6), which the select screen loaded to &2000-&3FEF (8,176
+bytes at most, packed), straight into the screen: the frame caches only fill
+that area later. The select screen's choices (who the computer plays, and
+how well) are at &3FF0, and `start` reads them first.
 
 **Characters live in the banks** (milestone 2). `tools/sprite_codegen.py
 character` writes each character as two bank images. Bank 0 starts with a
@@ -332,8 +333,8 @@ banks, then loads the engine. The snapshot build puts `CHAR_A` and `CHAR_B`
 straight into the banks instead. The stage comes packed with the select
 screen and is unpacked at boot (milestone 6). The music and its player sit in
 the payload, because the interrupt may come with a bank paged in. The load
-image ends at &61FC, close to its limit (&6240, where the first gap the boot
-copies to begins).
+image ends at &6435. It may reach &8000, because boot copies the gaps' code
+by way of &2000 (milestone 7).
 
 ### 3.5 Character file format (`TRUMP.PFC` etc.)
 
@@ -388,7 +389,7 @@ Build: a `Makefile` running pipeline → assemble → `.dsk`.
 | 4 | **Character loading** ✅ | `.PFC` format, loader, pen remap, select screen, two characters from disk |
 | 5 | **Specials + projectiles** ✅ | motion input, Tweet Storm (tweet-bird projectile), Judo Throw (throw state) |
 | 6 | **Presentation** ✅ | stages (White House lawn, Kremlin hall), title, music, SFX, victory screens with taunts |
-| 7 | **CPU opponent** | reactive AI with difficulty levels |
+| 7 | **CPU opponent** ✅ | reactive AI with difficulty levels |
 | 8 | **Roster wave 1** | Kim Jong-Un, Xi Jinping, Elon Musk, Zelensky (see [CHARACTERS.md](CHARACTERS.md)) |
 | 9 | **Release 1.0** | arcade ladder + Puppet Master boss, two-sided disk, real-hardware test, `.dsk` release |
 

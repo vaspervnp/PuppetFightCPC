@@ -26,8 +26,8 @@
 ;;
 ;; The rebuild starts on line 222 and runs across VSYNC, so interrupts are
 ;; let in after every job (INT_WINDOW, on the real stack): no stretch with
-;; them off is longer than ~1.3 ms, and the interrupt count stays exact
-;; (irq.asm).
+;; them off is longer than ~1.7 ms (a band of a fighter lying down), and the
+;; interrupt count stays exact (irq.asm).
 ;; ===========================================================================
 
 BAND            EQU 16          ; scanlines per band
@@ -61,8 +61,9 @@ J_SIZE          EQU 9
 
 ;; ---------------------------------------------------------------------------
 ;; RUN_RESTORE - run a restore, which can stop on any scanline, up to
-;; target. The two restores run back to back and each is under ~0.75 ms
-;; with interrupts off, so only the second lets interrupts in.
+;; target, then let interrupts in. (A fighter lying down is wide: its
+;; restore can take 1.7 ms a band, so the two can't run back to back with
+;; interrupts off.)
 ;; RUN_CHUNKS - run a compiled draw for whole chunks, to the first chunk
 ;; boundary at or past target.
 ;; ---------------------------------------------------------------------------
@@ -171,7 +172,7 @@ rebuild
     ld a,PH_SCHED
     ld (bench_phase),a
 rb_band
-    RUN_RESTORE job_ra,LOOK_RESTORE,PH_RESTORE_A,0
+    RUN_RESTORE job_ra,LOOK_RESTORE,PH_RESTORE_A,1
     RUN_RESTORE job_rb,LOOK_RESTORE,PH_RESTORE_B,1
     RUN_CHUNKS job_da,LOOK_DRAW_A,PH_DRAW_A
     RUN_CHUNKS job_db,LOOK_DRAW_B,PH_DRAW_B

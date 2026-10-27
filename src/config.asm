@@ -40,7 +40,14 @@ BLANK_LINES     EQU (CRTC_R4+1)*(CRTC_R9+1)-DISPLAY_LINES
 ;; screen loads to STAGE_AT and boot unpacks into the screen before it moves
 ;; the payload down. The compiled frame caches have it later.
 STAGE_AT        EQU #2000
-STAGE_ROOM      EQU #2000
+STAGE_ROOM      EQU SETTINGS_AT-STAGE_AT
+;; The select screen's choices, after the stage: who the computer plays
+;; (GM_CPU_A, GM_CPU_B) and how well (GM_LEVEL: 0-2). start reads them
+;; before the compiled frame caches go there.
+SETTINGS_AT     EQU #3FF0
+GM_CPU_A        EQU 0           ; bits of the settings (game_mode)
+GM_CPU_B        EQU 1
+GM_LEVEL        EQU 2           ; bits 2-3
 ST_INKS         EQU 3           ; a stage file: hardware inks of pens 0, 14
 ST_DATA         EQU 8           ; and 15, then (after the length) the data
 PAYLOAD_ORG     EQU #0200
@@ -102,10 +109,11 @@ COLD2_ORG       EQU (RESTORE_LIST_B XOR #1000)+256  ; #F5E0: round.asm, past
 ;; The mirror leaves #x240-#x43F of each 2 KB slice free (above). Those
 ;; gaps hold the logic, which only runs with main RAM at #4000: never code
 ;; that pages a character's bank in, or that the rebuild or an interrupt
-;; runs. Boot copies it from the load image: the gaps above the image, and
-;; last GAP5 to GAP7, inside the image but below everything copied from
-;; them.
+;; runs. Boot copies it from the load image by way of GAP_SCRATCH, where
+;; the packed stage was (boot has unpacked it by then), and the compiled
+;; frame caches go later.
 GAP_ROOM        EQU #200
+GAP_SCRATCH     EQU STAGE_AT
 GAP1_ORG        EQU #6240
 GAP2_ORG        EQU #6A40
 GAP3_ORG        EQU #7240
@@ -113,6 +121,7 @@ GAP4_ORG        EQU #7A40
 GAP5_ORG        EQU #5240
 GAP6_ORG        EQU #4240
 GAP7_ORG        EQU #4A40
+GAP8_ORG        EQU #5A40
 flip_tab        EQU #CE00       ; built at boot (make_tables), in the rest
 mask_tab        EQU #CF00       ; of slice 1's tail: page aligned
     ASSERT RESTORE_LIST_A+256<=flip_tab
@@ -192,6 +201,12 @@ PH_PREBUILD     EQU 8           ; restore lists for the next set-up
 PH_COMPILE      EQU 9           ; the runtime compiler
 PH_SHOT         EQU 10          ; a projectile's restore or draw
 
+    IFNDEF CPU
+CPU             EQU 0           ; -DCPU=n: the computer plays A (1), B (2),
+    ENDIF                       ; or both (3), at -DLEVEL=0-2
+    IFNDEF LEVEL
+LEVEL           EQU 1
+    ENDIF
     IFNDEF DEMO
 DEMO            EQU 0           ; -DDEMO=1: scripted fighters (the bench)
     ENDIF

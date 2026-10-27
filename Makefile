@@ -14,8 +14,12 @@
 # whose character has one (CHAR_B=trump for two).
 # SLACK=n starts every rebuild n*100 us late: the margin test (SLACK=15
 # must stay clean in the jump scenario).
+# CPU=n puts the computer in charge of fighter A (1), B (2) or both (3), at
+# LEVEL=0 (easy), 1 (normal) or 2 (hard); on the disc the select screen
+# chooses.
 #
 #   make bench-all   every scenario the 25 fps rule has to hold in
+#   make bench-ai    the computer against itself (CPU=3 LEVEL=2)
 
 RASM   ?= rasm
 PYTHON ?= python3
@@ -24,8 +28,11 @@ JUMP ?= 0
 DEMO ?= 0
 SLACK ?= 0
 SHOTS ?= 0
+CPU ?= 0
+LEVEL ?= 1
 CACHE_SLOT := $(shell awk '$$1=="CACHE_SLOT"{print $$3}' src/config.asm)
-RASMFLAGS := -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEMO) -DSHOTS=$(SHOTS)
+RASMFLAGS := -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEMO) -DSHOTS=$(SHOTS) \
+             -DCPU=$(CPU) -DLEVEL=$(LEVEL)
 BUILD  := build
 
 CHARS := trump putin
@@ -148,6 +155,11 @@ bench-play:
 # Combat: Trump lands a punch, Putin walks in and lands one, Trump blocks a
 # kick, Trump lands another. Ends Trump 36, Putin 32.
 FIGHT_KEYS := RIGHT@2-26,a@2-26,SPACE@30,a@40-42,z@44,RIGHT@52-55,LEFT@57-68,x@59,RIGHT@70-73,SPACE@75,a@80-83,x@86
+# The computer against itself, at its hardest: the logic at its busiest.
+bench-ai:
+	$(MAKE) --no-print-directory $(BUILD)/pfspike.sna CPU=3 LEVEL=2
+	$(PYTHON) tools/spike_bench.py --shots 30,60,90 || true
+
 bench-fight:
 	$(MAKE) --no-print-directory $(BUILD)/pfspike.sna
 	$(PYTHON) tools/spike_bench.py --keys $(FIGHT_KEYS) --shots 34,47,62,78,90 || true

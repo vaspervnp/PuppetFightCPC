@@ -31,6 +31,7 @@ lg_ctl
     ld (fighter_a+F_CTL),a
     ld a,(p2_ctl)
     ld (fighter_b+F_CTL),a
+    call ai_players             ; or the computer's (ai.asm)
     ld ix,fighter_a
     ld iy,fighter_b
     call think

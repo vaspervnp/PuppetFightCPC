@@ -15,6 +15,14 @@
 BUILDSNA
 BANKSET 0
 
+;; GAP_COPY - gap {n}'s code from where boot put it to its gap.
+    MACRO GAP_COPY n
+    ld hl,gap{n}_store-gap1_store+GAP_SCRATCH
+    ld de,GAP{n}_ORG
+    ld bc,gap{n}_end-gap{n}_start
+    ldir
+    MEND
+
 ;; ---------------------------------------------------------------------------
 ;; The file loads at #4000 (where AMSDOS can hand over) and moves the payload
 ;; down to #0200, leaving #4000-#7FFF free for the background mirror.
@@ -47,40 +55,24 @@ bt_black                        ; stage goes into the screen
     ld de,COLD2_ORG
     ld bc,cold2_end-cold2_start
     ldir
-    ld hl,gap1_store            ; and the logic to the mirror's gaps
-    ld de,GAP1_ORG
-    ld bc,gap1_end-gap1_start
-    ldir
-    ld hl,gap2_store
-    ld de,GAP2_ORG
-    ld bc,gap2_end-gap2_start
-    ldir
-    ld hl,gap3_store
-    ld de,GAP3_ORG
-    ld bc,gap3_end-gap3_start
-    ldir
-    ld hl,gap4_store
-    ld de,GAP4_ORG
-    ld bc,gap4_end-gap4_start
-    ldir
-    ld hl,gap5_store            ; last: these gaps are inside the image,
-    ld de,GAP5_ORG              ; below what they are copied from
-    ld bc,gap5_end-gap5_start
-    ldir
-    ld hl,gap6_store
-    ld de,GAP6_ORG
-    ld bc,gap6_end-gap6_start
-    ldir
-    ld hl,gap7_store
-    ld de,GAP7_ORG
-    ld bc,gap7_end-gap7_start
-    ldir
-    ld hl,STAGE_AT+ST_INKS      ; and the stage's inks: pen 0, pens 14-15
+    ld hl,STAGE_AT+ST_INKS      ; the stage's inks: pen 0, pens 14-15
     ld de,palette_game
     ldi
     ld de,palette_game+14
     ldi
     ldi
+    ld hl,gap1_store            ; and the logic to the mirror's gaps, by
+    ld de,GAP_SCRATCH           ; way of the stage's room: the image may
+    ld bc,image_end-gap1_store  ; cover the gaps
+    ldir
+    GAP_COPY 1
+    GAP_COPY 2
+    GAP_COPY 3
+    GAP_COPY 4
+    GAP_COPY 5
+    GAP_COPY 6
+    GAP_COPY 7
+    GAP_COPY 8
     jp start
 
 ;; unpack - HL = a packed stage (tools/stage_pack.py), DE = where it goes:
@@ -282,7 +274,11 @@ F_PODIR         EQU F_POY+1
 F_PVIS          EQU F_PODIR+1               ; shown in the next pass
 F_FB            EQU F_PVIS+1                ; the frame's drawn box (x0, x1,
 F_OFB           EQU F_FB+4                  ; y0, y1 from its left edge and
-F_SIZE          EQU F_OFB+4                 ; top, facing), and the shown one
+F_AIWAIT        EQU F_OFB+4                 ; top, facing), and the shown one;
+F_AIHOLD        EQU F_AIWAIT+1              ; when the computer plays it
+F_AISEQ         EQU F_AIHOLD+1              ; (ai.asm): pictures to its next
+F_SIZE          EQU F_AISEQ+1               ; choice, the controls it holds,
+                                            ; the special's steps left
 
 ;; The moves and the rules they follow (fighter.asm).
 MV_IDLE         EQU 0
@@ -661,7 +657,10 @@ sfx_vol         defb 0
 sfx_dc          defb 0
 sfx_t           defb 0
 sfx_rc          defb 0
-psg_buf        defs 2*PSG_REGS ; registers 0-10 to write, then as written
+game_mode       defb 0          ; the select screen's choices (SETTINGS_AT)
+ai_rnd_seed     defw 0          ; ai.asm: its dice
+psg_buf         defs 2*PSG_REGS ; registers 0-10: to write, as written
+    ASSERT psg_buf>>8==(psg_buf+2*PSG_REGS-1)>>8
 
 work_end
     ASSERT work_end<=WORK_AT+WORK_ROOM
@@ -682,7 +681,8 @@ cold2_end
     ASSERT cold2_end<=COLD2_ORG+COLD_ROOM
 
 ;; The logic: in gaps of the background mirror, which only runs with main
-;; RAM at #4000. Boot copies it there last, above the load image.
+;; RAM at #4000. Boot copies it all to GAP_SCRATCH first, then each gap's
+;; to its gap, so the image may lie over the gaps.
 gap1_store      EQU cold2_store+cold2_end-cold2_start
     ORG GAP1_ORG,gap1_store
 gap1_start
@@ -714,7 +714,6 @@ gap5_start
     include "victory.asm"
 gap5_end
     ASSERT gap5_end<=GAP5_ORG+GAP_ROOM
-    ASSERT gap5_store>=GAP5_ORG+GAP_ROOM    ; (inside the image: copied last)
 gap6_store      EQU gap5_store+gap5_end-gap5_start
     ORG GAP6_ORG,gap6_store
 gap6_start
@@ -722,7 +721,6 @@ gap6_start
     include "boot.asm"
 gap6_end
     ASSERT gap6_end<=GAP6_ORG+GAP_ROOM
-    ASSERT gap6_store>=GAP6_ORG+GAP_ROOM
 gap7_store      EQU gap6_store+gap6_end-gap6_start
     ORG GAP7_ORG,gap7_store
 gap7_start
@@ -730,9 +728,15 @@ gap7_start
     include "soundctl.asm"
 gap7_end
     ASSERT gap7_end<=GAP7_ORG+GAP_ROOM
-    ASSERT gap7_store>=GAP7_ORG+GAP_ROOM
-image_end       EQU gap7_store+gap7_end-gap7_start
-    ASSERT image_end<=GAP1_ORG          ; the copies never overwrite their source
+gap8_store      EQU gap7_store+gap7_end-gap7_start
+    ORG GAP8_ORG,gap8_store
+gap8_start
+    include "ai.asm"
+gap8_end
+    ASSERT gap8_end<=GAP8_ORG+GAP_ROOM
+image_end       EQU gap8_store+gap8_end-gap8_start
+    ASSERT image_end<=#8000             ; boot unpacks the stage over #8000 first
+    ASSERT GAP_SCRATCH+image_end-gap1_store<=SETTINGS_AT
 
     RUN boot
     SAVE 'PFSPIKE.BIN',boot,image_end-boot,DSK,'../build/pfspike.dsk'
@@ -751,3 +755,5 @@ image_end       EQU gap7_store+gap7_end-gap7_start
     ORG STAGE_AT
     include "gen/stage.asm"
     ASSERT $<=STAGE_AT+STAGE_ROOM
+    ORG SETTINGS_AT             ; and its choices (make CPU=... LEVEL=...)
+    defb CPU|LEVEL<<GM_LEVEL

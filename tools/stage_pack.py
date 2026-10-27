@@ -27,7 +27,7 @@ from sprite_codegen import encode_byte  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HEADER = 8
-STAGE_ROOM = 8192           # src/config.asm
+STAGE_ROOM = 0x3FF0 - 0x2000    # src/config.asm (SETTINGS_AT follows)
 STAGE_PENS = {0, 1, 2, 3, 4, 5, 14, 15}
 
 

@@ -861,6 +861,112 @@ The worst case ends long before the tick at line 222.
 | a fight to the end (`sound_check.py`) | bell, swing, hit, block, tweet, throw, KO, the fanfare on the victory screen, and the bell and fight music again on the rematch |
 | disc: title, select, load | all four banks match the snapshot; the music plays |
 
+## Milestone 7: the computer as an opponent
+
+**Memory first.**
+- The load image could not pass &6240: boot copied the gaps' code from the
+  image to the gaps, and the first of them would have landed on code not
+  copied yet.
+- Now boot copies all the gaps' code first to `GAP_SCRATCH` (&2000). That is
+  where the packed stage was, and boot has unpacked it by then. Each gap
+  then gets its code from there.
+- The image may now reach &8000 (the stage is unpacked over the screen
+  first). It ends at &6435.
+- The last mirror gap, &5A40, holds the AI (`ai.asm`, 504 of 512 bytes).
+
+**Settings.** One byte at `SETTINGS_AT` (&3FF0), after the stage's room
+(now 8,176 bytes):
+- bit 0: the computer plays A;
+- bit 1: it plays B;
+- bits 2-3: its level (0 easy, 1 normal, 2 hard).
+
+The select screen writes it, and `start` reads it into `game_mode` before
+the compiled frame caches cover that area. For the snapshot, `make CPU=n
+LEVEL=n` sets it (`CPU=3` is the computer against itself).
+
+**Select screen.**
+- C changes player 2: a player, then the computer at easy, normal and hard,
+  then back to a player.
+- Player 2's label shows which. When the computer plays, player 1 chooses
+  their own character, and once ready, the computer's as well.
+
+**The AI** (`src/ai.asm`).
+- After the keys are read, `ai_players` replaces the controls of each
+  fighter the computer plays. It makes the same CT_ bits a player would, so
+  the rest of the game can't tell.
+- The controls are worked out as if the fighter faced right, then turned.
+- A button is pressed for one picture only, so the next attack is a new
+  press.
+- The special's motion (down, down-forward, forward + punch) takes three
+  pictures (`F_AISEQ`).
+
+What it does, in order:
+1. A projectile coming within 24 bytes: block it low, or jump it.
+2. An attack within 16 bytes: block, low with the level's chance (low
+   blocks everything). Once blocking, it keeps blocking while attacks keep
+   coming: only the first reaction is a matter of chance.
+3. Someone jumping in close: an uppercut, or step back.
+4. At contact (11 bytes or less, where every attack lands): a random mix of
+   punch, kick, sweep, uppercut, back kick, and the special if it is a
+   strike or a throw.
+5. At 12-13 bytes: a punch (the only attack that reaches), or step in.
+6. From afar: walk in, now and then a jump in or a step back. A character
+   with a projectile fires it from 20 bytes or more, if none of its own is
+   flying.
+
+When it looks again:
+- Every `L_REACT` + random(`L_JITTER`) pictures.
+- Sooner when an attack comes: within `L_REACT`.
+- At once when it is free after a hit or a knockdown. Without this, it kept
+  a choice from before the hit and walked into the next punch.
+
+| Level | Pictures between looks | Block | Low | Uppercut | Attack | Fire |
+|---|---|---|---|---|---|---|
+| easy | 4 + 0-7 | 47% | 16% | 27% | 51% | 20% |
+| normal | 2 + 0-3 | 74% | 59% | 59% | 70% | 35% |
+| hard | 1 + 0-1 | 88% | 92% | 82% | 86% | 55% |
+
+The dice are a 16-bit xorshift. They aren't stirred with the refresh
+register: that depended on timing, so every change to the code changed the
+fight in the bench.
+
+**Reach** was measured in the emulator, as bytes between the two box x's at
+which each move lands, for both characters: the punch reaches up to 13,
+everything else up to 10-11. (The two can't come closer than 10.)
+
+**Results** (scripts driving the keys in the emulator, 200 s each). "Rush"
+walks in and punches every 6 pictures at 12 bytes or less. "Mash" walks in
+all the time and punches every 4 pictures.
+
+| Computer | Against rush (player : computer) | Against mash |
+|---|---|---|
+| easy | 11 : 2 | 1 : 0 (it blocks, mash can't get through, rounds run long) |
+| normal | 0 : 13 | 1 : 8 |
+| hard | 0 : 15 | 0 : 13 |
+
+Computer against computer at hard: Putin against Putin 7 : 4, Trump against
+Putin 8 : 3 (the tweet).
+
+**Two engine fixes the computer found.**
+- **Trades.** When both attacks landed in the same picture, `combat` always
+  took A's first. B was hit and its attack never counted, so A won every
+  trade: 12 : 0 computer against computer, whoever played A. Now the order
+  changes every picture.
+- **Interrupts in the rebuild.** A fighter lying down is wide, and its
+  restore took 1.7 ms in one band. The two restores ran back to back with
+  interrupts off (2.5 ms), the VSYNC interrupt was taken 44 lines late, and
+  the Gate Array moved the rest of the frame's interrupts. The tick then
+  came at line 260, and pictures took 3 frames (4 in 600 pictures of the
+  computer against itself). Now each restore lets interrupts in after it.
+  The same 600 pictures are all 2 frames.
+
+| Test | Result |
+|---|---|
+| `bench-all`, `bench-fight`, `bench-play`, `SLACK=15` | 2 frames between pictures, 0 caught, 0 late, 0 passes missed, 0 bytes wrong; the fight ends A 36, B 32 |
+| `bench-ai` (new: `CPU=3 LEVEL=2`, 96 pictures) | the same; logic 3.5 ms a picture on average, 8.3 ms at most |
+| the computer against itself, 600 pictures | 599 × 2 frames, 0 caught, 0 bytes wrong |
+| disc: C to the computer (normal), player 1 chooses both | `game_mode` &06; the computer plays B and beats a player who does nothing |
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

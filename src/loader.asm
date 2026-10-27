@@ -10,7 +10,10 @@
 ;; NAME.PFC holds one (tools/sprite_codegen.py pfc): a header with its name,
 ;; title and colours, then its two banks. The select screen shows the names
 ;; and titles from the headers. Each player picks one with left and right
-;; and fire, the same character twice too. Then fighter A's goes into banks
+;; and fire, the same character twice too. C makes player 2 the computer,
+;; at three levels (and C again a player): player 1 then chooses its
+;; character as well, once ready. The engine finds that at SETTINGS_AT.
+;; Then fighter A's goes into banks
 ;; 4-5 and fighter B's into banks 6-7, read a byte at a time so it can be
 ;; paged in a bank at a time. Fighter B's frames then have their own colours
 ;; moved from pens 6-9 to 10-13 (remap_tab), and in a mirror match its
@@ -40,6 +43,10 @@ H_LEN0          EQU 44
 H_LEN1          EQU 46
 H_STAGE         EQU 48
 STAGE_AT        EQU #2000       ; src/config.asm
+SETTINGS_AT     EQU #3FF0       ; (the engine's game_mode)
+GM_CPU_B        EQU 1
+GM_LEVEL        EQU 2
+KEY_C           EQU 62
 ST_LEN          EQU 6           ; a stage file: header, packed length
 ST_HEADER       EQU 8
 TITLE_AT        EQU #9800       ; the packed title, up to the firmware's
@@ -76,6 +83,15 @@ ld_zero
     jp nc,disc_error
     call title_wait
     call select
+    ld a,(cpu_b)                ; the computer's part, for the engine
+    or a
+    jr z,ld_mode
+    dec a
+    add a,a
+    add a,a                     ; << GM_LEVEL
+    or 1<<GM_CPU_B
+ld_mode
+    ld (SETTINGS_AT),a
 
     ld hl,s_loading
     call say
@@ -581,22 +597,42 @@ se_b
     ld (sel_b),a
     call show_a
     call show_b
+    call show_p2
 se_frame
     call MC_WAIT_FLYBACK
+    call cpu_key
     ld hl,keys_a
     call controls
+    ld c,a
+    ld a,(cpu_b)
+    or a
+    jr z,se_a
+    ld a,(rdy_a)                ; the computer plays B: once A is ready,
+    or a                        ; player 1 chooses for it
+    jr nz,se_p1b
+se_a
+    ld a,c
     ld hl,ps_a
     ld de,sel_a
     ld bc,rdy_a
     call choose
     call c,show_a
+    ld a,(cpu_b)
+    or a
+    jr nz,se_done
     ld hl,keys_b
     call controls
     ld hl,ps_b
+    jr se_b_choose
+se_p1b
+    ld a,c
+    ld hl,ps_a
+se_b_choose
     ld de,sel_b
     ld bc,rdy_b
     call choose
     call c,show_b
+se_done
     ld a,(rdy_a)
     ld hl,rdy_b
     and (hl)
@@ -608,6 +644,41 @@ se_wait
     pop bc
     djnz se_wait
     ret
+
+;; cpu_key - C just pressed: player 2 the next of player, computer easy,
+;; normal, hard; its label and its choice not ready. Destroys everything.
+cpu_key
+    ld a,KEY_C
+    call KM_TEST_KEY
+    ld hl,c_held
+    ld a,(hl)
+    ld (hl),0
+    ret z
+    ld (hl),1
+    or a
+    ret nz                      ; (held, not pressed)
+    ld a,(cpu_b)
+    inc a
+    and 3
+    ld (cpu_b),a
+    xor a
+    ld (rdy_b),a
+    call show_b
+    ; fall into show_p2
+
+;; show_p2 - player 2's label: a player or the computer at its level.
+show_p2
+    ld a,(cpu_b)
+    add a,a
+    ld l,a
+    ld h,0
+    ld de,s_p2
+    add hl,de
+    ld a,(hl)
+    inc hl
+    ld h,(hl)
+    ld l,a
+    jp say
 
 ;; controls - HL = a player's keys (left, right, fire: each a list of key
 ;; numbers ended by #FF): A = PS_ bits held. Destroys everything.
@@ -791,9 +862,19 @@ keys_b                          ; A, D, Z, X, joystick 1
 s_screen
     defb 31,3,2,15,2,"PUPPET FIGHT"
     defb 31,1,6,15,3,"PLAYER 1"
-    defb 31,1,14,15,3,"PLAYER 2"
     defb 31,1,23,15,1,"< > CHOOSE"
-    defb 31,1,24,"FIRE: READY",0
+    defb 31,1,24,"FIRE: READY"
+    defb 31,1,25,"C: COMPUTER",0
+s_p2
+    defw s_player,s_easy,s_normal,s_hard
+s_player
+    defb 31,1,14,15,3,"PLAYER 2  ",0
+s_easy
+    defb 31,1,14,15,3,"CPU EASY  ",0
+s_normal
+    defb 31,1,14,15,3,"CPU NORMAL",0
+s_hard
+    defb 31,1,14,15,3,"CPU HARD  ",0
 s_ready
     defb "READY!",0
 s_blank
@@ -827,7 +908,9 @@ ps_a            EQU rdy_b+2
 ps_b            EQU ps_a+1
 ch_ready        EQU ps_b+1
 title_up        EQU ch_ready+2  ; (ch_ready is a word)
-lc_ram          EQU title_up+1
+cpu_b           EQU title_up+1  ; 0 a player, 1-3 the computer's level + 1
+c_held          EQU cpu_b+1     ; C held last frame
+lc_ram          EQU c_held+1
 rb_moves        EQU lc_ram+1
 rb_frames       EQU rb_moves+1
 rb_move         EQU rb_frames+1
