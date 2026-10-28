@@ -3,7 +3,7 @@
     ORG #4000
 putin_b_dir
     defb "P","F",5,14
-    defb 6 : defw #5720        ; cache slots in bank 1
+    defb 6 : defw #57F8        ; cache slots in bank 1
     defb #47,#5E,#5F,#54        ; inks
     defb 2 : defw 0        ; special: throw
     defw putin_b_taunt
@@ -73,7 +73,7 @@ putin_b_m_ko
     defb 0,16,0 : defw putin_b_ko_0_spans,422 : defb 1,9,11,61,0,0,0,0 : defs 1
     defb 0,32,-8 : defw putin_b_ko_1_spans,457 : defb 6,17,21,61,0,0,0,0 : defs 1
     defb 0,32,-8 : defw putin_b_ko_2_spans,389 : defb 4,17,31,60,0,0,0,0 : defs 1
-    defb 0,32,-8 : defw putin_b_ko_3_spans,322 : defb 4,17,39,60,0,0,0,0 : defs 1
+    defb 1,32,-8 : defw putin_b_ko_3_spans,322 : defb 4,17,39,60,0,0,0,0 : defs 1
 putin_b_m_special
     defb 0,16,0 : defw putin_b_special_0_spans,459 : defb 6,14,8,61,0,0,0,0 : defs 1
     defb 0,16,0 : defw putin_b_special_1_spans,424 : defb 5,13,10,61,10,15,14,30 : defs 1
@@ -1662,33 +1662,6 @@ putin_b_ko_2_spans  ; 32 bytes wide
     defb 5,9,#00,#40,#CF,#CF,#30,#00,#80,#00,#00,#C0,#E0,#00,#80
     defb 6,7,#C5,#CF,#C0,#00,#00,#00,#00,#00,#00,#00,#80
     defb 6,2,#00,#40,#C0
-    defb 0,0
-    defb 0,0
-
-putin_b_ko_3_spans  ; 32 bytes wide
-    defb 39,24,22
-    defb 6,2,#00,#40,#00,#40
-    defb 5,4,#00,#40,#C5,#90,#00,#80
-    defb 5,4,#85,#CF,#1A,#60
-    defb 4,13,#00,#40,#0F,#0F,#1A,#0F,#00,#80,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#80
-    defb 4,13,#00,#40,#0F,#0F,#1A,#0F,#C0,#00,#80,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#00,#80
-    defb 4,14,#00,#40,#A5,#0F,#0F,#0F,#25,#4A,#C0,#00,#80,#00,#00,#00,#00,#00,#40,#C0,#00,#80
-    defb 4,14,#00,#40,#0F,#25,#0F,#0F,#0F,#0E,#0C,#E0,#00,#80,#00,#40,#C0,#C0,#00,#80
-    defb 4,14,#84,#0F,#1A,#0F,#0F,#0F,#0C,#0C,#58,#C8,#D0,#E0,#C0,#00,#80
-    defb 4,14,#84,#0F,#0F,#25,#0F,#0E,#0C,#0C,#58,#D8,#33,#33,#C0,#00,#80
-    defb 4,14,#D0,#0F,#0F,#0F,#0F,#4A,#0C,#0C,#72,#33,#72,#F0,#C0,#00,#80
-    defb 4,14,#D0,#0F,#0F,#0F,#0F,#0F,#84,#0C,#72,#72,#F0,#E4,#C0,#00,#80
-    defb 4,14,#85,#0F,#0F,#0F,#0F,#0F,#84,#0C,#72,#F0,#CC,#F0,#F0,#00,#80
-    defb 4,14,#00,#40,#0F,#0F,#0F,#0F,#1A,#84,#0C,#F0,#CC,#F0,#CC,#CC,#00,#80
-    defb 4,13,#00,#40,#0F,#0F,#0F,#0F,#30,#84,#0C,#F0,#CC,#CC,#C0,#C0
-    defb 4,11,#00,#40,#A5,#0F,#0F,#0F,#60,#0C,#58,#E4,#CC,#C0
-    defb 4,10,#00,#40,#F0,#0F,#0F,#0F,#70,#F0,#F0,#E4,#C8
-    defb 4,10,#00,#40,#F0,#A5,#0F,#1A,#60,#F0,#F0,#E4,#C8
-    defb 4,10,#00,#40,#F0,#F0,#0F,#30,#00,#80,#C0,#F0,#C0,#00,#80
-    defb 4,8,#00,#40,#CF,#E5,#30,#30,#00,#80,#00,#00,#C0
-    defb 5,4,#C5,#CF,#9A,#60
-    defb 5,4,#00,#40,#CF,#CA,#00,#80
-    defb 6,2,#C0,#00,#80
     defb 0,0
     defb 0,0
 

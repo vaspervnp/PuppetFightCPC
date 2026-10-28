@@ -295,9 +295,35 @@ class Bench:
                 row = out[y + i]
                 for j, d in enumerate(data):
                     row[x + j] = (row[x + j] & mask_of(d)) | d
+        if "BN_TEXT" in self.S:                 # the banner (src/banner.asm),
+            self.expected_banner(out)
         if "BURST_REC" in self.S:               # and the burst on top of all
             self.expected_burst(out)
         return out
+
+    def expected_banner(self, out):
+        """The banner (src/banner.asm) as bn_draw draws it: its words in the
+        victory font, a pixel a byte by 4 lines, white, each pixel's black
+        shadow a byte right and a row down drawn first."""
+        get = lambda name: self.c.read_ram(self.S[name], 1)[0]
+        if not get("BN_FLAGS") & 1:
+            return
+        main = lambda addr, n: self.bank_read(0xC1, addr, n) if addr >= 0x4000 else self.c.read_ram(addr, n)
+        p = self.S["BN_TEXTS"]
+        for _ in range(get("BN_TEXT") - 1):
+            p += 1 + main(p, 1)[0]
+        n = main(p, 1)[0]
+        x, top = get("BN_X"), self.S["BN_TOP"]
+        for k, ch in enumerate(main(p + 1, n)):
+            g = int.from_bytes(main(self.S["FONT"] + 2 * (ch - 32), 2), "little")
+            for r in range(5):
+                bits = g >> (13 - 3 * r) & 7
+                for c in range(3):
+                    if not bits >> (2 - c) & 1:
+                        continue
+                    for line in range(4):
+                        out[top + 4 * r + 4 + line][x + 4 * k + c + 1] = 0xC0
+                        out[top + 4 * r + line][x + 4 * k + c] = 0x0C
 
     def expected_burst(self, out):
         """The burst (src/burst.asm) as burst_draw draws it: its outline from

@@ -1523,6 +1523,42 @@ kicks and sweeps hid behind it, and the walk hardly moved the legs.
   interrupts, reached the burst's top after the beam had. Periods 4, 5
   and 0 only now.
 
+## Round banners
+
+Big words across the screen: **BEGIN FIGHT** as a round starts (40
+pictures), and as it ends **K.O.**, **PERFECT** (a K.O. at full health),
+**TIME UP** or **DRAW** (50 pictures, gone before the next round).
+`banner.asm`.
+
+- **Look.** The victory font, each pixel a byte wide and 4 lines tall, in
+  white with a black shadow a pixel right and down. So a letter is 4
+  bytes by 24 lines, centred on lines 88-111, the top of the fighter
+  band, where the mirror can put the stage back and only a jump reaches.
+- **Drawing.** It is a second passenger of the bursts' pass, with the same
+  times and the same pending byte (bits 2 and 3 of `BURST+F_PSTUN`), so
+  the compiler's `jc_flag`, `wait_render` (`and 5` now) and the pass
+  needed almost nothing new. It is taken off in periods 4, 5 or 0, ~6.6
+  ms with interrupts on, line by line from the top. It is drawn in period
+  5, never on the way to a rebuild, and takes that pass's turn: a burst
+  due in the same pass waits a picture. Four letters a picture
+  (`BN_CHUNK`), so the words appear left to right. All eleven letters of
+  BEGIN FIGHT in one go took 12.3 ms, and the beam caught their top in
+  the long benches. `banner_vis` (from `shot_vis`)
+  hides it while either fighter's top, on the screen or next, is above
+  line 112.
+- **Room.** 400 bytes was more than the free corners held.
+  - `CACHE_SLOT` went from 1744 to 1708, the size of the largest compiled
+    frame (Trump's). That freed 216 bytes after the payload.
+    `sprite_codegen.py --slot` stops the build if a frame ever grows past
+    it.
+  - `STAGE_SIZE` went to 607, the size of the largest stream.
+  - The pixel routine is at #0000-#0037, under the interrupt jump, which
+    nothing used with the ROMs off.
+  - Smaller pieces went to low RAM, the stack's unused tail, cold code and
+    gap 6. `banner_end` is left out of DEMO builds, which have no rounds:
+    gap 6 is full there with `JUMP=1`.
+- `spike_bench.py` draws the expected banner too.
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

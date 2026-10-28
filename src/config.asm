@@ -31,6 +31,7 @@ PAGE3_BASE      EQU #C000
 BLANK_LINES     EQU (CRTC_R4+1)*(CRTC_R9+1)-DISPLAY_LINES
 
 ;; --- Memory map --------------------------------------------------------------
+;; #0000-#0037  the banner's pixels (bannercel.asm)
 ;; #0038        interrupt jump (ROMs are off, so this is RAM)
 ;; #0040-#00FF  low code (stream.asm), copied down from the load image
 ;; #0100-#01AF  the bursts' pass (burst.asm), where the stack never goes
@@ -59,6 +60,8 @@ LOAD_ORG        EQU #4000
 STACK_TOP       EQU #0200       ; grows down from just under the payload
 LOW_ORG         EQU #0040
 LOW_ROOM        EQU #0100-LOW_ORG
+LOW0_ORG        EQU #0000
+LOW0_ROOM       EQU #0038-LOW0_ORG
 LOW2_ORG        EQU #0100
 LOW2_ROOM       EQU #01B0-LOW2_ORG
 
@@ -152,7 +155,7 @@ mask_tab        EQU #CF00       ; of slice 1's tail: page aligned
 ;; so that both fighters have about as many in all.
 MAIN_SLOTS      EQU 6           ; in main RAM, for both
 BANK1_SLOTS     EQU 6           ; at most, per character (sprite_codegen.py)
-CACHE_SLOT      EQU 1744
+CACHE_SLOT      EQU 1708
 CACHE_AT        EQU #4000-MAIN_SLOTS*CACHE_SLOT
 MAX_SLOTS       EQU 9           ; main + bank 1, per fighter
     ASSERT MAIN_SLOTS+2*BANK1_SLOTS<=18     ; (s, n) tables: 3 tails of 6

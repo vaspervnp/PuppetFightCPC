@@ -115,6 +115,10 @@ or when the clock runs out after 99 seconds. Then the fighter with more
 health wins; with the same health, nobody does. The winner of a round gets
 a marker under their bar. Two rounds win the match.
 
+Big words across the screen open each round, **BEGIN FIGHT**, and close
+it: **K.O.**, **PERFECT** (a knockout without losing any health), **TIME
+UP** or **DRAW**. They step aside while a fighter jumps through them.
+
 ![The winner](docs/img/victory.png)
 
 ## Against the computer: the ladder

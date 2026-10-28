@@ -34,6 +34,10 @@ bv_draw
     add a,a
     or b
 bv_set
+    ld b,a                      ; (bits 2-3 are the banner's: banner.asm)
+    ld a,(ix+F_PSTUN)
+    and #0C
+    or b
     ld (ix+F_PSTUN),a
     ret
 

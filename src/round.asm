@@ -64,6 +64,7 @@ rt_draw
     ld hl,0
     ld (rnd_winner),hl
 rt_end
+    call banner_end             ; K.O., TIME UP... (banner.asm)
     ld a,ROUND_END_PICS
     ld (rnd_timer),a
     ld a,1
@@ -132,6 +133,7 @@ clock_reset
     ld (rnd_secs),a
     ld a,PICS_PER_SEC
     ld (rnd_tick),a
+    call banner_begin           ; BEGIN FIGHT (banner.asm)
     jp draw_clock
 
 ;; draw_names - each fighter's name over its bar, in its first colour: its

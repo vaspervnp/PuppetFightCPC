@@ -31,7 +31,7 @@ BURST_W         EQU 14          ; bytes
 BURST_H         EQU 28          ; lines
 BURST_TOP       EQU 112         ; no higher (the beam: see above)
 BURST_TEXT      EQU 9           ; its word's first line
-    ASSERT BURST_TOP>=BAND_TOP
+    ASSERT BURST_TOP>=BAND_TOP && BURST_TOP>=BN_CLEAR  ; (banner.asm)
 
 ;; burst_pass - from shot_pass: take the burst off, then draw it, if the
 ;; beam allows. Comes back with main RAM. Destroys AF, BC, DE, HL, IY.
@@ -56,6 +56,9 @@ bp_go
     bit 0,(ix+F_PSTUN)
     call nz,burst_off
     res 0,(ix+F_PSTUN)
+    bit 2,(ix+F_PSTUN)          ; the banner's too (banner.asm)
+    call nz,bn_off
+    res 2,(ix+F_PSTUN)
     ld a,(irq_count)            ; drawing: period CLEAR_IRQ,
     cp CLEAR_IRQ
     jr nz,bp_out
@@ -65,9 +68,15 @@ bp_go
     sub b
     cp 2
     jr nc,bp_out
+    bit 3,(ix+F_PSTUN)          ; the banner first: the burst can wait
+    jr z,bp_burst
+    res 3,(ix+F_PSTUN)
+    call bn_draw
+    jr bp_out
+bp_burst
     bit 1,(ix+F_PSTUN)
     jr z,bp_out
-    ld (ix+F_PSTUN),0
+    res 1,(ix+F_PSTUN)
     ld (ix+F_PDRAWN),1
     ld (ix+F_PDMG),0
     call burst_draw

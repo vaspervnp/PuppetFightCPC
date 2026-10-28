@@ -66,6 +66,10 @@ bt_black                        ; stage goes into the screen
     ld de,LOW2_ORG
     ld bc,low2_end-low2_start
     ldir
+    ld hl,low0_store            ; and the banner's pixels under #0038
+    ld de,LOW0_ORG
+    ld bc,low0_end-low0_start
+    ldir
     ld hl,STAGE_AT+ST_INKS      ; the stage's inks: pen 0, pens 14-15
     ld de,palette_game
     ldi
@@ -231,7 +235,7 @@ wr_tick
     jr wait_render
 wr_start
     ld a,(BURST+F_PSTUN)        ; the projectiles' pass not done yet (the
-    and 1                       ; beam is on them), or a burst to take
+    and 5                       ; beam is on them), or a burst or banner to take
     ld b,a                      ; off: it goes first, on the next
     ld a,(shot_pending)         ; interrupt (or now, if this is it)
     or b
@@ -586,6 +590,7 @@ sc_ret
     include "rebuild.asm"
     include "prepare.asm"
     include "pick.asm"
+    include "banner.asm"
 
 ;; ---------------------------------------------------------------------------
 ;; Tables and sprite data
@@ -597,7 +602,7 @@ line_tab        EQU LINE_TAB_AT
 payload_end
     ASSERT payload_end<=STAGE_AT    ; boot unpacks the stage before the copy
 jit_stage       EQU payload_end     ; a frame on its way to another bank
-STAGE_SIZE      EQU 616             ; (sprite_codegen.py: largest stream 607)
+STAGE_SIZE      EQU 607             ; (sprite_codegen.py: largest stream 607)
     ASSERT jit_stage+STAGE_SIZE<=CACHE_AT   ; the compiled frame caches follow
 ;; ---------------------------------------------------------------------------
 ;; Workspace: in the unused tail of screen slice 3, past restore list A1.
@@ -713,6 +718,7 @@ cold_store      EQU payload_store+payload_end-payload_start
     ORG COLD_ORG,cold_store
 cold_start
     include "combat.asm"
+    include "bannerset.asm"
 cold_end
     ASSERT cold_end<=COLD_ORG+COLD_ROOM
 cold2_store     EQU cold_store+cold_end-cold_start
@@ -725,19 +731,27 @@ low_store       EQU cold2_store+cold2_end-cold2_start
     ORG LOW_ORG,low_store
 low_start
     include "stream.asm"
+    include "bannerlow.asm"
 low_end
     ASSERT low_end<=LOW_ORG+LOW_ROOM
 low2_store      EQU low_store+low_end-low_start
     ORG LOW2_ORG,low2_store
 low2_start
     include "burst.asm"
+    include "banneroff.asm"
 low2_end
     ASSERT low2_end<=LOW2_ORG+LOW2_ROOM
+low0_store      EQU low2_store+low2_end-low2_start
+    ORG LOW0_ORG,low0_store
+low0_start
+    include "bannercel.asm"
+low0_end
+    ASSERT low0_end<=LOW0_ORG+LOW0_ROOM
 
 ;; The logic: in gaps of the background mirror, which only runs with main
 ;; RAM at #4000. Boot copies it all to GAP_SCRATCH first, then each gap's
 ;; to its gap, so the image may lie over the gaps.
-gap1_store      EQU low2_store+low2_end-low2_start
+gap1_store      EQU low0_store+low0_end-low0_start
     ORG GAP1_ORG,gap1_store
 gap1_start
     include "fighter.asm"
@@ -784,6 +798,7 @@ gap6_store      EQU gap5_store+gap5_end-gap5_start
 gap6_start
     include "logic.asm"
     include "fill.asm"
+    include "bannerend.asm"
     include "boot.asm"
     include "fdcseek.asm"
 gap6_end

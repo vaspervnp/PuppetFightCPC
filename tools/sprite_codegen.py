@@ -258,7 +258,7 @@ def padded_spans(label, width, rows):
 
 
 BANK_SIZE = 16384
-STAGE_SIZE = 616    # src/main.asm: a frame on its way to another bank
+STAGE_SIZE = 607    # src/main.asm: a frame on its way to another bank
 BANK1_SLOTS = 6     # cache slots in bank 1 at most (src/config.asm)
 REC_SIZE = 16
 HIT_REACH = 2       # bytes a hit box reaches past the limb drawn: at the
