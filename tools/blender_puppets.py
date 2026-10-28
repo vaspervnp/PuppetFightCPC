@@ -546,6 +546,8 @@ def setup_render(sc):
 # twist = turn the torso so the near shoulder comes forward (punches).
 # spin = turn the whole puppet about the vertical axis (back kick); turn
 # overrides the head's own yaw so it can look back over the shoulder.
+# rN / lN = stretch the near arm / leg along its length on a strike, the
+# way a cartoon smears a blow (1 = as built).
 # ab = arm abduction (raise sideways). x/z = root offset; air = height above
 # ground (otherwise the lowest point is snapped to the floor).
 # wide = render a 64x64 frame (for horizontal/falling poses). The wider camera
@@ -564,17 +566,19 @@ def P(**kw):
 
 
 COMMON_MOVES = {
+    # a fighter's bounce: the knees dip and the guard rocks with them
     "idle": [
         P(),
-        P(torso=8, knN=26, knF=18, elN=114, elF=110),
-        P(torso=10, knN=30, knF=22, elN=118, elF=112, head=-2),
-        P(torso=8, knN=26, knF=18, elN=114, elF=110),
+        P(torso=10, knN=34, knF=26, hpN=24, hpF=-12, shN=40, elN=118, shF=55, elF=112, head=-2),
+        P(torso=14, knN=46, knF=38, hpN=30, hpF=-6, shN=44, elN=126, shF=58, elF=118, head=0),
+        P(torso=10, knN=34, knF=26, hpN=24, hpF=-12, shN=40, elN=118, shF=55, elF=112, head=-2),
     ],
+    # long strides, the arms swinging against the legs
     "walk": [
-        P(hpN=30, knN=10, hpF=-25, knF=25, torso=10),
-        P(hpN=5, knN=40, hpF=0, knF=15, torso=8),
-        P(hpN=-25, knN=25, hpF=30, knF=10, torso=10),
-        P(hpN=0, knN=15, hpF=5, knF=40, torso=8),
+        P(hpN=45, knN=8, hpF=-38, knF=32, torso=12, shN=5, shF=75),
+        P(hpN=8, knN=60, hpF=-2, knF=18, torso=8, shN=35, shF=50),
+        P(hpN=-38, knN=32, hpF=45, knF=8, torso=12, shN=65, shF=15),
+        P(hpN=-2, knN=18, hpF=8, knF=60, torso=8, shN=35, shF=50),
     ],
     "crouch": [
         P(hpN=35, knN=55, hpF=-5, knF=45, torso=12),
@@ -582,49 +586,61 @@ COMMON_MOVES = {
         P(hpN=80, knN=135, hpF=45, knF=130, torso=22, head=-12),
     ],
     "jump": [
-        P(hpN=50, knN=85, hpF=20, knF=80, torso=20, elN=90, elF=90),
-        P(hpN=70, knN=110, hpF=55, knF=115, torso=5, shN=80, elN=60, shF=90, elF=70),
-        P(hpN=20, knN=30, hpF=-10, knF=25, torso=0, shN=60, elN=80, shF=70, elF=80),
+        P(hpN=55, knN=95, hpF=25, knF=90, torso=24, shN=-20, elN=90, shF=-10, elF=90),
+        P(hpN=95, knN=135, hpF=80, knF=140, torso=10, shN=90, elN=50, shF=100, elF=60),
+        P(hpN=25, knN=35, hpF=-15, knF=25, torso=0, shN=70, elN=70, shF=80, elF=70),
     ],
+    # wound right back, then a lunge onto the front foot, the arm straight
+    # out (a wide frame: it reaches past a narrow one)
     "punch": [
-        P(torso=0, twist=-20, shN=10, elN=125, shF=40, elF=110),
-        P(torso=18, twist=45, shN=88, elN=2, shF=30, elF=120, hpN=28, knN=20, x=0.1),
-        P(torso=10, twist=20, shN=70, elN=50, shF=40, elF=110, x=0.04),
+        P(torso=-4, twist=-40, shN=-15, elN=140, shF=45, elF=110, hpN=10, knN=28),
+        P(torso=24, twist=65, shN=90, elN=0, shF=20, elF=130, hpN=45, knN=40, hpF=-40,
+          knF=8, x=0.38, rN=1.45, wide=True),
+        P(torso=14, twist=35, shN=78, elN=30, shF=35, elF=115, hpN=30, knN=30, hpF=-25,
+          x=0.2, rN=1.2, wide=True),
     ],
+    # chambered high, then the leg shot straight out, leaning back
     "kick": [
-        P(hpN=85, knN=120, hpF=-5, knF=8, torso=-8, shN=50, elN=100),
-        P(hpN=95, knN=5, hpF=-10, knF=5, torso=-22, lean=-6, shN=20, elN=90, shF=70, elF=60),
-        P(hpN=60, knN=70, hpF=-8, knF=8, torso=-10),
+        P(hpN=105, knN=135, hpF=-5, knF=14, torso=-12, shN=55, elN=100),
+        P(hpN=92, knN=0, hpF=-15, knF=4, torso=-18, lean=-6, shN=5, elN=90, shF=80,
+          elF=45, x=0.14, lN=1.4, wide=True),
+        P(hpN=75, knN=85, hpF=-8, knF=8, torso=-14),
     ],
+    # down low, the leg swept out flat along the floor
     "sweep": [
         P(hpN=60, knN=100, hpF=25, knF=95, torso=18),
-        P(hpN=85, knN=5, hpF=40, knF=135, torso=30, shF=-20, elF=40, shN=60, elN=60, x=-0.05),
+        P(hpN=88, knN=0, hpF=50, knF=140, torso=16, shF=-35, elF=40, shN=60, elN=60,
+          x=0.06, lN=1.5, wide=True),
         P(hpN=70, knN=60, hpF=30, knF=120, torso=24),
     ],
-    # anti-air: dip, drive up from the legs, fist past the head
+    # anti-air: dip deep, drive up from the legs, fist past the head
     "uppercut": [
-        P(hpN=40, knN=70, hpF=10, knF=60, torso=24, twist=-15, shN=-15, elN=95, x=0.02),
-        P(hpN=25, knN=35, hpF=-5, knF=25, torso=10, twist=20, shN=80, elN=100, x=0.06),
-        P(hpN=10, knN=5, hpF=-15, knF=5, torso=-12, twist=40, shN=140, elN=20, shF=20, elF=110, head=-25, x=0.08),
-        P(hpN=20, knN=25, hpF=-15, knF=15, torso=0, twist=15, shN=110, elN=60, x=0.04),
+        P(hpN=50, knN=90, hpF=15, knF=80, torso=30, twist=-25, shN=-25, elN=100, x=0.02),
+        P(hpN=25, knN=35, hpF=-5, knF=25, torso=10, twist=25, shN=85, elN=100, x=0.08),
+        P(hpN=8, knN=2, hpF=-18, knF=2, torso=-16, twist=50, shN=150, elN=12, shF=15,
+          elF=115, head=-28, x=0.12, rN=1.2),
+        P(hpN=20, knN=25, hpF=-15, knF=15, torso=0, twist=15, shN=110, elN=60, x=0.05),
     ],
     # spinning mule kick: turn away, then drive the near leg straight back
     # into the opponent while looking over the shoulder
     "backkick": [
-        P(spin=60, turn=-80, hpN=70, knN=110, torso=10, shN=40, elN=100),
-        P(spin=150, turn=-165, hpN=-30, knN=95, torso=30, shN=20, elN=90, shF=30, elF=90),
-        P(spin=170, turn=-185, hpN=-95, knN=5, hpF=10, knF=10, torso=50, shN=-20, elN=60, shF=-30, elF=60, x=0.05),
+        P(spin=60, turn=-80, hpN=75, knN=115, torso=12, shN=40, elN=100),
+        P(spin=150, turn=-165, hpN=-35, knN=100, torso=32, shN=20, elN=90, shF=30, elF=90),
+        P(spin=170, turn=-185, hpN=-100, knN=0, hpF=12, knF=10, torso=42, shN=-25, elN=60,
+          shF=-35, elF=60, x=0.1, lN=1.4, wide=True),
         P(spin=60, turn=-80, hpN=30, knN=60, torso=10, shN=40, elN=100),
     ],
     "block": [
-        P(shN=60, elN=125, shF=65, elF=125, head=4),
-        P(shN=80, elN=150, shF=85, elF=150, head=10, torso=12),
-        P(shN=82, elN=155, shF=88, elF=155, head=12, torso=14, x=-0.04),
+        P(shN=60, elN=125, shF=65, elF=125, head=4, knN=30, knF=22),
+        P(shN=80, elN=150, shF=85, elF=150, head=12, torso=16, knN=42, knF=34, x=-0.04),
+        P(shN=82, elN=155, shF=88, elF=155, head=14, torso=18, knN=46, knF=38, x=-0.08),
     ],
+    # knocked well back, head snapping, arms flung out
     "hit": [
-        P(torso=-12, head=-20, shN=20, elN=80, shF=30, elF=70, x=-0.04),
-        P(torso=-22, head=-30, lean=-6, shN=-10, elN=40, shF=-5, elF=40, hpN=30, x=-0.1),
-        P(torso=-8, head=-10, shN=20, elN=80, shF=30, elF=80, x=-0.05),
+        P(torso=-18, head=-28, shN=15, elN=70, shF=25, elF=60, x=-0.08),
+        P(torso=-26, head=-34, lean=-5, shN=-30, elN=25, shF=-25, elF=25, hpN=38, knN=22,
+          x=-0.03),
+        P(torso=-14, head=-18, shN=15, elN=70, shF=25, elF=70, x=-0.1),
     ],
     "ko": [
         P(torso=-20, head=-30, shN=-20, elN=30, shF=-10, elF=30, hpN=30, knN=10, x=-0.05),
@@ -633,6 +649,12 @@ COMMON_MOVES = {
         P(lean=-90, torso=0, head=0, shN=150, elN=10, shF=165, elF=10, hpN=15, knN=10, hpF=5, knF=5, x=-0.3, wide=True),
     ],
 }
+
+# The frame of each strike that hits, and the joint whose limb hits:
+# render_frames renders that limb alone too (<move>_<n>_hit.png), and
+# tools/make_sprites.py makes the hit box from it.
+HIT_FRAMES = {"punch": (1, "elN"), "kick": (1, "knN"), "sweep": (1, "knN"),
+              "uppercut": (2, "elN"), "backkick": (2, "knN")}
 
 TRUMP_MOVES = {
     # Tweet Storm: whips out the phone and fires a tweet (projectile is a
@@ -777,6 +799,8 @@ def apply_pose(sc, J, p):
         J["kn" + side].rotation_euler = (0, rad(p["kn" + side]), 0)
         # keep feet flat-ish against the shin/thigh rotation
         J["an" + side].rotation_euler = (0, rad(p["hp" + side] - p["kn" + side]) * 0.6, 0)
+    J["shN"].scale = (1, 1, p.get("rN", 1))
+    J["hpN"].scale = (1, 1, p.get("lN", 1))
     if "phone" in J:
         for o in [J["phone"]] + list(J["phone"].children):
             o.hide_render = not p.get("phone", False)
@@ -805,6 +829,8 @@ def key_pose(J, frame):
                 part.keyframe_insert("hide_viewport", frame=frame)
             continue
         o.keyframe_insert("rotation_euler", frame=frame)
+        if name in ("shN", "hpN"):
+            o.keyframe_insert("scale", frame=frame)
         if name == "root":
             o.keyframe_insert("location", frame=frame)
 
@@ -852,6 +878,8 @@ def build_and_render(name):
             entry["frames"].append({"frame": frame, "file": "%s_%d" % (move, i),
                                     "width": 64 if wide else 32,
                                     "offset_x": -16 if wide else 0})
+            if HIT_FRAMES.get(move, (None,))[0] == i:
+                entry["frames"][-1]["hit_limb"] = HIT_FRAMES[move][1]
             frame += 1
         manifest["moves"].append(entry)
     sc.frame_start = 1
@@ -863,11 +891,20 @@ def build_and_render(name):
         json.dump(manifest, f, indent=1)
 
     if RENDER:
-        render_frames(sc, manifest, out_dir)
+        render_frames(sc, manifest, out_dir, J)
     return sc, manifest
 
 
-def render_frames(sc, manifest, out_dir):
+def limb_meshes(joint):
+    out = []
+    for o in joint.children:
+        if o.type == "MESH":
+            out.append(o)
+        out += limb_meshes(o)
+    return out
+
+
+def render_frames(sc, manifest, out_dir, J):
     win = bpy.context.window or bpy.context.window_manager.windows[0]
     prev_scene = win.scene
     win.scene = sc
@@ -890,6 +927,20 @@ def render_frames(sc, manifest, out_dir):
                     sc.render.filepath = os.path.join(out_dir, fr["file"] + "_" + pass_name + ".png")
                     with bpy.context.temp_override(window=win, scene=sc):
                         bpy.ops.render.render(write_still=True, scene=sc.name)
+                if "hit_limb" in fr:
+                    # the striking limb alone, flat (its pixels are the hit box)
+                    keep = set(limb_meshes(J[fr["hit_limb"]]))
+                    hidden = [o for o in sc.collection.all_objects
+                              if o.type == "MESH" and not o.hide_render and o not in keep]
+                    for o in hidden:
+                        o.hide_render = True
+                    sh.light = "FLAT"
+                    sh.color_type = "MATERIAL"
+                    sc.render.filepath = os.path.join(out_dir, fr["file"] + "_hit.png")
+                    with bpy.context.temp_override(window=win, scene=sc):
+                        bpy.ops.render.render(write_still=True, scene=sc.name)
+                    for o in hidden:
+                        o.hide_render = False
         sh.light = "STUDIO"
         sh.color_type = "MATERIAL"
         sc.render.resolution_x = RES

@@ -1,9 +1,9 @@
 {
   "_comment": "Hit boxes for attack moves: the frame that hits and its box in frame pixels (x0, y0, x1, y1 inclusive), facing right. Read by tools/sprite_codegen.py.",
-  "punch":    {"frame": 1, "box": [22, 30, 31, 40]},
-  "kick":     {"frame": 1, "box": [15, 30, 25, 42]},
-  "sweep":    {"frame": 1, "box": [14, 50, 26, 62]},
-  "uppercut": {"frame": 2, "box": [14, 2, 25, 26]},
-  "backkick": {"frame": 2, "box": [16, 34, 25, 46]},
-  "special":  {"frame": 2, "box": [24, 27, 31, 35]}
+  "punch": {"frame": 1, "box": [44, 36, 52, 45]},
+  "kick": {"frame": 1, "box": [36, 35, 44, 42]},
+  "sweep": {"frame": 1, "box": [36, 49, 44, 54]},
+  "uppercut": {"frame": 2, "box": [14, 4, 20, 20]},
+  "backkick": {"frame": 2, "box": [36, 36, 43, 43]},
+  "special": {"frame": 2, "box": [24, 27, 31, 35]}
 }

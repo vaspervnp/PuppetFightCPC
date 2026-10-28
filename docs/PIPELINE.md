@@ -54,11 +54,18 @@ Blender (3D puppets, poses)  ->  art/render/<char>/*_id.png + *_lit.png
    g = dict(globals(), REPO=REPO, CHARACTERS=["trump", "putin"], RENDER=True)
    exec(open(REPO + r"\tools\blender_puppets.py").read(), g)
    ```
-   Poses live in `COMMON_MOVES` / `TRUMP_MOVES` / `PUTIN_MOVES` as joint angles.
+   Poses live in `COMMON_MOVES` and each character's `*_MOVES` as joint angles.
+   Strikes are posed big: a lunge (`x`), the hitting arm or leg stretched along
+   its length on the frame that lands (`rN`, `lN`, a cartoon smear), and a
+   64×64 wide frame so the limb isn't cut off. For each strike's hit frame
+   (`HIT_FRAMES`) the striking limb is also rendered alone (`*_hit.png`).
 2. **Quantise**: `python3 tools/make_sprites.py` maps each hi-res pixel to a
    pen (material ramp × light level), then each 8×4 block votes for one Mode 0
    pixel. Eyes and mouths get extra weight so they survive. It also adds
-   separation lines where an arm crosses the body, plus a black outline.
+   separation lines where an arm crosses the body, plus a black outline. From
+   the `*_hit.png` renders it writes the strikes' hit boxes into
+   `art/sprites/<char>_hits.json`: the front 9 pixels of a punch or kick, the
+   top 20 lines of an uppercut. A special's box is still set by hand.
 3. **Aseprite**: `tools/aseprite_build.lua` builds a 64×64 indexed `.aseprite`
    per character with one tag per move. Touch-ups by hand go here. Then run
    `tools/aseprite_export.lua` to write the frames back out.

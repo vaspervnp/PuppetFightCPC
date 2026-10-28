@@ -10,6 +10,7 @@
 ;; rebuild will draw (F_FB). Destroys everything.
 ;; ---------------------------------------------------------------------------
 shot_vis
+    call burst_vis              ; and the burst's (burst.asm)
     ld ix,fighter_a
     call sv_one
     ld ix,fighter_b

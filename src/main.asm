@@ -62,6 +62,10 @@ bt_black                        ; stage goes into the screen
     ld de,LOW_ORG
     ld bc,low_end-low_start
     ldir
+    ld hl,low2_store            ; and the bursts' pass
+    ld de,LOW2_ORG
+    ld bc,low2_end-low2_start
+    ldir
     ld hl,STAGE_AT+ST_INKS      ; the stage's inks: pen 0, pens 14-15
     ld de,palette_game
     ldi
@@ -203,25 +207,35 @@ page_char
 ;; Destroys AF, BC, DE, HL, IY.
 wait_render
     call shot_pass              ; (the projectiles, when the beam allows)
+    ld a,(tick_count)           ; (once: wr_tick waits for the next one
+    ld d,a                      ; after this, even if it came meanwhile)
     ld a,(last_render)
     ld l,a
-    ld a,(tick_count)
+    ld a,d
     sub l
     cp 2
     jr c,wr_tick                ; not the frame yet
     ld a,(irq_count)
     ld hl,start_irq
     cp (hl)
-    jr z,wr_start
+    jr nc,wr_start              ; (or later: a burst taken off took long)
     cp TICK_IRQ                 ; the tick's period, to start on the next:
     jr z,wait_render            ; nearly there
 wr_tick
-    call wait_tick
+    push de                     ; until the tick after the one read: the
+    call shot_pass              ; projectiles' pass, as soon as the beam
+    pop de                      ; allows (sleeping through to the tick
+    ld a,(tick_count)           ; left it to the rebuild's own start, too
+    cp d                        ; late for it)
+    jr z,wr_tick
     jr wait_render
 wr_start
-    ld a,(shot_pending)         ; the projectiles' pass not done yet (the
-    or a                        ; beam is on them): it goes first, on the
-    jr z,wr_go                  ; next interrupt (or now, if this is it)
+    ld a,(BURST+F_PSTUN)        ; the projectiles' pass not done yet (the
+    and 1                       ; beam is on them), or a burst to take
+    ld b,a                      ; off: it goes first, on the next
+    ld a,(shot_pending)         ; interrupt (or now, if this is it)
+    or b
+    jr z,wr_go
     ld (hl),CLEAR_IRQ
     jr wait_render
 wr_go
@@ -466,6 +480,7 @@ move_frames
 ;; Destroys AF, BC, DE, HL, IY.
 ;; ---------------------------------------------------------------------------
 shot_pass
+    call burst_pass             ; (a burst first: burst.asm)
     ld a,(shot_pending)
     or a
     ret z
@@ -582,7 +597,7 @@ line_tab        EQU LINE_TAB_AT
 payload_end
     ASSERT payload_end<=STAGE_AT    ; boot unpacks the stage before the copy
 jit_stage       EQU payload_end     ; a frame on its way to another bank
-STAGE_SIZE      EQU 600             ; (sprite_codegen.py: largest stream 599)
+STAGE_SIZE      EQU 616             ; (sprite_codegen.py: largest stream 607)
     ASSERT jit_stage+STAGE_SIZE<=CACHE_AT   ; the compiled frame caches follow
 ;; ---------------------------------------------------------------------------
 ;; Workspace: in the unused tail of screen slice 3, past restore list A1.
@@ -666,6 +681,8 @@ taunt_b         defs TAUNT_SIZE ; its pen as a left pixel, where it draws
 vt_on           defb 0
 vt_x            defb 0
 vt_lptr         defw 0
+vt_off          defb 0          ; (the text's background pen, likewise)
+burst_rec       defs F_PVIS+1-F_PW  ; burst.asm: a projectile's fields
 music_on        defb 0          ; sound.asm: the music is playing, its
 song_speed      defb 0          ; interrupts per row, and until the next
 row_tick        defb 0
@@ -710,39 +727,51 @@ low_start
     include "stream.asm"
 low_end
     ASSERT low_end<=LOW_ORG+LOW_ROOM
+low2_store      EQU low_store+low_end-low_start
+    ORG LOW2_ORG,low2_store
+low2_start
+    include "burst.asm"
+low2_end
+    ASSERT low2_end<=LOW2_ORG+LOW2_ROOM
 
 ;; The logic: in gaps of the background mirror, which only runs with main
 ;; RAM at #4000. Boot copies it all to GAP_SCRATCH first, then each gap's
 ;; to its gap, so the image may lie over the gaps.
-gap1_store      EQU low_store+low_end-low_start
+gap1_store      EQU low2_store+low2_end-low2_start
     ORG GAP1_ORG,gap1_store
 gap1_start
     include "fighter.asm"
+    include "burstdat.asm"
+    include "bursthit.asm"
     include "fdc.asm"
 gap1_end
-    ASSERT gap1_end<=GAP1_ORG+GAP_ROOM
+    ASSERT gap1_end<=GAP1_ORG+GAP_ROOM_EARLY
 gap2_store      EQU gap1_store+gap1_end-gap1_start
     ORG GAP2_ORG,gap2_store
 gap2_start
     include "moves.asm"
+    include "burstdraw.asm"
     include "discread.asm"
 gap2_end
-    ASSERT gap2_end<=GAP2_ORG+GAP_ROOM
+    ASSERT gap2_end<=GAP2_ORG+GAP_ROOM_EARLY
 gap3_store      EQU gap2_store+gap2_end-gap2_start
     ORG GAP3_ORG,gap3_store
 gap3_start
     include "input.asm"
     include "shotvis.asm"
+    include "burstvis.asm"
     include "ladder.asm"
 gap3_end
-    ASSERT gap3_end<=GAP3_ORG+GAP_ROOM
+    ASSERT gap3_end<=GAP3_ORG+GAP_ROOM_EARLY
 gap4_store      EQU gap3_store+gap3_end-gap3_start
     ORG GAP4_ORG,gap4_store
 gap4_start
     include "special.asm"
+    include "burstoff.asm"
+    include "names.asm"
     include "nmstage.asm"
 gap4_end
-    ASSERT gap4_end<=GAP4_ORG+GAP_ROOM
+    ASSERT gap4_end<=GAP4_ORG+GAP_ROOM_EARLY
 gap5_store      EQU gap4_store+gap4_end-gap4_start
     ORG GAP5_ORG,gap5_store
 gap5_start
@@ -754,6 +783,7 @@ gap6_store      EQU gap5_store+gap5_end-gap5_start
     ORG GAP6_ORG,gap6_store
 gap6_start
     include "logic.asm"
+    include "fill.asm"
     include "boot.asm"
     include "fdcseek.asm"
 gap6_end

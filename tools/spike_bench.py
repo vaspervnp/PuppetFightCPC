@@ -295,7 +295,41 @@ class Bench:
                 row = out[y + i]
                 for j, d in enumerate(data):
                     row[x + j] = (row[x + j] & mask_of(d)) | d
+        if "BURST_REC" in self.S:               # and the burst on top of all
+            self.expected_burst(out)
         return out
+
+    def expected_burst(self, out):
+        """The burst (src/burst.asm) as burst_draw draws it: its outline from
+        burst_shape, then its word in the victory font."""
+        base = self.S["BURST_REC"] - self.S["F_PW"]
+        get = lambda name: self.c.read_ram(base + self.S[name], 1)[0]
+        if not get("F_PDRAWN"):
+            return
+        main = lambda addr, n: self.bank_read(0xC1, addr, n) if addr >= 0x4000 else self.c.read_ram(addr, n)
+        w, h = self.S["BURST_W"], self.S["BURST_H"]
+        x, y = get("F_POX"), get("F_POY")
+        for i, v in enumerate(main(self.S["BURST_SHAPE"], h)):
+            a, b = v >> 4, w - 1 - (v & 15)
+            row = out[y + i]
+            fill = 0xC0 if i in (0, h - 1) else 0x0C
+            row[x + a] = 0x84
+            for j in range(a + 1, b):
+                row[x + j] = fill
+            row[x + b] = 0x48
+        word = main(self.S["BURST_WORDS"] + 4 * get("F_PSPEED"), 4)
+        on, off = 0x20, 0x08
+        px = lambda bit, v: on if v >> bit & 1 else off
+        for k, ch in enumerate(word):
+            g = int.from_bytes(main(self.S["FONT"] + 2 * (ch - 32), 2), "little")
+            for r in range(5):
+                bits = g >> (13 - 3 * r) & 7
+                e = px(2, bits) | px(1, bits) >> 1
+                d = px(0, bits) | off >> 1
+                for line in (0, 1):
+                    row = out[y + self.S["BURST_TEXT"] + 2 * r + line]
+                    row[x + (w - 8) // 2 + 2 * k] = e
+                    row[x + (w - 8) // 2 + 2 * k + 1] = d
 
 
 def main():

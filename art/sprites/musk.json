@@ -121,13 +121,13 @@
     },
     {
      "file": "punch_1",
-     "width": 32,
-     "offset_x": 0
+     "width": 64,
+     "offset_x": -16
     },
     {
      "file": "punch_2",
-     "width": 32,
-     "offset_x": 0
+     "width": 64,
+     "offset_x": -16
     }
    ]
   },
@@ -141,8 +141,8 @@
     },
     {
      "file": "kick_1",
-     "width": 32,
-     "offset_x": 0
+     "width": 64,
+     "offset_x": -16
     },
     {
      "file": "kick_2",
@@ -161,8 +161,8 @@
     },
     {
      "file": "sweep_1",
-     "width": 32,
-     "offset_x": 0
+     "width": 64,
+     "offset_x": -16
     },
     {
      "file": "sweep_2",
@@ -211,8 +211,8 @@
     },
     {
      "file": "backkick_2",
-     "width": 32,
-     "offset_x": 0
+     "width": 64,
+     "offset_x": -16
     },
     {
      "file": "backkick_3",

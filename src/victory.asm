@@ -39,6 +39,8 @@ vi_lines
     pop hl
     pop af
     ld (vt_on),a
+    ld a,#80                    ; on pen 1 (black)
+    ld (vt_off),a
     ld a,VT_LINE1
     call vt_text
     ld a,#08                    ; pen 2: white
@@ -47,21 +49,16 @@ vi_lines
     ; fall into vt_text
 
 ;; vt_text - HL = a line (length, characters), A = its first scanline,
-;; (vt_on) = the text's pen as a left pixel: draw it centred on pen 1.
-;; HL ends past the line. Destroys AF, BC, DE, IX.
+;; (vt_on), (vt_off) = the text's pen and its background's as left pixels:
+;; draw it centred. vt_at - the same for B characters from HL at x A, on
+;; the line vt_line set. HL ends past the line. Destroy AF, BC, DE, IX.
 vt_text
-    ld e,a
-    ld d,0
-    push hl
-    ld hl,LINE_TAB_AT
-    add hl,de
-    add hl,de
-    ld (vt_lptr),hl
-    pop hl
+    call vt_line
     ld b,(hl)                   ; x = 48 - length: 2 bytes a character
     inc hl
     ld a,48
     sub b
+vt_at
     ld (vt_x),a
 vt_char
     push bc
@@ -75,6 +72,19 @@ vt_char
     pop hl
     pop bc
     djnz vt_char
+    ret
+
+;; vt_line - A = a scanline: vt_lptr to its entry in line_tab. Destroys
+;; DE.
+vt_line
+    ld e,a
+    ld d,0
+    push hl
+    ld hl,LINE_TAB_AT
+    add hl,de
+    add hl,de
+    ld (vt_lptr),hl
+    pop hl
     ret
 
 ;; vt_glyph - A = a character at (vt_x) on the line (vt_lptr) points at.
@@ -114,29 +124,32 @@ vg_row
     ret
 
 ;; vt_bits - A = 3 pixels (bit 2 left): E, D = the two Mode 0 bytes, on in
-;; (vt_on), off in pen 1, the 4th pixel off. Destroys AF, L.
+;; (vt_on), off in (vt_off), the 4th pixel off. Destroys AF, L.
 vt_bits
     ld l,a
     ld a,(vt_on)
     bit 2,l
     jr nz,vb_l
-    ld a,#80
+    ld a,(vt_off)
 vb_l
     ld e,a
     ld a,(vt_on)                ; a right pixel is the left one's bits >> 1
-    srl a
     bit 1,l
     jr nz,vb_m
-    ld a,#40
+    ld a,(vt_off)
 vb_m
+    srl a
     or e
     ld e,a
     ld a,(vt_on)
     bit 0,l
     jr nz,vb_r
-    ld a,#80
+    ld a,(vt_off)
 vb_r
-    or #40
+    ld d,a
+    ld a,(vt_off)
+    srl a
+    or d
     ld d,a
     ret
 
@@ -162,6 +175,7 @@ vt_again
     call clear_wins
     ld ix,fighter_b
     call clear_wins
+    call draw_names             ; (the HUD is blank)
     ld hl,song_fight            ; the fight's music from the start
     call music_play
     jp rt_next

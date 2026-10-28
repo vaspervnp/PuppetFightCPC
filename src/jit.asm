@@ -803,8 +803,12 @@ rec_addr
 ;; before the next picture's rebuild (never while jit_force). Destroys AF,
 ;; BC.
 jc_look
-    ld a,(shot_pending)
+    ld a,(shot_pending)         ; (or a burst's: burst.asm)
     or a
+    jr nz,jl_shot
+    ld a,(BURST+F_PSTUN)
+    or a
+jl_shot
     call nz,jc_shot
 jc_time
     ld a,(jit_force)

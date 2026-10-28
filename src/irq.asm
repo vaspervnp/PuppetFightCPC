@@ -67,19 +67,12 @@ irq_no_sound
     ld a,0
     jr z,irq_flag
     ld a,(shot_pending)
+    ld hl,BURST+F_PSTUN         ; (or a burst's: burst.asm)
+    or (hl)
 irq_flag
     ld (jc_flag),a
     pop hl
     pop bc
     pop af
     ei
-    ret
-
-;; wait_tick - return on the next rebuild tick (line 170). Destroys AF, HL.
-wait_tick
-    ld hl,tick_count
-    ld a,(hl)
-wait_tick_loop
-    cp (hl)
-    jr z,wait_tick_loop
     ret

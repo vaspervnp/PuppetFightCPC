@@ -3,10 +3,10 @@
 ;; at, then its home stage's (src/ladder.asm); the boss last.
 DM_CHARS        EQU 6
 dm_files
-    defb 0,#C5,19,#C8          ; trump
-    defb 3,#C8,20,#C5          ; putin
-    defb 6,#C5,20,#C9          ; kim
-    defb 8,#C9,21,#C4          ; xi
-    defb 11,#C8,21,#C8          ; musk
-    defb 14,#C5,22,#C3          ; zelensky
-    defb 17,#C2,22,#C9          ; bremmer
+    defb 0,#C5,21,#C4          ; trump
+    defb 4,#C1,22,#C1          ; putin
+    defb 6,#C9,22,#C5          ; kim
+    defb 9,#C6,22,#C9          ; xi
+    defb 12,#C7,23,#C4          ; musk
+    defb 15,#C6,23,#C8          ; zelensky
+    defb 18,#C5,24,#C5          ; bremmer

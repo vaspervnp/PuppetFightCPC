@@ -1420,6 +1420,109 @@ Still to do for 1.0: a real 6128, with a 3" drive and with a Gotek/HxC,
 and RetroVirtualMachine or WinAPE. Those are the driver's and the
 overscan's real tests.
 
+## Names and comic-book bursts
+
+- **The names** are on the HUD over the health bars, in each fighter's
+  first colour (its bar's): the victory line up to the space ("TRUMP
+  WINS!"), so the character file needs nothing new. They use the victory
+  font, two lines a pixel row, so the HUD moved down: names on lines 1-10,
+  bars 12-19, the clock 9-23, win markers 21-23. `draw_names` draws them
+  at a match's start and after a victory blanks the HUD, not every round
+  (see below).
+- **The bursts.** A hit that lands (`land_hit`) puts a white starburst
+  with a black edge over the head of whoever took it, for 12 pictures,
+  with a word in dark red: POW!, BAM!, ZAP!, WHAM, BIFF, SOK!, BOP! or
+  OOF!, picked by the picture count. It is 14 bytes by 28 lines, drawn
+  line by line from a table of insets, and its word comes from the
+  victory font (`vt_bits` takes the background pen now, `vt_off`).
+  - It is drawn like a projectile, outside the rebuild and only where
+    neither fighter's drawn box is (`sv_one` serves it: it has a
+    projectile's fields). But it is high up (lines 112 and down), where
+    the projectiles' pass can't go, so it has its own times. It is taken
+    off in periods 4, 5 and 0, mostly on the tick in `wait_render`
+    before the rebuild. Only the shape's bytes come back from the mirror,
+    with interrupts on (~36 lines). It is drawn only in period 5 and never
+    on the way to a rebuild, so it can wait a picture.
+  - The first try drew it in periods 5 and 0 too. The long bench caught its
+    word half drawn on lines 127-136 now and then, so drawing is period 5
+    only.
+  - The first try also took it off with the projectiles' rectangle restore.
+    That is 3 ms with interrupts off, and the rebuild it delayed to line
+    222 missed its frame (2 pictures of 96 at 3 frames in `bench-ai`).
+    `wait_render` now also starts a rebuild late rather than wait a frame
+    (`jr nc`).
+- **Room.**
+  - The pass is in the stack's unused part, #0100-#015F. The stack goes
+    no lower than #01C0, measured over two minutes of CPU against CPU.
+  - Row 26's last four lines (212-215) are below the band, so in screen
+    slices 4-7 the mirror's gaps start 96 bytes early (gaps 1-4). The
+    drawing, the tables, `burst_hit`, `burst_vis` and `burst_off` are
+    there.
+  - `dn_len` went to gap 4, because COLD2 was full for `QUICKWIN`.
+- **Benches.** All pass, and `bench-all` has no change.
+  - **25 fps:** all seven matchups at 400 pictures, CPU against CPU,
+    with no picture late. HEAD had one picture late in the same Trump vs
+    Putin run.
+  - **Beam and screen:** 0 lines caught, 0 bytes wrong. `spike_bench.py`
+    now draws the expected burst too.
+  - **Held frames:** a little more than before, because the bursts take
+    some of the compiler's time. In 400 pictures A held 131 (123 before)
+    and B 118 (107).
+  - **The disc:** Caprice32 ran the ladder through every stage.
+
+## Bigger moves
+
+The moves were too small to read: a punch's fist barely left the body,
+kicks and sweeps hid behind it, and the walk hardly moved the legs.
+`tools/blender_puppets.py` now poses them bigger:
+
+- **Strikes.** A lunge onto the front foot (`x`), the striking arm or leg
+  stretched along its length on the frame that lands (`rN`, `lN`: a
+  cartoon smear, 1.2-1.5x), and a wide 64x64 frame so the limb isn't cut
+  off. This applies to the punch, the kick, the sweep and the back kick.
+  The uppercut drives higher.
+- **The rest.** The walk takes long strides with the arms swinging, the
+  idle bounces on the knees, and a hit knocks the head and arms back.
+  Block crouches into the guard.
+- **Hit boxes** come from the renders now. For each strike's hit frame the
+  striking limb is rendered alone too. `make_sprites.py` keeps the front 9
+  pixels of it (the top 20 lines of an uppercut) and writes the box into
+  `<char>_hits.json`. Specials keep their hand-set boxes. Reach is about
+  what it was: the old fists were already at the narrow frame's edge.
+- **Room.** Every character still fits its banks with the same bank 1
+  slots, and the largest compiled frame (Trump's, 1708 bytes) fits a
+  slot. Trump's punch stream is 607 bytes, so the compiler's staging
+  buffer grew to 616 (`STAGE_SIZE`). One byte of payload is left.
+- **A late picture at a new round.** A long Xi vs Musk run showed one
+  picture at 3 frames. It came from the start of a new round, not from the
+  moves: that logic step took 16.6 ms. Refilling both health bars took
+  6 ms of it, and redrawing the names another 6. The names now stay
+  through a round (they are only redrawn after a victory). `fill_rect`
+  stores 8 bytes per loop. To make room for it in the payload, `draw_hud`
+  moved to gap 6 as two `hud_rect` calls. The step is under 9 ms now.
+- **A lost tick.** Kim vs Zelensky still had one picture at 3 frames in
+  400. Its cause was older than this work. `wait_render` read
+  `tick_count`, found it wasn't time yet, then called `wait_tick`, which
+  read `tick_count` again and waited for it to change. When the tick
+  interrupt came between the two reads, it waited for the tick after,
+  and a whole frame was lost. `wait_render` now waits for a change from
+  the count it read.
+- **A pass slept through.** With that fixed, a Bremmer vs Trump run
+  caught 62 lines in one picture. Both had a projectile flying, and the
+  compiler had nothing to do, so `wait_render` slept in `wait_tick` from
+  the end of `prepare` to the next tick. That skipped the window where the
+  projectiles' pass may run (period 5 to period 2). The pass then ran on
+  the rebuild's own start, at period 5, and the rebuild began after it,
+  ~30 lines late. With the bigger frames that was too late for the
+  fighters' lower lines. While it waits for the tick, `wait_render` now
+  keeps calling `shot_pass`, which runs the pass as soon as the beam
+  allows. `wait_tick` is gone.
+- **A burst taken off too late.** Kim vs Zelensky then showed 5 lines of
+  a burst's top caught in one picture. Taking a burst off was allowed in
+  period 1 as well, and a take-off begun at the end of it, slowed by the
+  interrupts, reached the burst's top after the beam had. Periods 4, 5
+  and 0 only now.
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

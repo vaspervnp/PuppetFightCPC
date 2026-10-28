@@ -117,14 +117,15 @@
     {
      "frame": 16,
      "file": "punch_1",
-     "width": 32,
-     "offset_x": 0
+     "width": 64,
+     "offset_x": -16,
+     "hit_limb": "elN"
     },
     {
      "frame": 17,
      "file": "punch_2",
-     "width": 32,
-     "offset_x": 0
+     "width": 64,
+     "offset_x": -16
     }
    ]
   },
@@ -140,8 +141,9 @@
     {
      "frame": 19,
      "file": "kick_1",
-     "width": 32,
-     "offset_x": 0
+     "width": 64,
+     "offset_x": -16,
+     "hit_limb": "knN"
     },
     {
      "frame": 20,
@@ -163,8 +165,9 @@
     {
      "frame": 22,
      "file": "sweep_1",
-     "width": 32,
-     "offset_x": 0
+     "width": 64,
+     "offset_x": -16,
+     "hit_limb": "knN"
     },
     {
      "frame": 23,
@@ -193,7 +196,8 @@
      "frame": 26,
      "file": "uppercut_2",
      "width": 32,
-     "offset_x": 0
+     "offset_x": 0,
+     "hit_limb": "elN"
     },
     {
      "frame": 27,
@@ -221,8 +225,9 @@
     {
      "frame": 30,
      "file": "backkick_2",
-     "width": 32,
-     "offset_x": 0
+     "width": 64,
+     "offset_x": -16,
+     "hit_limb": "knN"
     },
     {
      "frame": 31,
@@ -455,6 +460,116 @@
    222,
    144,
    18
+  ],
+  "vest_white": [
+   33,
+   19,
+   217
+  ],
+  "arm_skin_n": [
+   100,
+   150,
+   160
+  ],
+  "arm_skin_f": [
+   167,
+   25,
+   103
+  ],
+  "hair_black": [
+   234,
+   156,
+   46
+  ],
+  "button_red": [
+   45,
+   31,
+   245
+  ],
+  "skin_yellow": [
+   112,
+   162,
+   188
+  ],
+  "belt": [
+   179,
+   37,
+   131
+  ],
+  "tshirt_black": [
+   246,
+   168,
+   74
+  ],
+  "arm_black_n": [
+   57,
+   43,
+   17
+  ],
+  "arm_black_f": [
+   124,
+   174,
+   216
+  ],
+  "chainsaw": [
+   191,
+   49,
+   159
+  ],
+  "tshirt_olive": [
+   2,
+   180,
+   102
+  ],
+  "arm_olive_n": [
+   69,
+   55,
+   45
+  ],
+  "arm_olive_f": [
+   136,
+   186,
+   244
+  ],
+  "pants_green": [
+   203,
+   61,
+   187
+  ],
+  "beard": [
+   14,
+   192,
+   130
+  ],
+  "crate": [
+   81,
+   67,
+   73
+  ],
+  "suit_black": [
+   148,
+   198,
+   16
+  ],
+  "globe_sea": [
+   215,
+   73,
+   215
+  ],
+  "globe_land": [
+   26,
+   204,
+   158
+  ],
+  "control": [
+   93,
+   79,
+   101
+  ],
+  "strings": [
+   160,
+   210,
+   44
   ]
  }
 }

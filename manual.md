@@ -107,8 +107,10 @@ There are three kinds:
 
 ![A match](docs/img/fight.png)
 
-Each fighter has a health bar at the top of the screen, player 1 on the
-left, and the round clock is between them. A round ends with a knockout,
+Each fighter has a health bar at the top of the screen with their name
+over it, player 1 on the left, and the round clock is between them. Every
+hit that lands throws up a comic-book burst over whoever took it: POW!,
+BAM!, ZAP!, WHAM and the rest. A round ends with a knockout,
 or when the clock runs out after 99 seconds. Then the fighter with more
 health wins; with the same health, nobody does. The winner of a round gets
 a marker under their bar. Two rounds win the match.

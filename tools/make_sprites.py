@@ -191,6 +191,44 @@ def preview(im, scale=4, bg=(40, 40, 60)):
     return canvas
 
 
+# Hit boxes from the striking limb rendered alone (tools/blender_puppets.py
+# HIT_FRAMES): its blocks, cut to the end that lands: the front few pixels
+# of a straight strike, the top of an uppercut.
+HIT_FRONT = 9      # pixels from the front edge kept
+HIT_TOP = 20       # lines from the top kept (uppercut)
+
+
+def hit_box(path, move):
+    im = Image.open(path).convert("RGBA")
+    a = im.getchannel("A").load()
+    cells = [(x, y) for y in range(im.height // BY) for x in range(im.width // BX)
+             if sum(a[x * BX + i, y * BY + j] > 0 for i in range(BX) for j in range(BY))
+             >= OPAQUE_MIN]
+    if not cells:
+        return None
+    if move == "uppercut":
+        top = min(y for _, y in cells)
+        cells = [(x, y) for x, y in cells if y < top + HIT_TOP]
+    else:
+        front = max(x for x, _ in cells)
+        cells = [(x, y) for x, y in cells if x > front - HIT_FRONT]
+    pad = 2 if move == "uppercut" else 0     # (a fist going up is narrow)
+    return [min(x for x, _ in cells) - pad, min(y for _, y in cells),
+            max(x for x, _ in cells) + pad, max(y for _, y in cells)]
+
+
+def update_hits(char, boxes):
+    path = os.path.join(REPO, "art", "sprites", char + "_hits.json")
+    with open(path) as f:
+        hits = json.load(f)
+    for move, (frame, box) in boxes.items():
+        hits[move] = {"frame": frame, "box": box}
+    lines = ["{"] + ['  %s: %s,' % (json.dumps(k), json.dumps(v)) for k, v in hits.items()]
+    lines[-1] = lines[-1].rstrip(",")
+    with open(path, "w") as f:
+        f.write("\n".join(lines) + "\n}\n")
+
+
 def process(char):
     src = os.path.join(REPO, "art", "render", char)
     dst = os.path.join(REPO, "art", "sprites", char)
@@ -200,6 +238,7 @@ def process(char):
     mats = {k: tuple(v) for k, v in man["materials"].items()}
 
     rows = []
+    boxes = {}
     table = {"character": char, "width": W, "height": H,
              "palette": palette_hex(), "moves": []}
     for move in man["moves"]:
@@ -211,6 +250,11 @@ def process(char):
             im = to_image(convert_frame(id_img, lit_img, mats))
             im.save(os.path.join(dst, base + ".png"), transparency=TRANSPARENT)
             frames.append(im)
+            hp = os.path.join(src, base + "_hit.png")
+            if "hit_limb" in fr and os.path.exists(hp):
+                box = hit_box(hp, move["name"])
+                if box:
+                    boxes[move["name"]] = (move["frames"].index(fr), box)
         rows.append(frames)
         table["moves"].append({
             "name": move["name"],
@@ -238,6 +282,8 @@ def process(char):
 
     with open(os.path.join(REPO, "art", "sprites", char + ".json"), "w") as f:
         json.dump(table, f, indent=1)
+    if boxes:
+        update_hits(char, boxes)
     return sum(len(r) for r in rows)
 
 

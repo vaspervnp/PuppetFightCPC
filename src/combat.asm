@@ -109,6 +109,7 @@ land_hit
 sk_alive
     ld (ix+F_HEALTH),a
     push af
+    call burst_hit              ; POW! (bursthit.asm)
     call health_bar
     pop af
     or a
@@ -317,5 +318,5 @@ health_bar
     add a,(ix+F_HEALTH)
 hb_x
     ld (fr_x),a
-    ld hl,8
+    ld hl,BAR_LINE
     jp fill_rect

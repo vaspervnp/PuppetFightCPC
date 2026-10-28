@@ -11,10 +11,10 @@
 
 ROUND_END_PICS  EQU 75          ; 3 s
 WINS_NEEDED     EQU 2
-MARK_LINE       EQU 18          ; win markers: under the bars, 3 x 3
+MARK_LINE       EQU BAR_LINE+9  ; win markers: under the bars, 3 x 3
 ROUND_SECS      EQU #99         ; the clock, BCD
 PICS_PER_SEC    EQU 25
-CLOCK_LINE      EQU 5           ; its digits: 3 x 5 pixels, 3 lines a row,
+CLOCK_LINE      EQU BAR_LINE-3  ; its digits: 3 x 5 pixels, 3 lines a row,
 CLOCK_X         EQU 46          ; between the bars
 
 ;; round_tick - once a picture, after combat. Destroys everything.
@@ -120,16 +120,41 @@ fighter_reset
     ld c,PB_10_10
 fr_bar
     ld b,8
-    ld de,8
+    ld de,BAR_LINE
     jp hud_rect
 
-;; clock_reset - the clock back to ROUND_SECS, on the screen too.
-;; draw_clock - its two digits. Destroy AF, BC, DE, HL.
+;; clock_reset - the clock back to ROUND_SECS, on the screen too (not the
+;; names: a new round leaves them be, which saves the picture it starts in
+;; ~10 ms of drawing). draw_clock - its two digits. Destroy AF, BC, DE, HL (and
+;; clock_reset IX).
 clock_reset
     ld a,ROUND_SECS
     ld (rnd_secs),a
     ld a,PICS_PER_SEC
     ld (rnd_tick),a
+    jp draw_clock
+
+;; draw_names - each fighter's name over its bar, in its first colour: its
+;; victory line up to the space ("TRUMP WINS!"), A's from the bar's left
+;; end, B's to its right end.
+draw_names
+    ld a,NAME_LINE
+    call vt_line
+    ld a,#80                    ; on pen 1 (black)
+    ld (vt_off),a
+    ld a,#28                    ; pen 6
+    ld hl,taunt_a+1
+    call dn_len
+    ld a,4
+    call vt_at
+    ld a,#0A                    ; pen 10
+    ld hl,taunt_b+1
+    call dn_len
+    ld a,92
+    sub b
+    sub b
+    jp vt_at
+
 draw_clock
     push ix
     ld a,(rnd_secs)

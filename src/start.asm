@@ -40,7 +40,6 @@ start
     call set_black
     call build_line_tab
     call draw_hud               ; on the stage boot unpacked
-    call clock_reset            ; and the round clock on it
     call copy_mirror
     call clear_lists
     call make_tables
@@ -73,6 +72,8 @@ start
     ld ix,fighter_b
     ld de,taunt_b
     call load_special
+    call clock_reset            ; the round clock and the names on the HUD
+    call draw_names
     call setup_crtc
     ld hl,palette_game
     call set_palette

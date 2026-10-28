@@ -9,41 +9,9 @@ line_addr
     add hl,de
     ret
 
-;; ---------------------------------------------------------------------------
-;; draw_hud - the health bars, full, on the stage boot unpacked (its lines
-;; 0-23 are the HUD's black). Destroys everything.
-;; ---------------------------------------------------------------------------
-draw_hud
-    ld ix,hud_rects
-dh_rect
-    ld a,(ix+0)
-    cp #FF
-    ret z
-    ld l,(ix+0)
-    ld h,(ix+1)
-    ld a,(ix+2)
-    ld (fr_h),a
-    ld a,(ix+3)
-    ld (fr_x),a
-    ld a,(ix+4)
-    ld (fr_w),a
-    ld a,(ix+5)
-    ld (fr_b),a
-    call fill_rect
-    ld bc,6
-    add ix,bc
-    jr dh_rect
-
-;; Rectangles: first line (word), lines, x, width, byte. #FF ends.
-hud_rects
-    defw 8
-    defb 8,4,40,PB_6_6          ; fighter A's health bar, in its first colour
-    defw 8
-    defb 8,52,40,PB_10_10       ; fighter B's
-    defb #FF
-
 ;; fill_rect - HL = first scanline, (fr_h) lines, (fr_x) x, (fr_w) width,
-;; (fr_b) byte. Destroys AF, BC, DE, HL.
+;; (fr_b) byte. Eight bytes at a time where it can (a new round refills
+;; both health bars in the picture it starts in). Destroys AF, BC, DE, HL.
 fill_rect
     call line_addr
 fr_line
@@ -61,16 +29,32 @@ fr_line
     ld a,(fr_b)
     ld b,a
     ld a,(fr_w)
+    ld c,a
+    and 7
+    jr z,fr_eights
 fr_byte
     ld (hl),b
     inc hl
     dec a
     jr nz,fr_byte
+fr_eights
+    ld a,c
+    rrca
+    rrca
+    rrca
+    and 31
+    jr z,fr_next
+fr_eight
+    REPEAT 8
+    ld (hl),b
+    inc hl
+    REND
+    dec a
+    jr nz,fr_eight
+fr_next
     pop hl
     ld a,(fr_h)
     dec a
     ld (fr_h),a
     jr nz,fr_line
     ret
-
-ret

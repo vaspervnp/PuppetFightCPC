@@ -33,7 +33,8 @@ BLANK_LINES     EQU (CRTC_R4+1)*(CRTC_R9+1)-DISPLAY_LINES
 ;; --- Memory map --------------------------------------------------------------
 ;; #0038        interrupt jump (ROMs are off, so this is RAM)
 ;; #0040-#00FF  low code (stream.asm), copied down from the load image
-;; #0100-#01FF  the stack (it goes down to #01E0)
+;; #0100-#01AF  the bursts' pass (burst.asm), where the stack never goes
+;; #01B0-#01FF  the stack (it goes down to #01D8, measured)
 ;; #0200-#3FFF  engine, tables, sprite data (copied down from the load image)
 ;; #4000-#7FFF  background mirror of the fighter band (see below)
 ;; #8000-#FFFF  overscan screen
@@ -58,6 +59,8 @@ LOAD_ORG        EQU #4000
 STACK_TOP       EQU #0200       ; grows down from just under the payload
 LOW_ORG         EQU #0040
 LOW_ROOM        EQU #0100-LOW_ORG
+LOW2_ORG        EQU #0100
+LOW2_ROOM       EQU #01B0-LOW2_ORG
 
 ;; --- Floor, fighter band and background mirror ---------------------------
 ;; Every stage has a raised floor: the bottom FLOOR_H lines are floor, never
@@ -121,12 +124,17 @@ COLD2_ORG       EQU (RESTORE_LIST_B XOR #1000)+256  ; #F5E0: round.asm, past
 ;; runs. Boot copies it from the load image by way of GAP_SCRATCH, where
 ;; the packed stage was (boot has unpacked it by then), and the compiled
 ;; frame caches go later.
+;; In slices 4-7 a gap starts a line early: the last four scanlines of row
+;; 26 (212-215) are below the band, so their mirror lines are free too.
 GAP_ROOM        EQU #200
+GAP_EARLY       EQU BYTES_PER_LINE
+GAP_ROOM_EARLY  EQU GAP_ROOM+GAP_EARLY
+    ASSERT BAND_BOTTOM<=26*8+4
 GAP_SCRATCH     EQU STAGE_AT
-GAP1_ORG        EQU #6240
-GAP2_ORG        EQU #6A40
-GAP3_ORG        EQU #7240
-GAP4_ORG        EQU #7A40
+GAP1_ORG        EQU #6240-GAP_EARLY
+GAP2_ORG        EQU #6A40-GAP_EARLY
+GAP3_ORG        EQU #7240-GAP_EARLY
+GAP4_ORG        EQU #7A40-GAP_EARLY
 GAP5_ORG        EQU #5240
 GAP6_ORG        EQU #4240
 GAP7_ORG        EQU #4A40
@@ -165,6 +173,8 @@ SN_TAIL2        EQU #FCE0
 
 ;; --- Spike scene ---------------------------------------------------------
 HUD_LINES       EQU 24
+NAME_LINE       EQU 1           ; the fighters' names (round.asm), 10 lines
+BAR_LINE        EQU 12          ; the health bars, 8 lines
 TRUMP_X0        EQU 20
     IFNDEF CLOSE_UP
 CLOSE_UP        EQU 0
@@ -196,6 +206,8 @@ PB_1_1   EQU #C0
 PB_5_3   EQU #E4
 PB_6_6   EQU #3C
 PB_10_10 EQU #0F
+PB_1_2   EQU #84
+PB_2_1   EQU #48
 
 ;; --- Bench phases (tools/spike_bench.py watches bench_phase) ---------------
 PH_IDLE         EQU 0
