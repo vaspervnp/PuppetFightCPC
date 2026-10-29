@@ -17,8 +17,11 @@
 # QUICKWIN=1 makes player 1 win every match at once (a test disc: the
 # ladder runs by itself).
 # CPU=n puts the computer in charge of fighter A (1), B (2) or both (3), at
-# LEVEL=0 (easy), 1 (normal) or 2 (hard); on the disc the select screen
-# chooses.
+# LEVEL=0 (easy), 1 (normal) or 2 (hard); +16 is training (CPU=17
+# CHAR_B=dummy: the computer against the training dummy); on the disc the
+# select screen chooses.
+# TRAINER is training's fighter B: on the disc, not on the select screen's
+# roster.
 #
 #   make bench-all   every scenario the 25 fps rule has to hold in
 #   make bench-ai    the computer against itself (CPU=3 LEVEL=2)
@@ -38,9 +41,10 @@ BUILD  := build
 
 CHARS := trump putin kim xi musk zelensky
 BOSS := bremmer
+TRAINER := dummy
 CHAR_A ?= trump
 CHAR_B ?= putin
-roster_index = $(shell echo $(CHARS) $(BOSS) | tr ' ' '\n' | grep -nx $(1) | awk -F: '{print $$1-1}')
+roster_index = $(shell echo $(CHARS) $(BOSS) $(TRAINER) | tr ' ' '\n' | grep -nx $(1) | awk -F: '{print $$1-1}')
 RASMFLAGS := -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEMO) -DSHOTS=$(SHOTS) \
              -DCPU=$(CPU) -DLEVEL=$(LEVEL) -DQUICKWIN=$(QUICKWIN) \
              -DCHAR_A_I=$(call roster_index,$(CHAR_A)) -DCHAR_B_I=$(call roster_index,$(CHAR_B))
@@ -52,7 +56,7 @@ GEN := src/gen/$(CHAR_A)_a_bank0.asm src/gen/$(CHAR_A)_a_bank1.asm \
        src/gen/$(CHAR_B)_b_bank0.asm src/gen/$(CHAR_B)_b_bank1.asm src/gen/chars.asm \
        src/gen/stage.asm src/gen/music.asm src/gen/diskmap.asm
 SRC := $(filter-out src/loader.asm,$(wildcard src/*.asm)) $(GEN)
-PFC := $(foreach c,$(CHARS) $(BOSS),$(BUILD)/pfc/$(shell echo $(c) | tr a-z A-Z).PFC)
+PFC := $(foreach c,$(CHARS) $(BOSS) $(TRAINER),$(BUILD)/pfc/$(shell echo $(c) | tr a-z A-Z).PFC)
 
 all: $(BUILD)/pfspike.sna
 
@@ -101,7 +105,7 @@ src/gen/music.asm: tools/music.py
 # background and fighters.
 $(BUILD)/TITLE.SCR $(BUILD)/SELECT.SCR $(BUILD)/FIGHTERS.BIN &: tools/title_art.py tools/stage_pack.py tools/sprite_codegen.py art/title.json \
         art/sprites/*.json $(wildcard art/sprites/*/*.png) | $(BUILD)
-	CHARS="$(CHARS)" $(PYTHON) tools/title_art.py
+	CHARS="$(CHARS) $(TRAINER)" $(PYTHON) tools/title_art.py
 
 # Character files for the disc, made for fighter B's pens (the loader moves
 # fighter A's), and the list of them the select screen reads.
@@ -116,7 +120,7 @@ $(BUILD)/pfc/ROSTER.TXT: Makefile | $(BUILD)
 # Where the engine finds the character files and stages on the disc
 # (tools/make_dsk.py): they go first, so it doesn't depend on the engine.
 src/gen/diskmap.asm: tools/make_dsk.py $(PFC) $(STG) $(BUILD)/pfc/ROSTER.TXT
-	CHARS="$(CHARS)" BOSS="$(BOSS)" $(PYTHON) tools/make_dsk.py map
+	CHARS="$(CHARS)" BOSS="$(BOSS)" TRAINER="$(TRAINER)" $(PYTHON) tools/make_dsk.py map
 
 src/gen/remap.asm: tools/sprite_codegen.py tools/cpc_palette.py
 	$(PYTHON) tools/sprite_codegen.py remap
@@ -128,7 +132,7 @@ $(BUILD)/PFLOAD.BIN: src/loader.asm src/gen/remap.asm | $(BUILD)
 # then the disc, an extended DSK with everything (tools/make_dsk.py).
 $(BUILD)/pfspike.sna: $(SRC) $(BUILD)/PFLOAD.BIN $(PFC) $(STG) $(BUILD)/TITLE.SCR $(BUILD)/SELECT.SCR $(BUILD)/FIGHTERS.BIN $(BUILD)/pfc/ROSTER.TXT FORCE | $(BUILD)
 	cd src && $(RASM) main.asm -oi ../$@ -s -sl -sq -os ../$(BUILD)/pfspike.sym -v2 $(RASMFLAGS)
-	CHARS="$(CHARS)" BOSS="$(BOSS)" $(PYTHON) tools/make_dsk.py write $(BUILD)/puppetfight.dsk
+	CHARS="$(CHARS)" BOSS="$(BOSS)" TRAINER="$(TRAINER)" $(PYTHON) tools/make_dsk.py write $(BUILD)/puppetfight.dsk
 
 bench: $(BUILD)/pfspike.sna
 	$(PYTHON) tools/spike_bench.py

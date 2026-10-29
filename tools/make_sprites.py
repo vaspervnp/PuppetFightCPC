@@ -71,9 +71,15 @@ RAMPS = {
     "globe_land":  (14, 14, 14),
     "control":     (3, 3, OUTLINE),
     "strings":     (10, 10, 10),
+    "burlap":      (7, 8, 3),
+    "target_red":  (4, 4, 3),
+    "target_white": (10, 10, 9),
+    "rope":        (3, 3, OUTLINE),
+    "spring":      (10, 9, 9),
+    "base":        (9, 9, 1),
 }
 
-WEIGHT = {"eye_white": 5, "pupil": 8, "mouth": 6, "brow": 3,
+WEIGHT = {"target_white": 2, "eye_white": 5, "pupil": 8, "mouth": 6, "brow": 3,
           "tie_red": 2, "tie_blue": 2, "phone": 3, "shirt": 1.5}
 
 HIGHLIGHT = 0.90   # fraction of the frame's max light level
@@ -288,5 +294,5 @@ def process(char):
 
 
 if __name__ == "__main__":
-    for c in sys.argv[1:] or ["trump", "putin", "kim", "xi", "musk", "zelensky", "bremmer"]:
+    for c in sys.argv[1:] or ["trump", "putin", "kim", "xi", "musk", "zelensky", "bremmer", "dummy"]:
         print(c, process(c), "frames")

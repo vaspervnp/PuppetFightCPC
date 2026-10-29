@@ -1,0 +1,637 @@
+{
+ "character": "dummy",
+ "moves": [
+  {
+   "name": "idle",
+   "frames": [
+    {
+     "frame": 1,
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "frame": 2,
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "frame": 3,
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "frame": 4,
+     "file": "idle_3",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "walk",
+   "frames": [
+    {
+     "frame": 1,
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 2,
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 3,
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 4,
+     "file": "idle_3",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    }
+   ]
+  },
+  {
+   "name": "crouch",
+   "frames": [
+    {
+     "frame": 1,
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 2,
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 3,
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    }
+   ]
+  },
+  {
+   "name": "jump",
+   "frames": [
+    {
+     "frame": 1,
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 2,
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 3,
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    }
+   ]
+  },
+  {
+   "name": "punch",
+   "frames": [
+    {
+     "frame": 1,
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 2,
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 3,
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    }
+   ]
+  },
+  {
+   "name": "kick",
+   "frames": [
+    {
+     "frame": 1,
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 2,
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 3,
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    }
+   ]
+  },
+  {
+   "name": "sweep",
+   "frames": [
+    {
+     "frame": 1,
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 2,
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 3,
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    }
+   ]
+  },
+  {
+   "name": "uppercut",
+   "frames": [
+    {
+     "frame": 1,
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 2,
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 3,
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 4,
+     "file": "idle_3",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    }
+   ]
+  },
+  {
+   "name": "backkick",
+   "frames": [
+    {
+     "frame": 1,
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 2,
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 3,
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 4,
+     "file": "idle_3",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    }
+   ]
+  },
+  {
+   "name": "block",
+   "frames": [
+    {
+     "frame": 1,
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 2,
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 3,
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    }
+   ]
+  },
+  {
+   "name": "hit",
+   "frames": [
+    {
+     "frame": 5,
+     "file": "hit_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "frame": 6,
+     "file": "hit_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "frame": 7,
+     "file": "hit_2",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "ko",
+   "frames": [
+    {
+     "frame": 8,
+     "file": "ko_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "frame": 9,
+     "file": "ko_1",
+     "width": 64,
+     "offset_x": -16
+    },
+    {
+     "frame": 10,
+     "file": "ko_2",
+     "width": 64,
+     "offset_x": -16
+    },
+    {
+     "frame": 11,
+     "file": "ko_3",
+     "width": 64,
+     "offset_x": -16
+    }
+   ]
+  },
+  {
+   "name": "special",
+   "frames": [
+    {
+     "frame": 1,
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 2,
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 3,
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 4,
+     "file": "idle_3",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    }
+   ]
+  },
+  {
+   "name": "victory",
+   "frames": [
+    {
+     "frame": 1,
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 2,
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    },
+    {
+     "frame": 3,
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0,
+     "alias": true
+    }
+   ]
+  }
+ ],
+ "materials": {
+  "suit_navy": [
+   40,
+   90,
+   20
+  ],
+  "suit_grey": [
+   107,
+   221,
+   219
+  ],
+  "shirt": [
+   174,
+   96,
+   162
+  ],
+  "tie_red": [
+   241,
+   227,
+   105
+  ],
+  "tie_blue": [
+   52,
+   102,
+   48
+  ],
+  "skin_orange": [
+   119,
+   233,
+   247
+  ],
+  "skin_pink": [
+   186,
+   108,
+   190
+  ],
+  "hair_yellow": [
+   253,
+   239,
+   133
+  ],
+  "hair_grey": [
+   64,
+   114,
+   76
+  ],
+  "shoe": [
+   131,
+   245,
+   19
+  ],
+  "eye_white": [
+   198,
+   120,
+   218
+  ],
+  "pupil": [
+   9,
+   251,
+   161
+  ],
+  "mouth": [
+   76,
+   126,
+   104
+  ],
+  "brow": [
+   143,
+   1,
+   47
+  ],
+  "phone": [
+   210,
+   132,
+   246
+  ],
+  "arm_navy_n": [
+   21,
+   7,
+   189
+  ],
+  "arm_navy_f": [
+   88,
+   138,
+   132
+  ],
+  "arm_grey_n": [
+   155,
+   13,
+   75
+  ],
+  "arm_grey_f": [
+   222,
+   144,
+   18
+  ],
+  "vest_white": [
+   33,
+   19,
+   217
+  ],
+  "arm_skin_n": [
+   100,
+   150,
+   160
+  ],
+  "arm_skin_f": [
+   167,
+   25,
+   103
+  ],
+  "hair_black": [
+   234,
+   156,
+   46
+  ],
+  "button_red": [
+   45,
+   31,
+   245
+  ],
+  "skin_yellow": [
+   112,
+   162,
+   188
+  ],
+  "belt": [
+   179,
+   37,
+   131
+  ],
+  "tshirt_black": [
+   246,
+   168,
+   74
+  ],
+  "arm_black_n": [
+   57,
+   43,
+   17
+  ],
+  "arm_black_f": [
+   124,
+   174,
+   216
+  ],
+  "chainsaw": [
+   191,
+   49,
+   159
+  ],
+  "tshirt_olive": [
+   2,
+   180,
+   102
+  ],
+  "arm_olive_n": [
+   69,
+   55,
+   45
+  ],
+  "arm_olive_f": [
+   136,
+   186,
+   244
+  ],
+  "pants_green": [
+   203,
+   61,
+   187
+  ],
+  "beard": [
+   14,
+   192,
+   130
+  ],
+  "crate": [
+   81,
+   67,
+   73
+  ],
+  "suit_black": [
+   148,
+   198,
+   16
+  ],
+  "globe_sea": [
+   215,
+   73,
+   215
+  ],
+  "globe_land": [
+   26,
+   204,
+   158
+  ],
+  "control": [
+   93,
+   79,
+   101
+  ],
+  "strings": [
+   160,
+   210,
+   44
+  ],
+  "burlap": [
+   227,
+   85,
+   243
+  ],
+  "target_red": [
+   38,
+   216,
+   186
+  ],
+  "target_white": [
+   105,
+   91,
+   129
+  ],
+  "rope": [
+   172,
+   222,
+   72
+  ],
+  "spring": [
+   239,
+   97,
+   15
+  ],
+  "base": [
+   50,
+   228,
+   214
+  ]
+ }
+}

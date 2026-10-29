@@ -116,7 +116,7 @@ st_land
 st_right
     add a,THROW_X
 st_set
-    call set_x                  ; (the walls stop it)
+    call set_x_wide             ; (the walls stop it)
     jp sk_hit                   ; the special's damage, a knockdown
 
 ;; ---------------------------------------------------------------------------

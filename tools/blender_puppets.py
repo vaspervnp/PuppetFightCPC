@@ -132,8 +132,12 @@ BREMMER = dict(
     tie="tie_blue", tie_len=0.44, skin="skin_pink", hair="hair_black", shoe="shoe",
 )
 
+# The training dummy (build_dummy): a burlap sack on a spring over a weighted
+# base, bending at the spring, the waist and the chest.
+DUMMY = dict(name="dummy", scale=1.08)
+
 SPECS = {"trump": TRUMP, "putin": PUTIN, "kim": KIM, "xi": XI, "musk": MUSK,
-         "zelensky": ZELENSKY, "bremmer": BREMMER}
+         "zelensky": ZELENSKY, "bremmer": BREMMER, "dummy": DUMMY}
 
 MATERIALS = [
     "suit_navy", "suit_grey", "shirt", "tie_red", "tie_blue",
@@ -154,6 +158,8 @@ MATERIALS = [
     "tshirt_olive", "arm_olive_n", "arm_olive_f", "pants_green", "beard", "crate",
     # the Puppet Master's black suit, his globe and his marionette control
     "suit_black", "globe_sea", "globe_land", "control", "strings",
+    # the training dummy: burlap, its target, rope, spring and base
+    "burlap", "target_red", "target_white", "rope", "spring", "base",
 ]
 
 
@@ -498,6 +504,59 @@ def build_character(s):
     return sc, J
 
 
+def build_dummy(s):
+    """The training dummy: a weighted base, a spring, then a burlap sack in
+    two parts (bend1 at the spring, bend2 at the waist, bend3 at the chest)
+    with stub arms, a target on the chest and a head with stitched X eyes."""
+    scn = "PF_" + s["name"]
+    old = bpy.data.scenes.get(scn)
+    if old is not None:
+        for o in list(old.collection.all_objects):
+            bpy.data.objects.remove(o, do_unlink=True)
+        bpy.data.scenes.remove(old)
+    sc = bpy.data.scenes.new(scn)
+
+    J = {}
+    root = J["root"] = new_empty(sc, "root", None, (0, 0, 0.0))
+    root.scale = (s["scale"],) * 3
+    new_part(sc, "base", "cyl", root, (0, 0, 0.05), (0.28, 0.28, 0.05), "base")
+    new_part(sc, "base_top", "sphere", root, (0, 0, 0.1), (0.22, 0.22, 0.07), "base")
+    b1 = J["bend1"] = new_empty(sc, "bend1", root, (0, 0, 0.14))
+    for i in range(4):
+        new_part(sc, "coil%d" % i, "sphere", b1, (0, 0, 0.03 + 0.05 * i), (0.075, 0.075, 0.03), "spring")
+    new_part(sc, "post", "cyl", b1, (0, 0, 0.1), (0.035, 0.035, 0.1), "spring")
+    b2 = J["bend2"] = new_empty(sc, "bend2", b1, (0, 0, 0.2))
+    new_part(sc, "sack_low", "sphere", b2, (0, 0, 0.28), (0.21, 0.23, 0.32), "burlap")
+    new_part(sc, "waist_rope", "cyl", b2, (0, 0, 0.4), (0.215, 0.235, 0.022), "rope")
+    b3 = J["bend3"] = new_empty(sc, "bend3", b2, (0, 0, 0.42))
+    new_part(sc, "sack_high", "sphere", b3, (0, 0, 0.16), (0.22, 0.25, 0.3), "burlap")
+    # the target faces between the opponent (+X) and the camera (-Y)
+    tg = new_empty(sc, "target", b3, (0, 0, 0.2))
+    tg.rotation_euler = (0, 0, math.radians(-55))
+    for i, (r, d, m) in enumerate(((0.17, 0.2, "target_red"), (0.11, 0.215, "target_white"),
+                                   (0.05, 0.23, "target_red"))):
+        new_part(sc, "ring%d" % i, "sphere", tg, (d, 0, 0), (0.02, r, r), m)
+    for side, y in (("N", -1), ("F", 1)):
+        sh = new_empty(sc, "stub" + side, b3, (0, y * 0.2, 0.3))
+        sh.rotation_euler = (math.radians(-y * 15), math.radians(-80), 0)
+        new_part(sc, "stub%s_seg" % side, "cyl", sh, (0, 0, -0.14), (0.06, 0.06, 0.14), "rope")
+        new_part(sc, "stub%s_end" % side, "sphere", sh, (0, 0, -0.28), (0.075, 0.075, 0.075), "rope")
+    new_part(sc, "neck_rope", "cyl", b3, (0, 0, 0.45), (0.1, 0.1, 0.03), "rope")
+    hd = J["head"] = new_empty(sc, "neck", b3, (0, 0, 0.47))
+    new_part(sc, "head_mesh", "sphere", hd, (0, 0, 0.16), (0.18, 0.18, 0.18), "burlap")
+    face = new_empty(sc, "face", hd, (0, 0, 0.16))
+    face.rotation_euler = (0, 0, math.radians(-40))
+    for i, y in enumerate((-0.07, 0.07)):
+        for j, a in enumerate((45, -45)):
+            new_part(sc, "eye%d%d" % (i, j), "box", face, (0.16, y, 0.04), (0.02, 0.012, 0.045),
+                     "pupil", rot=(a, 0, 0))
+    new_part(sc, "mouth", "box", face, (0.155, 0, -0.07), (0.02, 0.075, 0.012), "mouth")
+    for i, y in enumerate((-0.05, 0, 0.05)):
+        new_part(sc, "stitch%d" % i, "box", face, (0.16, y, -0.07), (0.02, 0.008, 0.03), "mouth")
+    setup_render(sc)
+    return sc, J
+
+
 # --------------------------------------------------------------------------
 # Camera / render
 # --------------------------------------------------------------------------
@@ -776,9 +835,34 @@ BREMMER_MOVES = {
     ],
 }
 
+# The dummy bends at its spring (b1), waist (b2) and chest (b3), positive
+# towards the opponent; lean tips it over on its base. It only sways, takes
+# hits and falls: every other move shows its idle frames (DUMMY_ALIAS).
+DUMMY_MOVES = {
+    "idle": [
+        dict(),
+        dict(b1=7, b2=6, b3=6, head=4),
+        dict(),
+        dict(b1=-7, b2=-6, b3=-6, head=-4),
+    ],
+    # bent right back by the blow, then springing through upright
+    "hit": [
+        dict(b1=-9, b2=-8, b3=-7, head=-10, x=0.1),
+        dict(b1=-12, b2=-10, b3=-8, head=-12, x=0.12),
+        dict(b1=9, b2=8, b3=7, head=6, x=-0.04),
+    ],
+    "ko": [
+        dict(lean=-8, b1=-8, b2=-7, b3=-6, head=-10, x=0.12),
+        dict(lean=-40, b1=-10, b2=-8, b3=-6, head=-8, x=-0.12, wide=True),
+        dict(lean=-70, b1=-6, b2=-4, b3=-3, head=-4, x=-0.2, wide=True),
+        dict(lean=-90, x=-0.26, wide=True),
+    ],
+}
+DUMMY_ALIAS = "idle"
+
 CHAR_MOVES = {"trump": TRUMP_MOVES, "putin": PUTIN_MOVES, "kim": KIM_MOVES,
               "xi": XI_MOVES, "musk": MUSK_MOVES, "zelensky": ZELENSKY_MOVES,
-              "bremmer": BREMMER_MOVES}
+              "bremmer": BREMMER_MOVES, "dummy": DUMMY_MOVES}
 
 MOVE_ORDER = ["idle", "walk", "crouch", "jump", "punch", "kick", "sweep",
               "uppercut", "backkick", "block", "hit", "ko", "special", "victory"]
@@ -821,6 +905,21 @@ def apply_pose(sc, J, p):
     J["root"].location = (p.get("x", 0), 0, hip_z - lowest + p.get("air", 0))
 
 
+def apply_dummy_pose(sc, J, p):
+    rad = math.radians
+    J["root"].rotation_euler = (0, rad(p.get("lean", 0)), 0)
+    for k in ("bend1", "bend2", "bend3"):
+        J[k].rotation_euler = (0, rad(p.get("b" + k[-1], 0)), 0)
+    J["head"].rotation_euler = (0, rad(p.get("head", 0)), 0)
+    J["root"].location = (p.get("x", 0), 0, 0)
+    sc.view_layers[0].update()
+    lowest = min((o.matrix_world @ Vector(c)).z
+                 for o in sc.collection.all_objects
+                 if o.type == "MESH" and not o.hide_render
+                 for c in o.bound_box)
+    J["root"].location = (p.get("x", 0), 0, -lowest)
+
+
 def key_pose(J, frame):
     for name, o in J.items():
         if name == "phone" or name.startswith("prop_"):
@@ -856,7 +955,8 @@ def set_constant(sc):
 
 def build_and_render(name):
     s = SPECS[name]
-    sc, J = build_character(s)
+    dummy = name == "dummy"
+    sc, J = (build_dummy if dummy else build_character)(s)
     J["root"]["hip_z"] = J["root"].location.z
 
     moves = dict(COMMON_MOVES)
@@ -871,14 +971,22 @@ def build_and_render(name):
     for move in MOVE_ORDER:
         sc.timeline_markers.new(move, frame=frame)
         entry = {"name": move, "frames": []}
+        if dummy and move not in DUMMY_MOVES:
+            # the same frames as its idle (sprite_codegen.py stores them once)
+            n = len(moves[move]) if move in moves else {"special": 4, "victory": 3}[move]
+            entry["frames"] = [{"frame": f["frame"], "file": f["file"], "width": 32,
+                                "offset_x": 0, "alias": True}
+                               for f in (manifest["moves"][0]["frames"] * n)[:n]]
+            manifest["moves"].append(entry)
+            continue
         for i, pose in enumerate(moves[move]):
-            apply_pose(sc, J, pose)
+            (apply_dummy_pose if dummy else apply_pose)(sc, J, pose)
             key_pose(J, frame)
             wide = pose.get("wide", False)
             entry["frames"].append({"frame": frame, "file": "%s_%d" % (move, i),
                                     "width": 64 if wide else 32,
                                     "offset_x": -16 if wide else 0})
-            if HIT_FRAMES.get(move, (None,))[0] == i:
+            if HIT_FRAMES.get(move, (None,))[0] == i and not dummy:
                 entry["frames"][-1]["hit_limb"] = HIT_FRAMES[move][1]
             frame += 1
         manifest["moves"].append(entry)
@@ -912,6 +1020,8 @@ def render_frames(sc, manifest, out_dir, J):
         sh = sc.display.shading
         for move in manifest["moves"]:
             for fr in move["frames"]:
+                if fr.get("alias"):
+                    continue
                 sc.frame_set(fr["frame"])
                 wide = fr["width"] == 64
                 sc.render.resolution_x = RES * 2 if wide else RES

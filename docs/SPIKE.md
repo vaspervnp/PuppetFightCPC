@@ -1559,6 +1559,71 @@ pictures), and as it ends **K.O.**, **PERFECT** (a K.O. at full health),
     gap 6 is full there with `JUMP=1`.
 - `spike_bench.py` draws the expected banner too.
 
+## Training
+
+A third choice in the select screen's **Opponent** row: **Training**
+(`GM_TRAIN`, bit 4 of the settings). Player 2's fighter is the sparring
+partner, under player 2's controls as in a match between players, so it
+stands still unless someone moves it. In `round.asm` the clock doesn't run,
+and when the round's end runs out it goes straight to the next round,
+skipping the win marker and the victory: a K.O. starts the round again
+with full health, its K.O. or PERFECT and then BEGIN FIGHT. 13 bytes in
+cold code; the rest is the loader's menu. There is no way back to the menu
+but a reset, as in the other modes.
+
+- `make CPU=17` is training with the computer as fighter A (16 + 1), for
+  the bench.
+- **The bench drifted.** In the emulator, VSYNC slips ~2 us a frame against
+  the bench's model of exact 19968 us frames. After ~1100 pictures (~45 s)
+  that was ~15 lines, and the bench saw tens of lines caught or late that
+  weren't. Every bench before was 400 pictures or shorter, so it never
+  showed. The bench now follows the frame tick (`FRAME_COUNT`): every 25
+  frames it moves its model to the earliest tick it saw (later ones are the
+  handler being late). 1500-2000 pictures of CPU matches, across the
+  victory and the next match, are now clean. It also prints the pictures
+  where lines were caught.
+
+### The training dummy
+
+Training's fighter B is now a training dummy rather than player 2's
+character (Blender scene `PF_dummy`, `build_dummy` in
+`tools/blender_puppets.py`):
+- **Look.** A burlap sack (`burlap`: pastel yellow, olive, dark red) tied at
+  the waist and neck with rope, dark red stub arms, a red and white target
+  on the chest, stitched X eyes and mouth, on a grey spring and weighted
+  base. Its joints are the spring, the waist and the chest (`b1`-`b3`).
+- **Moves.** Idle sways forward and back; hit bends right back and springs
+  through upright; ko tips it over on its base. Every other move shows the
+  idle frames (`DUMMY_ALIAS`), and `sprite_codegen.py` stores a frame
+  shared by moves once: `DUMMY.PFC` is 2,889 bytes (bank 0 876, bank 1
+  4,584, 6 cache slots, largest compiled frame 1,300).
+- **Disc.** `TRAINER` in the Makefile: its file goes on the disc after the
+  files the engine reads (the disc map is unchanged), and its picture last
+  in `FIGHTERS.BIN`. Its stage is the puppet theatre. The disc holds 153 of
+  its 180 blocks.
+- **Loader.** After the roster it puts `DUMMY` in the slot past the last
+  character, reads its header and picture with theirs, and doesn't count
+  it. Choosing Training sets player 2's row to it (player 2's choice kept
+  aside until another opponent is chosen), and the row can't be changed.
+- **Engine.** In training `ai_players` gives fighter B no controls: the
+  dummy never moves, whatever player 2 presses (+5 bytes, gap 8).
+
+**Wide frames at the walls.** The computer kept knocking the dummy into the
+corner, and a fall there showed the old fault: a wide frame (64 pixels, 8
+bytes out each side) at a wall wrapped round to the other edge and left
+pieces on the floor. A hit, a block's push and a throw now go through
+`set_x_wide` (`wallx.asm`, the last 16 bytes of low RAM), which keeps the
+fighter `X_WIDE` (8) bytes clear of the walls. Walking still reaches them.
+The QUICKWIN test build had no room left for training's checks in
+`round.asm`, so it goes without them.
+
+| Test | Result |
+|---|---|
+| `CPU=17 LEVEL=2 CHAR_B=dummy`, 1500 pictures | 25 fps, 0 caught, 0 late, 0 bytes wrong |
+| `CPU=3 LEVEL=2`, 1500 pictures | the same |
+| `bench-all`, `bench-fight`, `bench-play`, `bench-ai` | the same |
+| disc: TRAINING on the select screen | player 2's row shows DUMMY and its picture; the theatre, DUMMY on the HUD, the clock at 99 |
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

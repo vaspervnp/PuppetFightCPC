@@ -339,6 +339,7 @@ WALK_STEP       EQU 1           ; bytes per picture (2 mode 0 pixels)
 JUMP_STEP       EQU 1           ; bytes per picture across, in a jump
 JUMP_PICS       EQU 16          ; pictures in the air (jump_arc)
 X_MAX           EQU BYTES_PER_LINE-SPR_W
+X_WIDE          EQU 8           ; a wide frame's overhang each side (wallx.asm)
 MIN_SEP         EQU 10          ; closest two standing boxes may be (bytes)
 HEALTH_MAX      EQU 40          ; a full health bar, one byte a point
 HIT_PUSH        EQU 3           ; bytes a hit knocks the defender back,
@@ -732,6 +733,7 @@ low_store       EQU cold2_store+cold2_end-cold2_start
 low_start
     include "stream.asm"
     include "bannerlow.asm"
+    include "wallx.asm"
 low_end
     ASSERT low_end<=LOW_ORG+LOW_ROOM
 low2_store      EQU low_store+low_end-low_start

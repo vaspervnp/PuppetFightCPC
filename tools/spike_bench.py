@@ -82,6 +82,7 @@ class Bench:
         self.c.run_frames(5)
         self.c.quickload(os.path.join(BUILD, "pfspike.sna"))
         self.t = 0
+        self.ticks = 0                          # (4 MHz: t from these, no drift)
         # The first frame tick after irq_init: VSYNC started 2 lines (and the
         # handler's few us) before frame_count moved.
         fc = self.peek("FRAME_COUNT")
@@ -93,7 +94,8 @@ class Bench:
         self.line_addr = [lt[2 * i] | lt[2 * i + 1] << 8 for i in range(LINES)]
 
     def step(self, us=STEP):
-        self.t += self.c.run_us(us) // 4        # exec returns 4 MHz ticks
+        self.ticks += self.c.run_us(us)         # exec returns 4 MHz ticks
+        self.t = self.ticks // 4
 
     def beam(self):
         """Display line the beam is on (negative: in the blanking)."""
@@ -172,8 +174,16 @@ class Bench:
         done = 0
         last_done_t = self.t
         self.done0 = self.peek("JIT_DONE", 2)
+        fc, offsets = self.peek("FRAME_COUNT"), []
         while done < renders:
             self.step()
+            if self.peek("FRAME_COUNT") != fc:  # the frame tick: VSYNC drifts from
+                fc = self.peek("FRAME_COUNT")   # a model of exact frames (~2 us a
+                o = (self.t - 2 * LINE_US - STEP - self.vsync0) % FRAME_US
+                offsets.append(o - FRAME_US if o > FRAME_US // 2 else o)
+                if len(offsets) == 25:          # frame), so it follows the earliest
+                    self.vsync0 += min(offsets) # tick (late ones are the handler's)
+                    offsets = []
             if self.t - last_done_t > 50 * FRAME_US:
                 sys.exit("stuck: no picture for 50 frames (pc %04X, phase %d)"
                          % (self.c.pc, self.peek("BENCH_PHASE")))
@@ -223,17 +233,19 @@ class Bench:
                     if not ep_wrapped and b >= ep_line:
                         e -= 1                      # still the frame it started in,
                     if e >= 0:                      # below the beam: the old picture
-                        seen.append((e, b, self.c.read_ram(self.line_addr[b], 96)))
+                        seen.append((e, b, self.c.read_ram(self.line_addr[b], 96), done))
         while self.peek("BENCH_PHASE") in REBUILD_PHASES:
             self.step()
         epochs.append(self.band())
 
         caught = defaultdict(int)
         late = defaultdict(int)
-        for e, L, got in seen:
+        self.bad_pics = set()
+        for e, L, got, pic in seen:
             before, after = epochs[e][L], epochs[e + 1][L]
             if got == after:
                 continue
+            self.bad_pics.add(pic)
             if got == before:
                 late[L] += 1
             else:
@@ -414,6 +426,8 @@ def main():
         print("  caught lines:", sorted(caught)[:20], "..." if len(caught) > 20 else "")
     if late:
         print("  late lines:", sorted(late)[:20], "..." if len(late) > 20 else "")
+    if caught or late:
+        print("  in pictures:", sorted(b.bad_pics)[:20], "..." if len(b.bad_pics) > 20 else "", "last", max(b.bad_pics))
 
     exp = b.expected_band()
     got = b.band()

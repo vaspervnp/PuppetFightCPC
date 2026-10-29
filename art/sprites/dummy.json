@@ -1,0 +1,335 @@
+{
+ "character": "dummy",
+ "width": 32,
+ "height": 64,
+ "palette": [
+  "#000000",
+  "#000080",
+  "#0000FF",
+  "#800000",
+  "#FF0000",
+  "#FF8000",
+  "#FF8080",
+  "#FFFF80",
+  "#808000",
+  "#808080",
+  "#FFFFFF",
+  "#8080FF",
+  "#FFFF00",
+  "#008080",
+  "#008000",
+  "#000000"
+ ],
+ "moves": [
+  {
+   "name": "idle",
+   "frames": [
+    {
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_3",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "walk",
+   "frames": [
+    {
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_3",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "crouch",
+   "frames": [
+    {
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "jump",
+   "frames": [
+    {
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "punch",
+   "frames": [
+    {
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "kick",
+   "frames": [
+    {
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "sweep",
+   "frames": [
+    {
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "uppercut",
+   "frames": [
+    {
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_3",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "backkick",
+   "frames": [
+    {
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_3",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "block",
+   "frames": [
+    {
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "hit",
+   "frames": [
+    {
+     "file": "hit_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "hit_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "hit_2",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "ko",
+   "frames": [
+    {
+     "file": "ko_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "ko_1",
+     "width": 64,
+     "offset_x": -16
+    },
+    {
+     "file": "ko_2",
+     "width": 64,
+     "offset_x": -16
+    },
+    {
+     "file": "ko_3",
+     "width": 64,
+     "offset_x": -16
+    }
+   ]
+  },
+  {
+   "name": "special",
+   "frames": [
+    {
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_3",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  },
+  {
+   "name": "victory",
+   "frames": [
+    {
+     "file": "idle_0",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_1",
+     "width": 32,
+     "offset_x": 0
+    },
+    {
+     "file": "idle_2",
+     "width": 32,
+     "offset_x": 0
+    }
+   ]
+  }
+ ]
+}

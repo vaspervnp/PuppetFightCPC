@@ -141,10 +141,10 @@ knock_back
     cp (iy+F_X)
     jr c,kb_left
     add a,b
-    jp set_x
+    jp set_x_wide
 kb_left
     sub b
-    jp set_x
+    jp set_x_wide
 
 ;; guard - IX = defender: A = 0 if it isn't guarding, 1 if it guards
 ;; standing (holding back while free or blocking), 2 crouching (holding

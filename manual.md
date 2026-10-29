@@ -39,7 +39,7 @@ The menu has a row for each choice, and the two fighters stand above it.
 |---|---|
 | Player 1 | any fighter |
 | Player 2 | any fighter (the same one too: the second gets other colours) |
-| Opponent | Human or Computer |
+| Opponent | Human, Computer or Training |
 | Difficulty | Easy, Medium or Hard (only when the opponent is the computer) |
 
 The keys:
@@ -138,6 +138,16 @@ be read. The game keeps trying, so check that the disc is in drive A.
 ![The Puppet Master](docs/img/boss.png)
 
 With two players, each match is followed by a rematch.
+
+## Training
+
+Set **Opponent** to **Training** to practise the moves. Player 2's row
+then shows the **Dummy**: a burlap training dummy on a spring, with a
+target on its chest. It sways back and forth, bends right back when it
+is hit and springs up again, and a knockdown tips it over on its base.
+It never fights back. The clock stays at 99 and nobody wins rounds: a
+knockout only starts the round again, with full health. Training never
+ends; reset the computer to go back to the menu.
 
 ## The fighters
 

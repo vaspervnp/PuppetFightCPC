@@ -51,6 +51,12 @@ def boss():
     return os.environ.get("BOSS", "bremmer").split()
 
 
+def trainer():
+    """The training dummy (TRAINER): on the disc for the loader only, after
+    the files the engine reads, with its stage among theirs."""
+    return os.environ.get("TRAINER", "dummy").split()
+
+
 def everyone():
     return roster() + boss()
 
@@ -64,7 +70,7 @@ def home_stage(char):
 
 def stages():
     out = []
-    for c in everyone():
+    for c in everyone() + trainer():
         s = home_stage(c)
         if s not in out:
             out.append(s)
@@ -78,6 +84,8 @@ def files():
            for c in everyone()]
     out += [(s + ".STG", os.path.join(BUILD, "stages", s + ".STG"), "bin", 0x2000, 0)
             for s in stages()]
+    out += [(c.upper() + ".PFC", os.path.join(BUILD, "pfc", c.upper() + ".PFC"), "bin", 0x4000, 0)
+            for c in trainer()]
     out += [("ROSTER.TXT", os.path.join(BUILD, "pfc", "ROSTER.TXT"), "txt", 0, 0),
             ("TITLE.SCR", os.path.join(BUILD, "TITLE.SCR"), "bin", 0x9800, 0),
             ("SELECT.SCR", os.path.join(BUILD, "SELECT.SCR"), "bin", 0x9800, 0),

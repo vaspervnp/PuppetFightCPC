@@ -53,6 +53,7 @@ SETTINGS_AT     EQU #3FF0
 GM_CPU_A        EQU 0           ; bits of the settings (game_mode)
 GM_CPU_B        EQU 1
 GM_LEVEL        EQU 2           ; bits 2-3
+GM_TRAIN        EQU 4           ; training: no clock, no wins (round.asm)
 ST_INKS         EQU 3           ; a stage file: hardware inks of pens 0, 14
 ST_DATA         EQU 8           ; and 15, then (after the length) the data
 PAYLOAD_ORG     EQU #0200

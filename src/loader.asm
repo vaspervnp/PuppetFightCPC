@@ -12,7 +12,9 @@
 ;; and titles from the headers. Each player picks one with left and right
 ;; and fire, the same character twice too. C makes player 2 the computer,
 ;; at three levels (and C again a player): player 1 then chooses its
-;; character as well, once ready. The engine finds that, and who was
+;; character as well, once ready. Training (GM_TRAIN) puts the training
+;; dummy (DUMMY.PFC, not in the roster) up as fighter B, with no end to
+;; it. The engine finds that, and who was
 ;; chosen (roster numbers), at SETTINGS_AT. Then fighter A's goes into
 ;; banks 4-5 and fighter B's into banks 6-7, unpacked as they are read a
 ;; byte at a time (tools/stage_pack.py's format), one bank paged in at a
@@ -49,6 +51,7 @@ STAGE_AT        EQU #2000       ; src/config.asm
 SETTINGS_AT     EQU #3FF0       ; (the engine's game_mode)
 GM_CPU_B        EQU 1
 GM_LEVEL        EQU 2
+GM_TRAIN        EQU 4
 FIGHTERS        EQU #4000       ; FIGHTERS.BIN in bank 4 (tools/title_art.py)
 FI_INKS         EQU 0           ; per character: its own colours, a mirror
 FI_ALT          EQU 4           ; match's, its frame as fighter A and as B
@@ -93,10 +96,20 @@ ld_zero
     call show_title             ; (none on the disc: straight on)
     call read_roster
     jp nc,disc_error
+    ld hl,n_chars               ; the training dummy after them, for its
+    ld a,(hl)                   ; header and its picture, but not chosen
+    inc (hl)                    ; on the select screen (n_chars back)
+    call rr_slot
+    ex de,hl
+    ld hl,s_dummy
+    ld bc,8
+    ldir
     call read_headers
     jp nc,disc_error
     call read_fighters
     jp nc,disc_error
+    ld hl,n_chars
+    dec (hl)
     call title_wait
     call select
     ld a,(cpu_b)                ; the computer's part, for the engine
@@ -107,6 +120,13 @@ ld_zero
     add a,a                     ; << GM_LEVEL
     or 1<<GM_CPU_B
 ld_mode
+    ld b,a                      ; or training
+    ld a,(m_cpu)
+    cp 2
+    ld a,b
+    jr nz,ld_set
+    ld a,1<<GM_TRAIN
+ld_set
     ld (SETTINGS_AT),a
     ld hl,(sel_a)               ; and who: sel_a, sel_b
     ld (SETTINGS_AT+1),hl
@@ -340,14 +360,15 @@ rr_name                         ; a line ends: a name if it had any
     ret nc
     inc a
     ld (n_chars),a
-    ld l,a                      ; HL = the next name
+    ld c,0
+rr_slot                         ; A = a character: HL = its name
+    ld l,a
     ld h,0
     add hl,hl
     add hl,hl
     add hl,hl
     ld de,roster
     add hl,de
-    ld c,0
     ret
 
 ;; read_headers - every character's header, into headers. CY if all read.
@@ -678,7 +699,8 @@ alt_inks
 
 ;; ---------------------------------------------------------------------------
 ;; select - the menu, over SELECT.SCR (tools/title_art.py): player 1's and
-;; player 2's characters, the opponent (a player or the computer) and, for
+;; player 2's characters, the opponent (a player, the computer or training:
+;; player 2's row is then the dummy) and, for
 ;; the computer, its level, a row each. Up and down choose a row, left and
 ;; right change it, fire starts (either player's controls). The fighters
 ;; chosen stand above it in their own colours (FIGHTERS.BIN, in bank 4
@@ -713,11 +735,14 @@ se_frame
     or a
     jr z,se_frame
     bit PS_FIRE,a
-    jr nz,se_go
+    jp nz,se_go
     ld c,a
-    ld a,(m_cpu)                ; rows: 3, or 4 with the computer
-    add a,3
-    ld b,a
+    ld b,3                      ; rows: 3, or 4 with the computer
+    ld a,(m_cpu)
+    dec a
+    jr nz,se_rows
+    inc b
+se_rows
     ld hl,m_row
     bit PS_UP,c
     jr z,se_down
@@ -750,28 +775,61 @@ se_side
     jr z,se_char
     ld de,sel_b
     dec a
-    jr z,se_char
+    jr nz,se_opp
+    ld a,(m_cpu)                ; (in training, the dummy)
+    cp 2
+    jp z,se_frame
+    jr se_char
+se_opp
     dec a
     jr nz,se_level
-    ld a,(m_cpu)                ; the opponent: a player or the computer
-    xor 1
-    ld (m_cpu),a
-    jr se_show
+    ld a,(m_cpu)                ; the opponent: a player, the computer,
+    bit PS_LEFT,c               ; training
+    jr z,se_onext
+    or a
+    jr nz,se_oprev
+    ld a,3
+se_oprev
+    dec a
+    jr se_oset
+se_onext
+    inc a
+    cp 3
+    jr c,se_oset
+    xor a
+se_oset
+    ld hl,m_cpu
+    ld b,(hl)
+    ld (hl),a
+    cp 2                        ; training: fighter B is the dummy (the
+    jr nz,se_onot               ; last character), player 2's own choice
+    ld a,(sel_b)                ; kept aside until it ends
+    ld (m_keep_b),a
+    ld a,(n_chars)
+    jr se_bset
+se_onot
+    ld a,b
+    cp 2
+    jp nz,se_show
+    ld a,(m_keep_b)
+se_bset
+    ld (sel_b),a
+    jp se_show
 se_level
     ld a,(m_level)              ; the computer's level: 0-2
     bit PS_LEFT,c
     jr z,se_harder
     or a
-    jr z,se_show
+    jp z,se_show
     dec a
     jr se_lset
 se_harder
     cp 2
-    jr z,se_show
+    jp z,se_show
     inc a
 se_lset
     ld (m_level),a
-    jr se_show
+    jp se_show
 se_char
     ld a,(de)                   ; a character: round the roster
     bit PS_LEFT,c
@@ -792,9 +850,10 @@ se_cset
     ld (de),a
     jp se_show
 se_go
-    ld a,(m_cpu)                ; cpu_b: 0 a player, else the level + 1
-    or a
-    jr z,se_cpu
+    ld a,(m_cpu)                ; cpu_b: the level + 1 for the computer,
+    cp 1                        ; else 0
+    ld a,0
+    jr nz,se_cpu
     ld a,(m_level)
     inc a
 se_cpu
@@ -864,8 +923,8 @@ sm_pen
     jr c,sm_row
     jr nz,sm_fighters
     ld a,(m_cpu)                ; the level's row only for the computer
-    or a
-    jr nz,sm_row
+    dec a
+    jr z,sm_row
     ld hl,#0100+MENU_ROW+6
     call TXT_SET_CURSOR
     ld hl,s_blank
@@ -1115,8 +1174,9 @@ s_rows                          ; the menu's labels
     defb "PLAYER 2: ",0
     defb "OPPONENT: ",0
     defb "DIFFICULTY: ",0
+s_dummy defb "DUMMY   "        ; the training dummy's file
 s_human                         ; its values, 8 characters each
-    defb "HUMAN   COMPUTER"
+    defb "HUMAN   COMPUTERTRAINING"
 s_easy
     defb "EASY    MEDIUM  HARD    "
 s_blank
@@ -1176,7 +1236,8 @@ n_chars         EQU loader_end
 sel_a           EQU n_chars+1
 sel_b           EQU sel_a+1
 m_row           EQU sel_b+1     ; the menu: the row chosen, the opponent
-m_cpu           EQU m_row+1     ; (1: the computer) and its level (0-2)
+m_cpu           EQU m_row+1     ; (1: the computer, 2: training) and its
+                                ; level (0-2)
 m_level         EQU m_cpu+1
 m_i             EQU m_level+1   ; show_menu: the row it is on, its label,
 m_lbl           EQU m_i+1       ; the 4 colours it sets
@@ -1184,7 +1245,8 @@ m_inks          EQU m_lbl+2
 ps_a            EQU m_inks+4    ; the controls held last frame
 title_up        EQU ps_a+1
 cpu_b           EQU title_up+1  ; 0 a player, 1-3 the computer's level + 1
-lc_ram          EQU cpu_b+1
+m_keep_b        EQU cpu_b+1     ; player 2's character during training
+lc_ram          EQU m_keep_b+1
 rb_moves        EQU lc_ram+1
 rb_frames       EQU rb_moves+1
 rb_move         EQU rb_frames+1

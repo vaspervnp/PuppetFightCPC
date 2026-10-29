@@ -1,0 +1,23 @@
+{
+  "_comment": "The training dummy (training only, not in ROSTER.TXT): see putin_pfc.json for the fields. Its moves other than idle, hit and ko show its idle frames.",
+  "name": "DUMMY",
+  "title": "The Training Dummy",
+  "colours": [
+    6,
+    25,
+    12,
+    0
+  ],
+  "alt_colours": [
+    6,
+    25,
+    12,
+    0
+  ],
+  "merge": {},
+  "special": {
+    "kind": "strike"
+  },
+  "stage": "theatre",
+  "taunt": "..."
+}

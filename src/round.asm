@@ -5,7 +5,8 @@
 ;; holds its victory pose for ROUND_END_PICS pictures, gets a win marker
 ;; under its bar, and both fighters start again. WINS_NEEDED round wins
 ;; take the match: the victory screen (victory.asm), then the next match
-;; starts from nothing. Cold code
+;; starts from nothing. Training (GM_TRAIN): the clock stands still, and a
+;; KO only starts the round again, nobody's. Cold code
 ;; (COLD2_ORG).
 ;; ===========================================================================
 
@@ -35,7 +36,12 @@ round_tick
     ld hl,fighter_b
     call rt_out
     jr z,rt_ko
-    ld hl,rnd_tick              ; nobody down: the clock
+    IF QUICKWIN==0              ; (no room for training on the test disc)
+    ld a,(game_mode)            ; nobody down: the clock (not in
+    bit GM_TRAIN,a              ; training)
+    ret nz
+    ENDIF
+    ld hl,rnd_tick
     dec (hl)
     ret nz
     ld (hl),PICS_PER_SEC
@@ -76,7 +82,12 @@ rt_over
     ld hl,rnd_timer
     dec (hl)
     ret nz
-    ld hl,(rnd_winner)          ; the round to the winner, if any
+    IF QUICKWIN==0
+    ld a,(game_mode)            ; the round to the winner, if any (and not
+    bit GM_TRAIN,a              ; in training)
+    jr nz,rt_next
+    ENDIF
+    ld hl,(rnd_winner)
     ld a,h
     or l
     jr z,rt_next

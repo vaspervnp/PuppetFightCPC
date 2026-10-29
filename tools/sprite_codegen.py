@@ -314,6 +314,8 @@ def cmd_character(args):
     for m in tbl["moves"]:
         for fr in m["frames"]:
             f = fr["file"]
+            if f in recs:
+                continue                    # a frame shared by moves: once
             width, rows = load_frame(c, f, args.side)
             label = "%s_%s" % (lp, f)
             sp, sp_size = padded_spans(label, width, rows)

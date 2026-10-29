@@ -63,12 +63,16 @@ ai_players
     call ai_tick
     ld (fighter_a+F_CTL),a
 ap_b
-    ld a,(game_mode)
-    bit GM_CPU_B,a
+    xor a
+    ld hl,game_mode
+    bit GM_TRAIN,(hl)
+    jr nz,ap_set                ; training: the dummy stands still
+    bit GM_CPU_B,(hl)
     ret z
     ld ix,fighter_b
     ld iy,fighter_a
     call ai_tick
+ap_set
     ld (fighter_b+F_CTL),a
     ret
 
