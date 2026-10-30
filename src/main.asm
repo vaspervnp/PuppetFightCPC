@@ -747,6 +747,7 @@ low0_store      EQU low2_store+low2_end-low2_start
     ORG LOW0_ORG,low0_store
 low0_start
     include "bannercel.asm"
+    include "traingo.asm"
 low0_end
     ASSERT low0_end<=LOW0_ORG+LOW0_ROOM
 
@@ -832,6 +833,19 @@ image_end       EQU gap8_store+gap8_end-gap8_start
 ;; screen loads (loader.asm).
 ;; ---------------------------------------------------------------------------
     include "gen/chars.asm"
+
+;; Training's own code (train.asm): in the dummy's bank 0 when it is
+;; fighter B, else out of the way; on the disc, TRAIN.BIN.
+    IF TRAIN_B
+    BANK 6
+TRAIN_PHYS      EQU TRAIN_AT
+    ELSE
+    BANKSET 0
+TRAIN_PHYS      EQU TRAIN_SCRATCH
+    ENDIF
+    ORG TRAIN_AT,TRAIN_PHYS
+    include "train.asm"
+    SAVE '../build/TRAIN.BIN',TRAIN_PHYS,train_end-train_start
 
 ;; The stage, packed, where the select screen would have loaded it (make
 ;; STAGE=..., fighter B's character's home stage by default).

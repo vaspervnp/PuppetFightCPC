@@ -67,25 +67,22 @@
    "name": "crouch",
    "frames": [
     {
-     "frame": 1,
-     "file": "idle_0",
+     "frame": 5,
+     "file": "crouch_0",
      "width": 32,
-     "offset_x": 0,
-     "alias": true
+     "offset_x": 0
     },
     {
-     "frame": 2,
-     "file": "idle_1",
+     "frame": 6,
+     "file": "crouch_1",
      "width": 32,
-     "offset_x": 0,
-     "alias": true
+     "offset_x": 0
     },
     {
-     "frame": 3,
-     "file": "idle_2",
+     "frame": 7,
+     "file": "crouch_2",
      "width": 32,
-     "offset_x": 0,
-     "alias": true
+     "offset_x": 0
     }
    ]
   },
@@ -93,25 +90,22 @@
    "name": "jump",
    "frames": [
     {
-     "frame": 1,
-     "file": "idle_0",
+     "frame": 8,
+     "file": "jump_0",
      "width": 32,
-     "offset_x": 0,
-     "alias": true
+     "offset_x": 0
     },
     {
-     "frame": 2,
-     "file": "idle_1",
+     "frame": 9,
+     "file": "jump_1",
      "width": 32,
-     "offset_x": 0,
-     "alias": true
+     "offset_x": 0
     },
     {
-     "frame": 3,
-     "file": "idle_2",
+     "frame": 10,
+     "file": "jump_2",
      "width": 32,
-     "offset_x": 0,
-     "alias": true
+     "offset_x": 0
     }
    ]
   },
@@ -263,25 +257,22 @@
    "name": "block",
    "frames": [
     {
-     "frame": 1,
-     "file": "idle_0",
+     "frame": 11,
+     "file": "block_0",
      "width": 32,
-     "offset_x": 0,
-     "alias": true
+     "offset_x": 0
     },
     {
-     "frame": 2,
-     "file": "idle_1",
+     "frame": 12,
+     "file": "block_1",
      "width": 32,
-     "offset_x": 0,
-     "alias": true
+     "offset_x": 0
     },
     {
-     "frame": 3,
-     "file": "idle_2",
+     "frame": 13,
+     "file": "block_2",
      "width": 32,
-     "offset_x": 0,
-     "alias": true
+     "offset_x": 0
     }
    ]
   },
@@ -289,19 +280,19 @@
    "name": "hit",
    "frames": [
     {
-     "frame": 5,
+     "frame": 14,
      "file": "hit_0",
      "width": 32,
      "offset_x": 0
     },
     {
-     "frame": 6,
+     "frame": 15,
      "file": "hit_1",
      "width": 32,
      "offset_x": 0
     },
     {
-     "frame": 7,
+     "frame": 16,
      "file": "hit_2",
      "width": 32,
      "offset_x": 0
@@ -312,25 +303,25 @@
    "name": "ko",
    "frames": [
     {
-     "frame": 8,
+     "frame": 17,
      "file": "ko_0",
      "width": 32,
      "offset_x": 0
     },
     {
-     "frame": 9,
+     "frame": 18,
      "file": "ko_1",
      "width": 64,
      "offset_x": -16
     },
     {
-     "frame": 10,
+     "frame": 19,
      "file": "ko_2",
      "width": 64,
      "offset_x": -16
     },
     {
-     "frame": 11,
+     "frame": 20,
      "file": "ko_3",
      "width": 64,
      "offset_x": -16

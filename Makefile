@@ -18,7 +18,8 @@
 # ladder runs by itself).
 # CPU=n puts the computer in charge of fighter A (1), B (2) or both (3), at
 # LEVEL=0 (easy), 1 (normal) or 2 (hard); +16 is training (CPU=17
-# CHAR_B=dummy: the computer against the training dummy); on the disc the
+# CHAR_B=dummy: the computer against the training dummy, which then does
+# what LEVEL says: 0 stand, 1 crouch, 2 jump, 3 block); on the disc the
 # select screen chooses.
 # TRAINER is training's fighter B: on the disc, not on the select screen's
 # roster.
@@ -46,7 +47,7 @@ CHAR_A ?= trump
 CHAR_B ?= putin
 roster_index = $(shell echo $(CHARS) $(BOSS) $(TRAINER) | tr ' ' '\n' | grep -nx $(1) | awk -F: '{print $$1-1}')
 RASMFLAGS := -DCLOSE_UP=$(CLOSE_UP) -DJUMP=$(JUMP) -DSLACK=$(SLACK) -DDEMO=$(DEMO) -DSHOTS=$(SHOTS) \
-             -DCPU=$(CPU) -DLEVEL=$(LEVEL) -DQUICKWIN=$(QUICKWIN) \
+             -DCPU=$(CPU) -DLEVEL=$(LEVEL) -DQUICKWIN=$(QUICKWIN) -DTRAIN_B=$(if $(filter $(CHAR_B),$(TRAINER)),1,0) \
              -DCHAR_A_I=$(call roster_index,$(CHAR_A)) -DCHAR_B_I=$(call roster_index,$(CHAR_B))
 STAGES := whitehouse kremlin pyongyang beijing starbase kyiv theatre
 STAGE ?= $(shell $(PYTHON) -c "import json; print(json.load(open('art/sprites/$(CHAR_B)_pfc.json'))['stage'])")

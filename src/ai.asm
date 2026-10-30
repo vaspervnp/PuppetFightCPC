@@ -66,7 +66,7 @@ ap_b
     xor a
     ld hl,game_mode
     bit GM_TRAIN,(hl)
-    jr nz,ap_set                ; training: the dummy stands still
+    jp nz,train_go              ; training: the dummy's own (train.asm)
     bit GM_CPU_B,(hl)
     ret z
     ld ix,fighter_b

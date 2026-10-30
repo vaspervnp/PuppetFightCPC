@@ -523,8 +523,9 @@ def build_dummy(s):
     new_part(sc, "base_top", "sphere", root, (0, 0, 0.1), (0.22, 0.22, 0.07), "base")
     b1 = J["bend1"] = new_empty(sc, "bend1", root, (0, 0, 0.14))
     for i in range(4):
-        new_part(sc, "coil%d" % i, "sphere", b1, (0, 0, 0.03 + 0.05 * i), (0.075, 0.075, 0.03), "spring")
-    new_part(sc, "post", "cyl", b1, (0, 0, 0.1), (0.035, 0.035, 0.1), "spring")
+        J["spring_coil%d" % i] = new_part(sc, "coil%d" % i, "sphere", b1, (0, 0, 0.03 + 0.05 * i),
+                                         (0.075, 0.075, 0.03), "spring")
+    J["spring_post"] = new_part(sc, "post", "cyl", b1, (0, 0, 0.1), (0.035, 0.035, 0.1), "spring")
     b2 = J["bend2"] = new_empty(sc, "bend2", b1, (0, 0, 0.2))
     new_part(sc, "sack_low", "sphere", b2, (0, 0, 0.28), (0.21, 0.23, 0.32), "burlap")
     new_part(sc, "waist_rope", "cyl", b2, (0, 0, 0.4), (0.215, 0.235, 0.022), "rope")
@@ -537,7 +538,7 @@ def build_dummy(s):
                                    (0.05, 0.23, "target_red"))):
         new_part(sc, "ring%d" % i, "sphere", tg, (d, 0, 0), (0.02, r, r), m)
     for side, y in (("N", -1), ("F", 1)):
-        sh = new_empty(sc, "stub" + side, b3, (0, y * 0.2, 0.3))
+        sh = J["stub" + side] = new_empty(sc, "stub" + side, b3, (0, y * 0.2, 0.3))
         sh.rotation_euler = (math.radians(-y * 15), math.radians(-80), 0)
         new_part(sc, "stub%s_seg" % side, "cyl", sh, (0, 0, -0.14), (0.06, 0.06, 0.14), "rope")
         new_part(sc, "stub%s_end" % side, "sphere", sh, (0, 0, -0.28), (0.075, 0.075, 0.075), "rope")
@@ -837,13 +838,33 @@ BREMMER_MOVES = {
 
 # The dummy bends at its spring (b1), waist (b2) and chest (b3), positive
 # towards the opponent; lean tips it over on its base. It only sways, takes
-# hits and falls: every other move shows its idle frames (DUMMY_ALIAS).
+# hits and falls, and crouches, hops and blocks for training's choices
+# (sq squashes the spring, arm raises the stubs); every other move shows its
+# idle frames (DUMMY_ALIAS).
 DUMMY_MOVES = {
     "idle": [
         dict(),
         dict(b1=7, b2=6, b3=6, head=4),
         dict(),
         dict(b1=-7, b2=-6, b3=-6, head=-4),
+    ],
+    # the spring pressed down and the sack folded over it
+    "crouch": [
+        dict(sq=0.7, b2=14, b3=12, head=6),
+        dict(sq=0.45, b2=30, b3=26, head=12, x=-0.03),
+        dict(sq=0.3, b2=42, b3=38, head=18, x=-0.07),
+    ],
+    # off the spring: pressed, stretched, tucked
+    "jump": [
+        dict(sq=0.6, b2=6, b3=6, head=4),
+        dict(sq=1.3, b2=-3, b3=-3, head=-4),
+        dict(sq=0.85, b2=10, b3=8, head=6),
+    ],
+    # leaning away, the stubs up in front of the target
+    "block": [
+        dict(b1=-4, b2=-4, b3=-2, head=-6, arm=40),
+        dict(b1=-6, b2=-6, b3=-4, head=-10, arm=75),
+        dict(b1=-7, b2=-7, b3=-5, head=-12, arm=90),
     ],
     # bent right back by the blow, then springing through upright
     "hit": [
@@ -911,6 +932,15 @@ def apply_dummy_pose(sc, J, p):
     for k in ("bend1", "bend2", "bend3"):
         J[k].rotation_euler = (0, rad(p.get("b" + k[-1], 0)), 0)
     J["head"].rotation_euler = (0, rad(p.get("head", 0)), 0)
+    sq = p.get("sq", 1)                 # the spring squashed (<1) or stretched
+    for i in range(4):
+        J["spring_coil%d" % i].location.z = (0.03 + 0.05 * i) * sq
+        J["spring_coil%d" % i].scale.z = 0.03 * min(sq, 1)
+    J["spring_post"].location.z = 0.1 * sq
+    J["spring_post"].scale.z = 0.1 * sq
+    J["bend2"].location.z = 0.2 * sq
+    for side, y in (("N", -1), ("F", 1)):   # arm: the stubs raised forward
+        J["stub" + side].rotation_euler = (rad(-y * 15), rad(-80 - p.get("arm", 0)), 0)
     J["root"].location = (p.get("x", 0), 0, 0)
     sc.view_layers[0].update()
     lowest = min((o.matrix_world @ Vector(c)).z
@@ -930,8 +960,11 @@ def key_pose(J, frame):
         o.keyframe_insert("rotation_euler", frame=frame)
         if name in ("shN", "hpN"):
             o.keyframe_insert("scale", frame=frame)
-        if name == "root":
+        if name == "root" or name == "bend2":
             o.keyframe_insert("location", frame=frame)
+        if name.startswith("spring_"):
+            o.keyframe_insert("location", frame=frame)
+            o.keyframe_insert("scale", frame=frame)
 
 
 def set_constant(sc):

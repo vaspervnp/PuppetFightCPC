@@ -1,5 +1,5 @@
 {
-  "_comment": "The training dummy (training only, not in ROSTER.TXT): see putin_pfc.json for the fields. Its moves other than idle, hit and ko show its idle frames.",
+  "_comment": "The training dummy (training only, not in ROSTER.TXT): see putin_pfc.json for the fields. Its moves other than idle, crouch, jump, block, hit and ko show its idle frames. bank0_end: training's own code (src/train.asm) goes at TRAIN_AT, past its frames.",
   "name": "DUMMY",
   "title": "The Training Dummy",
   "colours": [
@@ -19,5 +19,6 @@
     "kind": "strike"
   },
   "stage": "theatre",
-  "taunt": "..."
+  "taunt": "...",
+  "bank0_end": "7800"
 }

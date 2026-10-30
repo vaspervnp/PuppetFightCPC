@@ -86,6 +86,8 @@ def files():
             for s in stages()]
     out += [(c.upper() + ".PFC", os.path.join(BUILD, "pfc", c.upper() + ".PFC"), "bin", 0x4000, 0)
             for c in trainer()]
+    if trainer():   # training's own code (src/train.asm), to the dummy's bank
+        out += [("TRAIN.BIN", os.path.join(BUILD, "TRAIN.BIN"), "bin", 0x7800, 0)]
     out += [("ROSTER.TXT", os.path.join(BUILD, "pfc", "ROSTER.TXT"), "txt", 0, 0),
             ("TITLE.SCR", os.path.join(BUILD, "TITLE.SCR"), "bin", 0x9800, 0),
             ("SELECT.SCR", os.path.join(BUILD, "SELECT.SCR"), "bin", 0x9800, 0),

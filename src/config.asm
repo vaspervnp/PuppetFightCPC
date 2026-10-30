@@ -50,6 +50,16 @@ STAGE_ROOM      EQU SETTINGS_AT-STAGE_AT
 ;; (roster numbers). start reads them before the compiled frame caches go
 ;; there; ladder.asm puts them back for the next opponent.
 SETTINGS_AT     EQU #3FF0
+;; Training's own code (train.asm, TRAIN.BIN): in the dummy's bank 0, past
+;; its frames, paged in at #4000 for a moment each picture. Leaving it for
+;; the select screen, a stub runs from STUB_AT, with a 2K file buffer at
+;; STUB_BUF. A snapshot without the dummy keeps it at TRAIN_SCRATCH (the
+;; screen, which boot fills).
+TRAIN_AT        EQU #7800
+TRAIN_RAM       EQU #C6             ; fighter B's bank 0
+TRAIN_SCRATCH   EQU #9000
+STUB_AT         EQU #1000
+STUB_BUF        EQU #1800
 GM_CPU_A        EQU 0           ; bits of the settings (game_mode)
 GM_CPU_B        EQU 1
 GM_LEVEL        EQU 2           ; bits 2-3

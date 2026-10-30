@@ -75,17 +75,17 @@
    "name": "crouch",
    "frames": [
     {
-     "file": "idle_0",
+     "file": "crouch_0",
      "width": 32,
      "offset_x": 0
     },
     {
-     "file": "idle_1",
+     "file": "crouch_1",
      "width": 32,
      "offset_x": 0
     },
     {
-     "file": "idle_2",
+     "file": "crouch_2",
      "width": 32,
      "offset_x": 0
     }
@@ -95,17 +95,17 @@
    "name": "jump",
    "frames": [
     {
-     "file": "idle_0",
+     "file": "jump_0",
      "width": 32,
      "offset_x": 0
     },
     {
-     "file": "idle_1",
+     "file": "jump_1",
      "width": 32,
      "offset_x": 0
     },
     {
-     "file": "idle_2",
+     "file": "jump_2",
      "width": 32,
      "offset_x": 0
     }
@@ -225,17 +225,17 @@
    "name": "block",
    "frames": [
     {
-     "file": "idle_0",
+     "file": "block_0",
      "width": 32,
      "offset_x": 0
     },
     {
-     "file": "idle_1",
+     "file": "block_1",
      "width": 32,
      "offset_x": 0
     },
     {
-     "file": "idle_2",
+     "file": "block_2",
      "width": 32,
      "offset_x": 0
     }

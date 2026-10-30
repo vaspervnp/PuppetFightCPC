@@ -13,8 +13,9 @@
 ;; and fire, the same character twice too. C makes player 2 the computer,
 ;; at three levels (and C again a player): player 1 then chooses its
 ;; character as well, once ready. Training (GM_TRAIN) puts the training
-;; dummy (DUMMY.PFC, not in the roster) up as fighter B, with no end to
-;; it. The engine finds that, and who was
+;; dummy (DUMMY.PFC, not in the roster) up as fighter B, doing what the
+;; fourth row says (the level bits), with its own code (TRAIN.BIN,
+;; src/train.asm) in its bank; ESC there comes back here. The engine finds that, and who was
 ;; chosen (roster numbers), at SETTINGS_AT. Then fighter A's goes into
 ;; banks 4-5 and fighter B's into banks 6-7, unpacked as they are read a
 ;; byte at a time (tools/stage_pack.py's format), one bank paged in at a
@@ -35,6 +36,8 @@ SCR_SET_MODE    EQU #BC0E
 SCR_SET_INK     EQU #BC32
 SCR_SET_BORDER  EQU #BC38
 MC_WAIT_FLYBACK EQU #BD19
+MC_START_PROGRAM EQU #BD16
+CAS_IN_DIRECT   EQU #BC83
 CAS_IN_OPEN     EQU #BC77
 CAS_IN_CLOSE    EQU #BC7A
 CAS_IN_CHAR     EQU #BC80
@@ -48,6 +51,8 @@ H_LEN0          EQU 44          ; (unpacked: unused, the end mark ends one)
 H_LEN1          EQU 46
 H_STAGE         EQU 48
 STAGE_AT        EQU #2000       ; src/config.asm
+TRAIN_AT        EQU #7800       ; (and train.asm's tr_mcsp after a jr)
+TRAIN_MCSP      EQU TRAIN_AT+2
 SETTINGS_AT     EQU #3FF0       ; (the engine's game_mode)
 GM_CPU_B        EQU 1
 GM_LEVEL        EQU 2
@@ -88,6 +93,11 @@ ld_zero
     ld (hl),0
     inc hl
     djnz ld_zero
+    ld hl,(MC_START_PROGRAM+1)  ; for training's way back (train.asm): a
+    ld a,h                      ; low jump, the ROM's state in the top bits
+    and #3F
+    ld h,a
+    ld (mcsp),hl
     xor a
     call SCR_SET_MODE           ; mode 0: 20 columns, the game's look
     ld bc,0
@@ -125,7 +135,10 @@ ld_mode
     cp 2
     ld a,b
     jr nz,ld_set
-    ld a,1<<GM_TRAIN
+    ld a,(m_dummy)              ; the dummy's choice, as the level
+    add a,a
+    add a,a                     ; << GM_LEVEL
+    or 1<<GM_TRAIN
 ld_set
     ld (SETTINGS_AT),a
     ld hl,(sel_a)               ; and who: sel_a, sel_b
@@ -147,6 +160,10 @@ ld_set
     ld hl,sel_b
     cp (hl)
     call z,alt_inks
+    ld a,(m_cpu)                ; training: its own code in the dummy's
+    cp 2                        ; bank 0
+    call z,load_train
+    jp nc,disc_error
     ld bc,#7FC0
     out (c),c
     call load_stage
@@ -418,6 +435,24 @@ load_stage
     call CAS_IN_CLOSE
     scf
     ret
+
+;; load_train - TRAIN.BIN (train.asm) to TRAIN_AT in bank 6, told where
+;; the firmware's MC START PROGRAM is. CY if loaded.
+load_train
+    ld hl,s_train
+    ld de,f_bin
+    call open_file
+    ret nc
+    ld a,#C6
+    call page
+    ld hl,TRAIN_AT
+    call CAS_IN_DIRECT
+    ret nc
+    ld hl,(mcsp)
+    ld (TRAIN_MCSP),hl
+    ld a,#C0
+    call page
+    jp CAS_IN_CLOSE
 
 ;; open_char - A = character: open NAME.PFC. CY if opened.
 ;; open_file - HL = a name (8 characters, space padded), DE = its
@@ -737,10 +772,10 @@ se_frame
     bit PS_FIRE,a
     jp nz,se_go
     ld c,a
-    ld b,3                      ; rows: 3, or 4 with the computer
-    ld a,(m_cpu)
-    dec a
-    jr nz,se_rows
+    ld b,3                      ; rows: 3, or 4 with the computer or
+    ld a,(m_cpu)                ; training
+    or a
+    jr z,se_rows
     inc b
 se_rows
     ld hl,m_row
@@ -816,7 +851,15 @@ se_bset
     ld (sel_b),a
     jp se_show
 se_level
-    ld a,(m_level)              ; the computer's level: 0-2
+    ld hl,m_level               ; the computer's level: 0-2
+    ld b,2
+    ld a,(m_cpu)
+    cp 2
+    jr nz,se_lone
+    ld hl,m_dummy               ; or the dummy's choice: 0-3
+    inc b
+se_lone
+    ld a,(hl)
     bit PS_LEFT,c
     jr z,se_harder
     or a
@@ -824,11 +867,11 @@ se_level
     dec a
     jr se_lset
 se_harder
-    cp 2
+    cp b
     jp z,se_show
     inc a
 se_lset
-    ld (m_level),a
+    ld (hl),a
     jp se_show
 se_char
     ld a,(de)                   ; a character: round the roster
@@ -922,9 +965,14 @@ sm_pen
     cp 3
     jr c,sm_row
     jr nz,sm_fighters
-    ld a,(m_cpu)                ; the level's row only for the computer
+    ld a,(m_cpu)                ; the level's row only for the computer,
+    or a                        ; or the dummy's for training
+    jr z,sm_none
     dec a
     jr z,sm_row
+    ld hl,s_dlabel
+    jr sm_row
+sm_none
     ld hl,#0100+MENU_ROW+6
     call TXT_SET_CURSOR
     ld hl,s_blank
@@ -1023,6 +1071,11 @@ sm_value
     ld a,(m_cpu)
     jr z,sv_pick
     ld b,6
+    ld a,(m_cpu)
+    cp 2
+    ld hl,s_stand
+    ld a,(m_dummy)
+    jr z,sv_pick
     ld hl,s_easy
     ld a,(m_level)
 sv_pick
@@ -1175,10 +1228,15 @@ s_rows                          ; the menu's labels
     defb "OPPONENT: ",0
     defb "DIFFICULTY: ",0
 s_dummy defb "DUMMY   "        ; the training dummy's file
+s_train defb "TRAIN   "        ; and its code
 s_human                         ; its values, 8 characters each
     defb "HUMAN   COMPUTERTRAINING"
 s_easy
     defb "EASY    MEDIUM  HARD    "
+s_dlabel
+    defb "DUMMY:      ",0      ; (as long as DIFFICULTY:)
+s_stand
+    defb "STAND   CROUCH  JUMP    BLOCK   "
 s_blank
     defb "                    ",0
 s_start
@@ -1218,6 +1276,8 @@ f_ext
     defb ".PFC"
 f_stg
     defb ".STG"
+f_bin
+    defb ".BIN"
 f_title
     defb "TITLE.SCR"
 f_title_end
@@ -1246,7 +1306,9 @@ ps_a            EQU m_inks+4    ; the controls held last frame
 title_up        EQU ps_a+1
 cpu_b           EQU title_up+1  ; 0 a player, 1-3 the computer's level + 1
 m_keep_b        EQU cpu_b+1     ; player 2's character during training
-lc_ram          EQU m_keep_b+1
+m_dummy         EQU m_keep_b+1  ; the dummy's choice (train.asm TD_)
+mcsp            EQU m_dummy+1   ; the firmware's MC START PROGRAM
+lc_ram          EQU mcsp+2
 rb_moves        EQU lc_ram+1
 rb_frames       EQU rb_moves+1
 rb_move         EQU rb_frames+1

@@ -1624,6 +1624,48 @@ The QUICKWIN test build had no room left for training's checks in
 | `bench-all`, `bench-fight`, `bench-play`, `bench-ai` | the same |
 | disc: TRAINING on the select screen | player 2's row shows DUMMY and its picture; the theatre, DUMMY on the HUD, the clock at 99 |
 
+### Training's own code: the dummy's choices and ESC
+
+The RAM audit for the next features: the main RAM had about 70 bytes left,
+in pieces (gap 6: 14, gap 3: 13, gap 4: 11, low0: 9, low2: 6, the rest under
+6), and every character's bank 0 is full but one: the dummy's frames take
+3,239 of bank 6's 16K. So training's code lives there (`src/train.asm`,
+`TRAIN.BIN`, at `TRAIN_AT` = #7800; `bank0_end` in `dummy_pfc.json` keeps
+the frames below it), and the engine pays only for the way in: `ap_b`
+jumps to `train_go` (`traingo.asm`, 8 bytes in low0, now full), which
+pages bank 6 in and jumps to it; it leaves through `page_main`. It can't
+call anything in the mirror's gaps, which the bank hides, so it reads the
+workspace only (`fighter_a`/`fighter_b`, `key_rows`, `rnd_state`,
+`game_mode`). The loader reads `TRAIN.BIN` into bank 6 after the dummy.
+
+- **The dummy's choices.** In training the select screen's fourth row is
+  DUMMY: STAND, CROUCH, JUMP or BLOCK, in `game_mode`'s level bits. Crouch
+  holds down; jump holds up (a hop each time it lands); block holds back
+  while fighter A attacks (`attacking`'s moves) or its projectile is within
+  24 bytes, and down with it against a sweep. New frames for them in
+  Blender: crouch presses the spring down (`sq`) and folds the sack over,
+  jump stretches it, block leans away with the stubs up (`arm`).
+  `DUMMY.PFC` grows to bank 0 3,239, bank 1 5,901, largest frame 1,354.
+- **ESC.** The way back to the select screen without a reset. The engine
+  has the whole machine, so the firmware is started again: the loader
+  leaves where MC START PROGRAM is (from its jumpblock entry at #BD16, a
+  low jump, so the 464 and 664 work too) at `tr_mcsp`. On ESC, `tr_exit`
+  copies a program to `STUB_AT` (#1000) and 15 bytes to just before MC
+  START PROGRAM's address, ending with the `out` that pages the lower ROM
+  in: the next byte comes from the ROM, so no RAM code below #4000 runs
+  with the ROM over it (the first try did, and came back to BASIC). The
+  firmware then runs the program with ROM select #FF: the CRTC back to the
+  firmware's values (it leaves the game's overscan ones), the disc ROM
+  (KL ROM WALK), then `PFLOAD.BIN` and `PUPPET.BIN` as `PUPPET.BAS` does.
+  A snapshot has 0 there and ignores ESC.
+
+| Test | Result |
+|---|---|
+| `CPU=17 LEVEL=0..3 CHAR_B=dummy` (stand, crouch, jump, block), 1500 pictures each | 0 caught, 0 late, 0 bytes wrong; blocking, the dummy's health was still full after 1200 pictures |
+| `bench-all`, `bench-fight`, `bench-play`, `bench-ai` | 25 fps, 0 caught, 0 late, 0 bytes wrong |
+| builds: default, QUICKWIN=1, DEMO=1 SHOTS=1 CHAR_B=trump, CPU=3, CPU=17 CHAR_B=dummy | all build |
+| disc: TRAINING, DUMMY: BLOCK, a fight, ESC | the firmware's screen, then the title and the select screen, clean; the disc holds 158 of its 180 blocks |
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

@@ -41,6 +41,7 @@ The menu has a row for each choice, and the two fighters stand above it.
 | Player 2 | any fighter (the same one too: the second gets other colours) |
 | Opponent | Human, Computer or Training |
 | Difficulty | Easy, Medium or Hard (only when the opponent is the computer) |
+| Dummy | Stand, Crouch, Jump or Block (only in training) |
 
 The keys:
 
@@ -145,9 +146,18 @@ Set **Opponent** to **Training** to practise the moves. Player 2's row
 then shows the **Dummy**: a burlap training dummy on a spring, with a
 target on its chest. It sways back and forth, bends right back when it
 is hit and springs up again, and a knockdown tips it over on its base.
-It never fights back. The clock stays at 99 and nobody wins rounds: a
-knockout only starts the round again, with full health. Training never
-ends; reset the computer to go back to the menu.
+It never fights back. The **Dummy** row chooses what it does:
+
+| Dummy | |
+|---|---|
+| Stand | Stands there and takes it |
+| Crouch | Stays down: only low attacks reach it |
+| Jump | Hops, again and again: practise the uppercut |
+| Block | Blocks every attack and projectile, low against a sweep: practise the throw |
+
+The clock stays at 99 and nobody wins rounds: a knockout only starts the
+round again, with full health. Press **ESC** to go back to the menu: the
+game loads it again from the disc, so leave the disc in the drive.
 
 ## The fighters
 
