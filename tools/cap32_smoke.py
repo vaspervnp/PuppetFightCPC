@@ -3,7 +3,8 @@
 controller emulation, as far as possible from the headless one the
 benches use: the disc driver (src/fdc.asm) meets a different µPD765.
 
-Boots the disc, takes a screenshot of the title, of the select screen, of
+Boots the disc, takes a screenshot of the REVIVE8BIT screen and skips it
+with SPACE, then of the title, of the select screen, of
 the controls screen, chooses the computer as the opponent and starts, then
 takes a screenshot every few seconds and quits. With a QUICKWIN=1 disc
 (make QUICKWIN=1) player 1 wins every match at once, so the screenshots
@@ -42,7 +43,8 @@ def main(dsk, out, n="24"):
     with open(os.path.join(HOME, "pf.sh"), "w") as f:
         f.write(RUNNER)
     down, right = "s", "d"          # player 2's keys work the menu too
-    cmd = ('RUN"PUPPET\n' + WAIT * 400 + SHOT              # the title
+    cmd = ('RUN"PUPPET\n' + WAIT * 150 + SHOT              # REVIVE8BIT
+           + " " + WAIT * 400 + SHOT                         # the title
            + " " + WAIT * 200 + SHOT                         # the menu
            + down + WAIT * 10 + down + WAIT * 10 + right + WAIT * 20 + SHOT
            + " " + WAIT * 60 + SHOT                          # the controls

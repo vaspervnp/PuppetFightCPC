@@ -93,6 +93,7 @@ def files():
             ("SELECT.SCR", os.path.join(BUILD, "SELECT.SCR"), "bin", 0x9800, 0),
             ("FIGHTERS.BIN", os.path.join(BUILD, "FIGHTERS.BIN"), "bin", 0x4000, 0),
             ("PFLOAD.BIN", os.path.join(BUILD, "PFLOAD.BIN"), "bin", 0x8000, 0x8000),
+            ("REVIVE8B.SCR", os.path.join(REPO, "art", "revive8b.scr"), "bin", 0xC000, 0),
             ("PUPPET.BAS", os.path.join(REPO, "src", "puppet.bas"), "txt", 0, 0),
             ("PUPPET.BIN", os.path.join(BUILD, "PUPPET.BIN"), "bin", 0x4000, 0x4000)]
     return out

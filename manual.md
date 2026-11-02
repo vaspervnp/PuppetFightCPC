@@ -20,7 +20,8 @@ Insert the disc in drive A and type
 
     RUN"PUPPET
 
-The title screen appears while the fighters are read from the disc. Press
+First comes the REVIVE8BIT screen: **SPACE** skips it, or it goes by
+itself after ten seconds. The title screen appears while the fighters are read from the disc. Press
 **fire** (or **SPACE**) to go on to the select screen.
 
 The game needs a CPC 6128 (or a 464/664 with 128K and a disc drive). Leave

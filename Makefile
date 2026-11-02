@@ -131,7 +131,7 @@ $(BUILD)/PFLOAD.BIN: src/loader.asm src/gen/remap.asm | $(BUILD)
 
 # One rasm pass writes the snapshot, the symbols and (via SAVE) the engine;
 # then the disc, an extended DSK with everything (tools/make_dsk.py).
-$(BUILD)/pfspike.sna: $(SRC) $(BUILD)/PFLOAD.BIN $(PFC) $(STG) $(BUILD)/TITLE.SCR $(BUILD)/SELECT.SCR $(BUILD)/FIGHTERS.BIN $(BUILD)/pfc/ROSTER.TXT FORCE | $(BUILD)
+$(BUILD)/pfspike.sna: $(SRC) $(BUILD)/PFLOAD.BIN $(PFC) $(STG) $(BUILD)/TITLE.SCR $(BUILD)/SELECT.SCR $(BUILD)/FIGHTERS.BIN $(BUILD)/pfc/ROSTER.TXT art/revive8b.scr src/puppet.bas FORCE | $(BUILD)
 	cd src && $(RASM) main.asm -oi ../$@ -s -sl -sq -os ../$(BUILD)/pfspike.sym -v2 $(RASMFLAGS)
 	CHARS="$(CHARS)" BOSS="$(BOSS)" TRAINER="$(TRAINER)" $(PYTHON) tools/make_dsk.py write $(BUILD)/puppetfight.dsk
 
