@@ -121,6 +121,11 @@ Big words across the screen open each round, **BEGIN FIGHT**, and close
 it: **K.O.**, **PERFECT** (a knockout without losing any health), **TIME
 UP** or **DRAW**. They step aside while a fighter jumps through them.
 
+**ESC** stops the fight and asks over the names: **EXIT ? ESC=YES,
+FIRE1=NO**. A second **ESC** takes you back to the menu: the game loads it
+again from the disc, so leave the disc in the drive. **Fire** (or
+**SPACE**) goes on with the fight where it stopped.
+
 ![The winner](docs/img/victory.png)
 
 ## Against the computer: the ladder
@@ -157,8 +162,8 @@ It never fights back. The **Dummy** row chooses what it does:
 | Block | Blocks every attack and projectile, low against a sweep: practise the throw |
 
 The clock stays at 99 and nobody wins rounds: a knockout only starts the
-round again, with full health. Press **ESC** to go back to the menu: the
-game loads it again from the disc, so leave the disc in the drive.
+round again, with full health. **ESC** twice goes back to the menu, as in
+any fight.
 
 ## The fighters
 

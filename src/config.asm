@@ -50,11 +50,17 @@ STAGE_ROOM      EQU SETTINGS_AT-STAGE_AT
 ;; (roster numbers). start reads them before the compiled frame caches go
 ;; there; ladder.asm puts them back for the next opponent.
 SETTINGS_AT     EQU #3FF0
-;; Training's own code (train.asm, TRAIN.BIN): in the dummy's bank 0, past
-;; its frames, paged in at #4000 for a moment each picture. Leaving it for
-;; the select screen, a stub runs from STUB_AT, with a 2K file buffer at
-;; STUB_BUF. A snapshot without the dummy keeps it at TRAIN_SCRATCH (the
-;; screen, which boot fills).
+;; ESC's question (exit.asm, EXIT.BIN) and the way back to the select
+;; screen (back.asm, BACK.BIN): at EXIT_AT in fighter B's and fighter A's
+;; bank 0, past every character's frames (tools/sprite_codegen.py
+;; BANK0_END), paged in at #4000 while it asks; EX_SWITCH goes from one to
+;; the other. Leaving, a stub runs from STUB_AT, with a 2K file buffer at
+;; STUB_BUF. Training's own code (train.asm, TRAIN.BIN): in the dummy's
+;; bank 0, past its frames, paged in at #4000 for a moment each picture,
+;; by way of exit.asm's first lines. A snapshot without the dummy keeps it
+;; at TRAIN_SCRATCH (the screen, which boot fills).
+EXIT_AT         EQU #7E60
+EX_SWITCH       EQU EXIT_AT+6
 TRAIN_AT        EQU #7800
 TRAIN_RAM       EQU #C6             ; fighter B's bank 0
 TRAIN_SCRATCH   EQU #9000

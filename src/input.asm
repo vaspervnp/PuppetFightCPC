@@ -28,10 +28,11 @@ CT_KICK         EQU 5
     MEND
 
 ;; ---------------------------------------------------------------------------
-;; read_controls - scan the matrix and set p1_ctl / p2_ctl (1 = held).
+;; read_controls - scan the matrix and set p1_ctl / p2_ctl (1 = held); ESC
+;; asks whether to leave the fight (exit.asm).
 ;; About 100 us, with interrupts off while port A is turned round: the
 ;; sound's interrupt writes to the PSG through it (sound.asm). Destroys
-;; AF, BC, E, HL.
+;; AF, BC, E, HL (after ESC, everything).
 ;; ---------------------------------------------------------------------------
 read_controls
     di
@@ -90,4 +91,9 @@ rc_line
     KEY 7,#80,CT_KICK           ; X
     ld a,c
     ld (p2_ctl),a
-    ret
+    ld a,(key_rows+8)           ; ESC: the question, the fight standing
+    and #04                     ; still (exit.asm), and if it goes on, the
+    ret nz                      ; names drawn again
+    cpl
+    call train_go
+    jp draw_names

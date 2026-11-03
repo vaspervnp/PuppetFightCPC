@@ -834,6 +834,18 @@ image_end       EQU gap8_store+gap8_end-gap8_start
 ;; ---------------------------------------------------------------------------
     include "gen/chars.asm"
 
+;; ESC's question (exit.asm) and the way back (back.asm): in fighter B's
+;; and fighter A's bank 0, past any character's frames; on the disc,
+;; EXIT.BIN and BACK.BIN.
+    BANK 6
+    ORG EXIT_AT
+    include "exit.asm"
+    SAVE '../build/EXIT.BIN',EXIT_AT,exit_end-exit_start
+    BANK 4
+    ORG EXIT_AT
+    include "back.asm"
+    SAVE '../build/BACK.BIN',EXIT_AT,back_end-back_start
+
 ;; Training's own code (train.asm): in the dummy's bank 0 when it is
 ;; fighter B, else out of the way; on the disc, TRAIN.BIN.
     IF TRAIN_B

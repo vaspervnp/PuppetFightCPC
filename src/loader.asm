@@ -15,7 +15,8 @@
 ;; character as well, once ready. Training (GM_TRAIN) puts the training
 ;; dummy (DUMMY.PFC, not in the roster) up as fighter B, doing what the
 ;; fourth row says (the level bits), with its own code (TRAIN.BIN,
-;; src/train.asm) in its bank; ESC there comes back here. The engine finds that, and who was
+;; src/train.asm) in its bank. In any fight, ESC twice comes back here
+;; (EXIT.BIN, src/exit.asm, past fighter B's frames). The engine finds that, and who was
 ;; chosen (roster numbers), at SETTINGS_AT. Then fighter A's goes into
 ;; banks 4-5 and fighter B's into banks 6-7, unpacked as they are read a
 ;; byte at a time (tools/stage_pack.py's format), one bank paged in at a
@@ -51,8 +52,8 @@ H_LEN0          EQU 44          ; (unpacked: unused, the end mark ends one)
 H_LEN1          EQU 46
 H_STAGE         EQU 48
 STAGE_AT        EQU #2000       ; src/config.asm
-TRAIN_AT        EQU #7800       ; (and train.asm's tr_mcsp after a jr)
-TRAIN_MCSP      EQU TRAIN_AT+2
+TRAIN_AT        EQU #7800       ; config.asm
+EXIT_AT         EQU #7E60       ; config.asm (back.asm's bk_mcsp)
 SETTINGS_AT     EQU #3FF0       ; (the engine's game_mode)
 GM_CPU_B        EQU 1
 GM_LEVEL        EQU 2
@@ -93,7 +94,7 @@ ld_zero
     ld (hl),0
     inc hl
     djnz ld_zero
-    ld hl,(MC_START_PROGRAM+1)  ; for training's way back (train.asm): a
+    ld hl,(MC_START_PROGRAM+1)  ; for ESC's way back (exit.asm): a
     ld a,h                      ; low jump, the ROM's state in the top bits
     and #3F
     ld h,a
@@ -160,9 +161,24 @@ ld_set
     ld hl,sel_b
     cp (hl)
     call z,alt_inks
+    ld hl,s_exit                ; ESC's code past fighter B's frames
+    ld a,#C6
+    call load_exit
+    jp nc,disc_error
+    ld hl,s_back                ; and fighter A's
+    ld a,#C4
+    call load_exit
+    jp nc,disc_error
+    ld a,#C4
+    call page
+    ld hl,(mcsp)
+    ld (EXIT_AT),hl
     ld a,(m_cpu)                ; training: its own code in the dummy's
     cp 2                        ; bank 0
-    call z,load_train
+    ld hl,s_train
+    ld de,TRAIN_AT
+    ld a,#C6
+    call z,load_bin
     jp nc,disc_error
     ld bc,#7FC0
     out (c),c
@@ -436,20 +452,23 @@ load_stage
     scf
     ret
 
-;; load_train - TRAIN.BIN (train.asm) to TRAIN_AT in bank 6, told where
-;; the firmware's MC START PROGRAM is. CY if loaded.
-load_train
-    ld hl,s_train
+;; load_exit - HL = a name (8 characters), A = a bank's RAM configuration:
+;; load NAME.BIN to EXIT_AT there (EXIT.BIN, BACK.BIN). load_bin - and DE
+;; = where (TRAIN.BIN). CY if loaded.
+load_exit
+    ld de,EXIT_AT
+load_bin
+    push af
+    push de
     ld de,f_bin
     call open_file
+    pop hl
+    pop bc
     ret nc
-    ld a,#C6
+    ld a,b
     call page
-    ld hl,TRAIN_AT
     call CAS_IN_DIRECT
     ret nc
-    ld hl,(mcsp)
-    ld (TRAIN_MCSP),hl
     ld a,#C0
     call page
     jp CAS_IN_CLOSE
@@ -1229,6 +1248,8 @@ s_rows                          ; the menu's labels
     defb "DIFFICULTY: ",0
 s_dummy defb "DUMMY   "        ; the training dummy's file
 s_train defb "TRAIN   "        ; and its code
+s_exit  defb "EXIT    "        ; ESC's code
+s_back  defb "BACK    "
 s_human                         ; its values, 8 characters each
     defb "HUMAN   COMPUTERTRAINING"
 s_easy

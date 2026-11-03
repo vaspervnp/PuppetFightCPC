@@ -1666,6 +1666,51 @@ workspace only (`fighter_a`/`fighter_b`, `key_rows`, `rnd_state`,
 | builds: default, QUICKWIN=1, DEMO=1 SHOTS=1 CHAR_B=trump, CPU=3, CPU=17 CHAR_B=dummy | all build |
 | disc: TRAINING, DUMMY: BLOCK, a fight, ESC | the firmware's screen, then the title and the select screen, clean; the disc holds 158 of its 180 blocks |
 
+### ESC in any fight: a question first
+
+ESC now asks before it leaves, in every fight, not only training: **EXIT
+? ESC=YES, FIRE1=NO** over the names, the fight standing still (the music
+plays on). ESC again goes back to the select screen as training's ESC did;
+fire (either joystick's fire 1, or Space) goes on.
+
+- **Where the code lives.** Not in main RAM (about 60 bytes left) and not
+  in the dummy's bank (training only). Every character's bank 0 ends below
+  #7E55 (Putin's is the longest), so `EXIT_AT` = #7E60 holds code in
+  *any* bank 0: the question (`src/exit.asm`, `EXIT.BIN`, 334 bytes) in
+  fighter B's, and the way back (`src/back.asm`, `BACK.BIN`, 170 bytes) in
+  fighter A's, as the two didn't fit 416 bytes together.
+  `tools/sprite_codegen.py` now packs every bank 0 below `BANK0_END`
+  (#7E60; the dummy's own `bank0_end` stays #7800), which changed no
+  character's packing. The ladder's next opponents are unpacked a byte
+  at a time to their lengths, so fighter B's tail stays; fighter A is
+  never loaded again. The loader reads both files after the fighters
+  (after `remap_a`), and MC START PROGRAM's address goes to `BACK.BIN`.
+- **The way in.** `read_controls` (gap 3, 12 of its 13 bytes) ends with
+  ESC's check: down, it calls `train_go` with A = #FF and then `jp
+  draw_names`. `train_go` now jumps to `EXIT_AT`, where `or a / jp
+  z,TRAIN_AT` sends training's controls (A = 0, from `ap_b`) on to the
+  dummy's code, which lost its own ESC.
+- **The question.** The bank hides the gaps (the victory font, the names),
+  so it draws with its own 5 x 5 font (16 characters, rows doubled: 10
+  lines at 3 bytes a character, from line 0), scans the matrix itself a
+  frame at a time (the bounce goes by) into `key_rows`, and waits for ESC
+  to come up first, then for ESC or fire. Fire: it waits for fire to come
+  up (or the fighter would punch), blacks the lines, calls `draw_clock`
+  (COLD2, visible), and `read_controls` draws the names.
+- **Between the banks.** ESC again: `ld bc,#7FC4` and a jump to
+  `EX_SWITCH` (`EXIT_AT`+6), an `out (c),c` in both files: the code goes
+  on in fighter A's bank, in `back.asm` after its own `out`. That one,
+  with #7FC6, is the way back (a snapshot, where MC START PROGRAM is 0:
+  it goes on asking).
+
+| Test | Result |
+|---|---|
+| `bench-all`, `bench-fight`, `bench-play`, `bench-ai` | 25 fps, 0 caught, 0 late |
+| `CPU=3` and `CPU=17 CHAR_B=dummy LEVEL=3`, 400 pictures | 25 fps, 0 caught, 0 late |
+| builds: default, QUICKWIN=1, DEMO=1 SHOTS=1 CHAR_B=trump, CPU=3, CPU=17 CHAR_B=dummy | all build |
+| disc, against a player, the computer and the dummy: ESC, Space, ESC, ESC | the question with the clock stopped; Space and the fight goes on, names and clock back; ESC twice, the title and the select screen; the disc holds 177 of its 180 blocks |
+| snapshot (training): ESC, ESC, Space | the second ESC does nothing, Space goes on, the dummy still sways |
+
 ## Next (milestone 2 work this feeds)
 
 - Held frames in busy play (34 of 192 fighter-pictures in the script): the

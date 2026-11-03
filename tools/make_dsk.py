@@ -88,6 +88,8 @@ def files():
             for c in trainer()]
     if trainer():   # training's own code (src/train.asm), to the dummy's bank
         out += [("TRAIN.BIN", os.path.join(BUILD, "TRAIN.BIN"), "bin", 0x7800, 0)]
+    out += [("EXIT.BIN", os.path.join(BUILD, "EXIT.BIN"), "bin", 0x7E60, 0),    # ESC's (src/exit.asm,
+            ("BACK.BIN", os.path.join(BUILD, "BACK.BIN"), "bin", 0x7E60, 0)]    # src/back.asm)
     out += [("ROSTER.TXT", os.path.join(BUILD, "pfc", "ROSTER.TXT"), "txt", 0, 0),
             ("TITLE.SCR", os.path.join(BUILD, "TITLE.SCR"), "bin", 0x9800, 0),
             ("SELECT.SCR", os.path.join(BUILD, "SELECT.SCR"), "bin", 0x9800, 0),
