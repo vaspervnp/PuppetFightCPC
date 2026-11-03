@@ -6,13 +6,51 @@
 
 ## The story
 
-The world's leaders have stopped taking questions. In *Puppet Fight* they
-settle things the old way: two felt puppets, one stage, ninety-nine seconds.
+### The Summit Nobody Asked For
 
-Trump, Putin, Kim, Xi, Musk and Zelensky step into the ring, each with a
-move straight out of the headlines. Win your way past every one of them and
-the man who pulls the strings comes out from behind the curtain: the Puppet
-Master himself.
+It was meant to be a peace summit. There were flags, there was a round
+table, and there was a buffet that cost more than a small country.
+
+Then somebody touched the last croissant.
+
+Within ninety-nine seconds the round table was in pieces and the
+interpreters had run for the exits. The world's most powerful leaders were
+rolling up their felt sleeves. Diplomacy had failed, so the old way was
+back: two puppets, one stage, no questions from the press.
+
+The contenders:
+
+- **Donald Trump, The Greatest American 2.0.** He came to make the summit
+  great again and left after firing three tables. His Tweet Storm sends a
+  furious little bird across the stage in ALL CAPS. *"Nobody punches better
+  than me. Everybody says so."*
+- **Vladimir Putin, Tsar of All the Puppets.** He took off his shirt before
+  he came in the door. Black belt in judo, and in rewriting the rules of
+  judo. *"I did not throw you. You fell into my hands. Is different."*
+- **Kim Jong-Un, Supremest Leader.** He was invited by accident and arrived
+  by surfboard, on a missile. State media has already declared him the
+  winner of every round, including the ones still to come.
+- **Xi Jinping, President Emperor.** He brought a belt and a road, and he
+  is using both to reach you from across the stage. Sooner or later,
+  everything is part of the Belt and Road.
+- **Elon Musk, Tech Support.** He bought the arena halfway through the
+  first round and renamed it "X Stage". The chainsaw was "just for
+  cost-cutting". His fighting style is in beta.
+- **Volodymyr Zelensky, Humble President.** He didn't come for a fight, he
+  came for supplies, and he keeps asking for more crates. The crates are
+  heavy and slow, and they hurt.
+
+Win your way past all six. Then the lights go down and the curtain
+twitches, and somebody chuckles behind the stage. You've been fighting
+puppets all along. Now meet the hand inside them.
+
+**Ian Bremmer, The Puppet Master.** He has analysed every move you made and
+turned it into a forty-page geopolitical risk report. His G-Zero World is
+the globe itself, thrown at you because nobody else is in charge of it.
+
+Two rounds win a match, 99 seconds each, zero diplomatic immunity.
+
+*No real leaders were harmed. Several puppets need new stuffing.*
 
 ## Loading
 
